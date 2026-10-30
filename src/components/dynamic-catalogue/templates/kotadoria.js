@@ -7,7 +7,23 @@
 const E = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const cap = s => (s || '').toUpperCase();
 const pn = n => String(n).padStart(2, '0');
-const bg = u => u ? `background-image:url(${u})` : '';
+const getImgUrl = u => {
+  if (!u) return '';
+  if (typeof u === 'string') return u;
+  return u.img || u.image || (u.images && u.images[0] && (u.images[0].url || u.images[0])) || u.angle1 || u.url || '';
+};
+const bg = u => {
+  const url = getImgUrl(u);
+  return url ? `background-image:url("${url}")` : '';
+};
+const fmtPrice = p => {
+  if (p == null || p === '') return '₹4,200';
+  const s = String(p).trim();
+  if (s.startsWith('₹')) return s;
+  const num = Number(s.replace(/[^0-9.]/g, ''));
+  if (!isNaN(num) && num > 0) return `₹${num.toLocaleString('en-IN')}`;
+  return `₹${s}`;
+};
 
 const th = (name, bg, ink, muted, acc, dark, soft, line, onDark) => ({ name, bg, ink, muted, acc, dark, soft, line, onDark });
 
@@ -1046,13 +1062,16 @@ function kd1_products(c, no, slice, pageIdx, totalPages) {
       <p>Interwoven real gold electroplated zari borders on sheer gossamer mulberry silk-cotton</p>
     </div>
     <div class="kd1-grid">
-      ${slice.map((it, idx) => `
+      ${slice.map((it, idx) => {
+        const cardImg = it.img || it.image || (it.images && it.images[0] && (it.images[0].url || it.images[0])) || it.angle1 || '/assets/kota-doria/0X2A0389_db4c4b42-1d9b-405b-9ea0-664b5017af38.jpg';
+        const cardPrice = fmtPrice(it.price || 4200);
+        return `
         <div class="kd1-card">
-          <div class="kd1-img" style="${bg(it.img)}">
+          <div class="kd1-img" style="${bg(cardImg)}">
             <span class="kd1-tag">ROYAL ZARI PALLU</span>
           </div>
           <div class="kd1-details">
-            <div class="kd1-sku-chip">${E(it.code || `#KD1-${pn(idx + 1)}`)}</div>
+            <div class="kd1-sku-chip">${E(it.sku || it.code || `#KD1-${pn(idx + 1)}`)}</div>
             <h3>${E(it.name || it.title || 'Royal Zari Saree')}</h3>
             <p class="kd1-desc">${E(it.shortDescription || it.description || 'Intricate zari pallu with micro square khat weave on pit-loom.')}</p>
             <div class="kd1-pills">
@@ -1061,12 +1080,13 @@ function kd1_products(c, no, slice, pageIdx, totalPages) {
               <span>✦ 6.3m Complete with Blouse Piece</span>
             </div>
             <div class="kd1-foot">
-              <span class="kd1-price">₹${it.price || 4200}</span>
+              <span class="kd1-price">${E(cardPrice)}</span>
               <span class="kd1-craft">Royal Kaithun Atelier</span>
             </div>
           </div>
         </div>
-      `).join('')}
+      `;
+      }).join('')}
     </div>
     ${foot(c)}
   `;
@@ -1255,22 +1275,26 @@ function kd2_products(c, no, slice, pageIdx, totalPages) {
       <p>Hand-stamped natural vegetable dye motifs on featherweight Kota Doria</p>
     </div>
     <div class="kd2-grid">
-      ${slice.map((it, idx) => `
+      ${slice.map((it, idx) => {
+        const cardImg = it.img || it.image || (it.images && it.images[0] && (it.images[0].url || it.images[0])) || it.angle1 || '/assets/kota-doria/bagru-hand-block-print-kota-doria-cotton-natural-dyed-3pc-unstitched-602.jpg';
+        const cardPrice = fmtPrice(it.price || 2850);
+        return `
         <div class="kd2-card">
-          <div class="kd2-img" style="${bg(it.img)}">
+          <div class="kd2-img" style="${bg(cardImg)}">
             <span class="kd2-stamp-badge">WOODBLOCK PRINT</span>
           </div>
           <div class="kd2-body">
-            <div class="kd2-code">${E(it.code || `#KD2-${pn(idx + 1)}`)}</div>
+            <div class="kd2-code">${E(it.sku || it.code || `#KD2-${pn(idx + 1)}`)}</div>
             <h3>${E(it.name || it.title || 'Block Printed Saree')}</h3>
             <div class="kd2-color-chip">Natural Indigo &amp; Madder Dye</div>
             <div class="kd2-foot">
-              <span class="kd2-price">₹${it.price || 2850}</span>
+              <span class="kd2-price">${E(cardPrice)}</span>
               <span class="kd2-tag">Deckle Craft</span>
             </div>
           </div>
         </div>
-      `).join('')}
+      `;
+      }).join('')}
     </div>
     ${foot(c)}
   `;
@@ -1407,22 +1431,26 @@ function kd3_products(c, no, slice, pageIdx, totalPages) {
       <p>High-fashion editorial silhouettes with sheer micro-khat transparency</p>
     </div>
     <div class="kd3-grid">
-      ${slice.map((it, idx) => `
+      ${slice.map((it, idx) => {
+        const cardImg = it.img || it.image || (it.images && it.images[0] && (it.images[0].url || it.images[0])) || it.angle1 || '/assets/kota-doria/lucknowi-chikankari-hand-embroidered-kota-doria-cotton-2pc-unstitched-127.jpg';
+        const cardPrice = fmtPrice(it.price || 4800);
+        return `
         <div class="kd3-card">
-          <div class="kd3-img" style="${bg(it.img)}">
+          <div class="kd3-img" style="${bg(cardImg)}">
             <span class="kd3-look-num">LOOK #${pn(idx + 1)}</span>
           </div>
           <div class="kd3-info">
-            <div class="kd3-code">${E(it.code || `#KD3-${pn(idx + 1)}`)}</div>
+            <div class="kd3-code">${E(it.sku || it.code || `#KD3-${pn(idx + 1)}`)}</div>
             <h3>${E(it.name || it.title || 'Runway Gossamer Saree')}</h3>
             <p class="kd3-notes">${E(it.shortDescription || it.description || 'Editorial sheer drape with silver border and modern minimalist fall.')}</p>
             <div class="kd3-foot">
-              <span class="kd3-price">₹${it.price || 4800}</span>
+              <span class="kd3-price">${E(cardPrice)}</span>
               <span class="kd3-label">Editorial Sample Available</span>
             </div>
           </div>
         </div>
-      `).join('')}
+      `;
+      }).join('')}
     </div>
     ${foot(c)}
   `;
@@ -1560,22 +1588,26 @@ function kd4_products(c, no, slice, pageIdx, totalPages) {
       <p>Soft pastel hues with silver and gold tested zari work on sheer khat cotton-silk</p>
     </div>
     <div class="kd4-products-mosaic">
-      ${slice.map((it, idx) => `
+      ${slice.map((it, idx) => {
+        const cardImg = it.img || it.image || (it.images && it.images[0] && (it.images[0].url || it.images[0])) || it.angle1 || '/assets/kota-doria/0X2A0389_db4c4b42-1d9b-405b-9ea0-664b5017af38.jpg';
+        const cardPrice = fmtPrice(it.price || 3400);
+        return `
         <div class="kd4-product-card">
-          <div class="kd4-product-img" style="${bg(it.img)}">
+          <div class="kd4-product-img" style="${bg(cardImg)}">
             <span class="kd4-festive-tag">TROUSSEAU PICK</span>
           </div>
           <div class="kd4-product-body">
-            <span class="kd4-code">${E(it.code || `#KD4-${pn(idx + 1)}`)}</span>
+            <span class="kd4-code">${E(it.sku || it.code || `#KD4-${pn(idx + 1)}`)}</span>
             <h3>${E(it.name || it.title || 'Festive Pastel Saree')}</h3>
             <p>${E(it.shortDescription || it.description || 'Gentle pastel drape with delicate woven border and pure cotton weft.')}</p>
             <div class="kd4-product-foot">
-              <span class="kd4-price">₹${it.price || 3400}</span>
+              <span class="kd4-price">${E(cardPrice)}</span>
               <span class="kd4-gift-badge">Gift Box Included</span>
             </div>
           </div>
         </div>
-      `).join('')}
+      `;
+      }).join('')}
     </div>
     ${foot(c)}
   `;
@@ -1741,13 +1773,16 @@ function kd5_products(c, no, slice, pageIdx, totalPages) {
       <p>Finely finished with pure silk fringe tassels, contrast piping, and antique gold zari borders</p>
     </div>
     <div class="kd5-grid">
-      ${slice.map((it, idx) => `
+      ${slice.map((it, idx) => {
+        const cardImg = it.img || it.image || (it.images && it.images[0] && (it.images[0].url || it.images[0])) || it.angle1 || '/assets/kota-doria/bagru-hand-block-print-kota-doria-cotton-natural-dyed-3pc-unstitched-602.jpg';
+        const cardPrice = fmtPrice(it.price || 1650);
+        return `
         <div class="kd5-card">
-          <div class="kd5-img" style="${bg(it.img)}">
+          <div class="kd5-img" style="${bg(cardImg)}">
             <span class="kd5-tassel-badge">HAND-KNOTTED TASSELS</span>
           </div>
           <div class="kd5-body">
-            <div class="kd5-code">${E(it.code || `#KD5-${pn(idx + 1)}`)}</div>
+            <div class="kd5-code">${E(it.sku || it.code || `#KD5-${pn(idx + 1)}`)}</div>
             <h3>${E(it.name || it.title || 'Artisan Dupatta')}</h3>
             <p>${E(it.shortDescription || it.description || 'Featherlight 2.5m stole with woven borders and decorative fringes.')}</p>
             <div class="kd5-specs">
@@ -1755,12 +1790,13 @@ function kd5_products(c, no, slice, pageIdx, totalPages) {
               <span>Weight: 140g</span>
             </div>
             <div class="kd5-foot">
-              <span class="kd5-price">₹${it.price || 1650}</span>
+              <span class="kd5-price">${E(cardPrice)}</span>
               <span class="kd5-moq">Min Order: 5 Pcs</span>
             </div>
           </div>
         </div>
-      `).join('')}
+      `;
+      }).join('')}
     </div>
     ${foot(c)}
   `;
@@ -1891,13 +1927,16 @@ function kd6_products(c, no, slice, pageIdx, totalPages) {
       <p>Horizontal ribbon presentation highlighting specific botanical dye recipes</p>
     </div>
     <div class="kd6-ribbon-list">
-      ${slice.map((it, idx) => `
+      ${slice.map((it, idx) => {
+        const cardImg = it.img || it.image || (it.images && it.images[0] && (it.images[0].url || it.images[0])) || it.angle1 || '/assets/kota-doria/green-kota-doria-cotton-hand-block-sanganeri-print-3pc-unstitched-858.jpg';
+        const cardPrice = fmtPrice(it.price || 3100);
+        return `
         <div class="kd6-ribbon-row">
-          <div class="kd6-ribbon-thumb" style="${bg(it.img)}">
+          <div class="kd6-ribbon-thumb" style="${bg(cardImg)}">
             <span class="kd6-eco-tag">ORGANIC</span>
           </div>
           <div class="kd6-ribbon-details">
-            <div class="kd6-code">${E(it.code || `#KD6-${pn(idx + 1)}`)}</div>
+            <div class="kd6-code">${E(it.sku || it.code || `#KD6-${pn(idx + 1)}`)}</div>
             <h3>${E(it.name || it.title || 'Botanical Dye Saree')}</h3>
             <p>${E(it.shortDescription || it.description || 'Naturally pigmented silk-cotton with organic harda mordant.')}</p>
             <div class="kd6-pills">
@@ -1906,11 +1945,12 @@ function kd6_products(c, no, slice, pageIdx, totalPages) {
             </div>
           </div>
           <div class="kd6-ribbon-action">
-            <span class="kd6-price">₹${it.price || 3100}</span>
+            <span class="kd6-price">${E(cardPrice)}</span>
             <small>Direct Loom Rate</small>
           </div>
         </div>
-      `).join('')}
+      `;
+      }).join('')}
     </div>
     ${foot(c)}
   `;
@@ -2036,14 +2076,17 @@ function kd7_products(c, no, slice, pageIdx, totalPages) {
       <p>Oversized dual-spread master pieces featuring pure gold bullion zari pallus</p>
     </div>
     <div class="kd7-couture-grid">
-      ${slice.map((it, idx) => `
+      ${slice.map((it, idx) => {
+        const cardImg = it.img || it.image || (it.images && it.images[0] && (it.images[0].url || it.images[0])) || it.angle1 || '/assets/kota-doria/0X2A0389_db4c4b42-1d9b-405b-9ea0-664b5017af38.jpg';
+        const cardPrice = fmtPrice(it.price || 9500);
+        return `
         <div class="kd7-couture-card">
-          <div class="kd7-couture-img" style="${bg(it.img)}">
+          <div class="kd7-couture-img" style="${bg(cardImg)}">
             <span class="kd7-edition-chip">EDITION SERIAL #${pn(idx + 1)}/25</span>
           </div>
           <div class="kd7-couture-body">
             <div class="kd7-meta-row">
-              <span class="kd7-code">${E(it.code || `#KD7-NOIR-${pn(idx + 1)}`)}</span>
+              <span class="kd7-code">${E(it.sku || it.code || `#KD7-NOIR-${pn(idx + 1)}`)}</span>
               <span class="kd7-khat-tag">420 KHAT DENSITY</span>
             </div>
             <h3>${E(it.name || it.title || 'Haute Couture Saree')}</h3>
@@ -2055,12 +2098,13 @@ function kd7_products(c, no, slice, pageIdx, totalPages) {
               <div><span>Blouse Piece:</span> Included (80cm)</div>
             </div>
             <div class="kd7-couture-foot">
-              <span class="kd7-price">₹${it.price || 9500}</span>
+              <span class="kd7-price">${E(cardPrice)}</span>
               <span class="kd7-bespoke-tag">Bespoke Commission</span>
             </div>
           </div>
         </div>
-      `).join('')}
+      `;
+      }).join('')}
     </div>
     ${foot(c)}
   `;
@@ -2208,14 +2252,17 @@ function kd8_products(c, no, slice, pageIdx, totalPages) {
           </tr>
         </thead>
         <tbody>
-          ${slice.map((it, idx) => `
+          ${slice.map((it, idx) => {
+            const cardImg = it.img || it.image || (it.images && it.images[0] && (it.images[0].url || it.images[0])) || it.angle1 || '/assets/kota-doria/0X2A0389_db4c4b42-1d9b-405b-9ea0-664b5017af38.jpg';
+            const cardPrice = fmtPrice(it.price || 3200);
+            return `
             <tr>
               <td>
-                <div class="kd8-tbl-thumb" style="${bg(it.img)}"></div>
+                <div class="kd8-tbl-thumb" style="${bg(cardImg)}"></div>
               </td>
               <td>
                 <b>${E(it.name || it.title || 'Export Saree Batch')}</b>
-                <small>${E(it.code || `#KD8-EXP-${pn(idx + 1)}`)}</small>
+                <small>${E(it.sku || it.code || `#KD8-EXP-${pn(idx + 1)}`)}</small>
               </td>
               <td>
                 <span>Warp: 20/22D Silk</span>
@@ -2229,10 +2276,11 @@ function kd8_products(c, no, slice, pageIdx, totalPages) {
                 <code>5007.20.10</code>
               </td>
               <td>
-                <span class="kd8-price-pill">₹${it.price || 3200}</span>
+                <span class="kd8-price-pill">${E(cardPrice)}</span>
               </td>
             </tr>
-          `).join('')}
+          `;
+          }).join('')}
         </tbody>
       </table>
     </div>
@@ -2360,9 +2408,10 @@ const CSS = `
 .kd-head-tag { font-size: 9.5px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--acc); }
 .kd-head-num { font-size: 11px; font-weight: 800; background: var(--soft); color: var(--acc); padding: 3px 8px; border-radius: 4px; }
 .kd-foot {
-  position: absolute; bottom: 24px; left: 44px; right: 44px;
+  position: absolute; bottom: 20px; left: 44px; right: 44px;
   display: flex; justify-content: space-between; align-items: center;
-  border-top: 1px solid var(--line); padding-top: 10px; font-size: 9.5px; color: var(--muted);
+  border-top: 1px solid var(--line); padding-top: 8px; font-size: 9.5px; color: var(--muted);
+  z-index: 5;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -2418,21 +2467,79 @@ const CSS = `
   background: rgba(0,0,0,0.75); color: #fff; padding: 8px 12px; border-radius: 8px; font-size: 9.5px; text-align: center;
 }
 
-.kd1-head { margin-bottom: 20px; }
-.kd1-head h2 { font-family: var(--hf); font-size: 26px; margin: 0 0 4px; color: var(--ink); }
-.kd1-head p { font-size: 11.5px; color: var(--muted); margin: 0; }
-.kd1-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
-.kd1-card { background: #ffffff; border-radius: 16px; overflow: hidden; border: 2px solid var(--acc); box-shadow: 0 6px 18px rgba(0,0,0,0.06); }
-.kd1-img { height: 210px; background-size: cover; background-position: center; position: relative; }
-.kd1-tag { position: absolute; top: 12px; left: 12px; background: var(--acc); color: #fff; font-size: 9.5px; font-weight: 800; padding: 4px 10px; border-radius: 8px; letter-spacing: 0.1em; }
-.kd1-details { padding: 18px 20px; }
-.kd1-sku-chip { font-size: 9.5px; font-weight: 800; color: var(--acc); margin-bottom: 4px; }
-.kd1-details h3 { font-family: var(--hf); font-size: 17px; margin: 0 0 6px; }
-.kd1-desc { font-size: 11px; color: var(--muted); margin: 0 0 10px; line-height: 1.5; }
-.kd1-pills { display: flex; flex-direction: column; gap: 4px; font-size: 10.5px; color: var(--ink); margin-bottom: 12px; }
-.kd1-foot { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--line); padding-top: 10px; }
-.kd1-price { font-size: 16px; font-weight: 800; color: var(--acc); }
-.kd1-craft { font-size: 10px; color: var(--muted); font-weight: 700; text-transform: uppercase; }
+.kd1-head { margin-bottom: 12px; }
+.kd1-head h2 { font-family: var(--hf); font-size: 22px; margin: 0 0 3px; color: var(--ink); line-height: 1.2; }
+.kd1-head p { font-size: 11px; color: var(--muted); margin: 0; }
+.kd1-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 30px; }
+.kd1-card {
+  background: #ffffff;
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1.5px solid var(--acc);
+  box-shadow: 0 4px 14px rgba(0,0,0,0.05);
+  display: flex;
+  flex-direction: column;
+  height: 410px;
+  max-height: 410px;
+  box-sizing: border-box;
+}
+.kd1-img {
+  height: 185px;
+  min-height: 185px;
+  max-height: 185px;
+  background-size: cover;
+  background-position: center;
+  position: relative;
+  background-color: var(--soft);
+}
+.kd1-tag { position: absolute; top: 10px; left: 10px; background: var(--acc); color: #fff; font-size: 8.5px; font-weight: 800; padding: 3px 8px; border-radius: 6px; letter-spacing: 0.08em; }
+.kd1-details {
+  padding: 12px 14px 14px;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  justify-content: space-between;
+  box-sizing: border-box;
+}
+.kd1-sku-chip { font-size: 8.5px; font-weight: 800; color: var(--acc); margin-bottom: 3px; }
+.kd1-details h3 {
+  font-family: var(--hf);
+  font-size: 14.5px;
+  margin: 0 0 4px;
+  line-height: 1.25;
+  color: var(--ink);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.kd1-desc {
+  font-size: 10px;
+  color: var(--muted);
+  margin: 0 0 6px;
+  line-height: 1.35;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.kd1-pills {
+  display: flex;
+  flex-direction: column;
+  gap: 2.5px;
+  font-size: 9px;
+  color: var(--ink);
+  margin-bottom: 6px;
+  line-height: 1.3;
+}
+.kd1-pills span {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.kd1-foot { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--line); padding-top: 6px; margin-top: auto; }
+.kd1-price { font-size: 15px; font-weight: 800; color: var(--acc); line-height: 1; }
+.kd1-craft { font-size: 9px; color: var(--muted); font-weight: 700; text-transform: uppercase; }
 
 .kd1-tech-wrap { height: 860px; display: flex; flex-direction: column; justify-content: space-between; }
 .kd1-tech-hero h3 { font-family: var(--hf); font-size: 24px; margin: 0 0 6px; }
@@ -2564,20 +2671,56 @@ const CSS = `
 .kd3-curator-notes h4 { font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; margin: 0 0 8px; }
 .kd3-curator-notes ul { font-size: 11px; color: var(--muted); line-height: 1.6; padding-left: 18px; margin: 0; }
 
-.kd3-head { margin-bottom: 20px; }
-.kd3-head h2 { font-family: var(--hf); font-size: 26px; margin: 0 0 4px; }
-.kd3-head p { font-size: 11.5px; color: var(--muted); }
-.kd3-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
-.kd3-card { background: #ffffff; border-radius: 14px; overflow: hidden; border: 1px solid var(--line); }
-.kd3-img { height: 260px; background-size: cover; background-position: center; position: relative; }
-.kd3-look-num { position: absolute; top: 14px; left: 14px; background: rgba(0,0,0,0.8); color: #fff; font-size: 10px; font-weight: 800; padding: 4px 12px; border-radius: 20px; letter-spacing: 0.16em; }
-.kd3-info { padding: 18px 20px; }
-.kd3-code { font-size: 9px; font-weight: 800; color: var(--acc); margin-bottom: 4px; }
-.kd3-info h3 { font-family: var(--hf); font-size: 17px; margin: 0 0 6px; }
-.kd3-notes { font-size: 11px; color: var(--muted); line-height: 1.5; margin: 0 0 12px; }
-.kd3-foot { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--line); padding-top: 10px; }
-.kd3-price { font-size: 16px; font-weight: 800; color: var(--acc); }
-.kd3-label { font-size: 10px; color: var(--muted); font-weight: 700; text-transform: uppercase; }
+.kd3-head { margin-bottom: 12px; }
+.kd3-head h2 { font-family: var(--hf); font-size: 22px; margin: 0 0 3px; line-height: 1.2; }
+.kd3-head p { font-size: 11px; color: var(--muted); margin: 0; }
+.kd3-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 30px; }
+.kd3-card {
+  background: #ffffff;
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  display: flex;
+  flex-direction: column;
+  height: 410px;
+  max-height: 410px;
+  box-sizing: border-box;
+}
+.kd3-img {
+  height: 185px;
+  min-height: 185px;
+  max-height: 185px;
+  background-size: cover;
+  background-position: center;
+  position: relative;
+  background-color: var(--soft);
+}
+.kd3-look-num { position: absolute; top: 10px; left: 10px; background: rgba(0,0,0,0.8); color: #fff; font-size: 8.5px; font-weight: 800; padding: 3px 10px; border-radius: 20px; letter-spacing: 0.12em; }
+.kd3-info { padding: 12px 14px 14px; display: flex; flex-direction: column; flex: 1; justify-content: space-between; box-sizing: border-box; }
+.kd3-code { font-size: 8.5px; font-weight: 800; color: var(--acc); margin-bottom: 3px; }
+.kd3-info h3 {
+  font-family: var(--hf);
+  font-size: 14.5px;
+  margin: 0 0 4px;
+  line-height: 1.25;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.kd3-notes {
+  font-size: 10px;
+  color: var(--muted);
+  line-height: 1.35;
+  margin: 0 0 6px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.kd3-foot { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--line); padding-top: 6px; margin-top: auto; }
+.kd3-price { font-size: 15px; font-weight: 800; color: var(--acc); line-height: 1; }
+.kd3-label { font-size: 9px; color: var(--muted); font-weight: 700; text-transform: uppercase; }
 
 .kd3-tech-wrap { height: 860px; display: flex; flex-direction: column; justify-content: center; }
 .kd3-tech-header { text-align: center; margin-bottom: 40px; }
@@ -2627,20 +2770,57 @@ const CSS = `
 .kd4-card-text h4 { font-family: var(--hf); font-size: 18px; color: #881337; margin: 0 0 8px; }
 .kd4-card-text p { font-size: 11.5px; line-height: 1.6; color: var(--muted); margin: 0; }
 
-.kd4-head { margin-bottom: 20px; }
-.kd4-head h2 { font-family: var(--hf); font-size: 26px; color: #881337; margin: 0 0 4px; }
-.kd4-head p { font-size: 11.5px; color: var(--muted); }
-.kd4-products-mosaic { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-.kd4-product-card { background: #fff; border-radius: 16px; overflow: hidden; border: 1px solid #fecdd3; box-shadow: 0 6px 18px rgba(0,0,0,0.04); }
-.kd4-product-img { height: 180px; background-size: cover; background-position: center; position: relative; }
+.kd4-head { margin-bottom: 12px; }
+.kd4-head h2 { font-family: var(--hf); font-size: 22px; color: #881337; margin: 0 0 3px; line-height: 1.2; }
+.kd4-head p { font-size: 11px; color: var(--muted); margin: 0; }
+.kd4-products-mosaic { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 30px; }
+.kd4-product-card {
+  background: #fff;
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1px solid #fecdd3;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.04);
+  display: flex;
+  flex-direction: column;
+  height: 410px;
+  max-height: 410px;
+  box-sizing: border-box;
+}
+.kd4-product-img {
+  height: 185px;
+  min-height: 185px;
+  max-height: 185px;
+  background-size: cover;
+  background-position: center;
+  position: relative;
+  background-color: #fff1f2;
+}
 .kd4-festive-tag { position: absolute; top: 10px; left: 10px; background: #be123c; color: #fff; font-size: 8.5px; font-weight: 800; padding: 3px 8px; border-radius: 4px; letter-spacing: 0.08em; }
-.kd4-product-body { padding: 14px 16px; }
-.kd4-code { font-size: 9px; font-weight: 800; color: #be123c; margin-bottom: 2px; }
-.kd4-product-body h3 { font-family: var(--hf); font-size: 15px; margin: 0 0 4px; }
-.kd4-product-body p { font-size: 10.5px; color: var(--muted); margin: 0 0 10px; }
-.kd4-product-foot { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #fecdd3; padding-top: 8px; }
-.kd4-price { font-size: 15px; font-weight: 800; color: #be123c; }
-.kd4-gift-badge { font-size: 9.5px; color: #059669; font-weight: 700; }
+.kd4-product-body { padding: 12px 14px 14px; display: flex; flex-direction: column; flex: 1; justify-content: space-between; box-sizing: border-box; }
+.kd4-code { font-size: 8.5px; font-weight: 800; color: #be123c; margin-bottom: 3px; }
+.kd4-product-body h3 {
+  font-family: var(--hf);
+  font-size: 14.5px;
+  margin: 0 0 4px;
+  line-height: 1.25;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.kd4-product-body p {
+  font-size: 10px;
+  color: var(--muted);
+  margin: 0 0 6px;
+  line-height: 1.35;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.kd4-product-foot { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #fecdd3; padding-top: 6px; margin-top: auto; }
+.kd4-price { font-size: 15px; font-weight: 800; color: #be123c; line-height: 1; }
+.kd4-gift-badge { font-size: 9px; color: #059669; font-weight: 700; }
 
 .kd4-tech-wrap { height: 860px; }
 .kd4-tech-wrap h3 { font-family: var(--hf); font-size: 24px; color: #881337; margin: 0 0 16px; }
@@ -2682,21 +2862,57 @@ const CSS = `
 .kd5-style-card h4 { font-size: 14px; margin: 0 0 6px; }
 .kd5-style-card p { font-size: 11px; line-height: 1.6; color: var(--muted); margin: 0; }
 
-.kd5-head { margin-bottom: 20px; }
-.kd5-head h2 { font-family: var(--hf); font-size: 26px; margin: 0 0 4px; }
-.kd5-head p { font-size: 11.5px; color: var(--muted); }
-.kd5-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-.kd5-card { background: #fff; border-radius: 14px; overflow: hidden; border: 1px solid var(--line); }
-.kd5-img { height: 190px; background-size: cover; background-position: center; position: relative; }
+.kd5-head { margin-bottom: 12px; }
+.kd5-head h2 { font-family: var(--hf); font-size: 22px; margin: 0 0 3px; line-height: 1.2; }
+.kd5-head p { font-size: 11px; color: var(--muted); margin: 0; }
+.kd5-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 30px; }
+.kd5-card {
+  background: #fff;
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  display: flex;
+  flex-direction: column;
+  height: 410px;
+  max-height: 410px;
+  box-sizing: border-box;
+}
+.kd5-img {
+  height: 185px;
+  min-height: 185px;
+  max-height: 185px;
+  background-size: cover;
+  background-position: center;
+  position: relative;
+  background-color: var(--soft);
+}
 .kd5-tassel-badge { position: absolute; top: 10px; right: 10px; background: var(--dark); color: #fff; font-size: 8.5px; font-weight: 800; padding: 3px 8px; border-radius: 4px; }
-.kd5-body { padding: 14px 16px; }
-.kd5-code { font-size: 9px; font-weight: 800; color: var(--acc); margin-bottom: 2px; }
-.kd5-body h3 { font-family: var(--hf); font-size: 16px; margin: 0 0 4px; }
-.kd5-body p { font-size: 11px; color: var(--muted); margin: 0 0 8px; }
-.kd5-specs { display: flex; gap: 12px; font-size: 10px; color: var(--muted); margin-bottom: 8px; }
-.kd5-foot { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--line); padding-top: 8px; }
-.kd5-price { font-size: 15px; font-weight: 800; color: var(--acc); }
-.kd5-moq { font-size: 9.5px; color: var(--muted); font-weight: 700; }
+.kd5-body { padding: 12px 14px 14px; display: flex; flex-direction: column; flex: 1; justify-content: space-between; box-sizing: border-box; }
+.kd5-code { font-size: 8.5px; font-weight: 800; color: var(--acc); margin-bottom: 3px; }
+.kd5-body h3 {
+  font-family: var(--hf);
+  font-size: 14.5px;
+  margin: 0 0 4px;
+  line-height: 1.25;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.kd5-body p {
+  font-size: 10px;
+  color: var(--muted);
+  margin: 0 0 6px;
+  line-height: 1.35;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.kd5-specs { display: flex; gap: 12px; font-size: 9.5px; color: var(--muted); margin-bottom: 6px; }
+.kd5-foot { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--line); padding-top: 6px; margin-top: auto; }
+.kd5-price { font-size: 15px; font-weight: 800; color: var(--acc); line-height: 1; }
+.kd5-moq { font-size: 9px; color: var(--muted); font-weight: 700; }
 
 .kd5-tech-wrap { height: 860px; }
 .kd5-tech-wrap h3 { font-family: var(--hf); font-size: 24px; margin: 0 0 20px; }

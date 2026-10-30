@@ -915,21 +915,21 @@ const CSS = `
 .ss1-mode .ss1-lead { font-size: 13.5px; line-height: 1.7; color: var(--muted); max-width: 600px; margin: 0 auto 16px; }
 .ss1-mode .ss1-pills { display: flex; justify-content: center; gap: 16px; }
 .ss1-mode .ss1-pills span { font-size: 11px; color: var(--dark); font-weight: 700; background: var(--soft); padding: 5px 12px; border-radius: 12px; }
-.ss1-mode .ss1-head { margin-bottom: 20px; text-align: center; }
-.ss1-mode .ss1-head h2 { font-family: var(--hf); font-size: 28px; margin: 0 0 4px; }
-.ss1-mode .ss1-head p { font-size: 12px; color: var(--muted); }
-.ss1-mode .ss1-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
-.ss1-mode .ss1-card { background: #ffffff; border-radius: 16px; overflow: hidden; border: 1px solid var(--line); box-shadow: 0 4px 14px rgba(0,0,0,0.04); }
-.ss1-mode .ss1-card-img { height: 200px; background-size: cover; background-position: center; position: relative; }
-.ss1-mode .ss1-code { position: absolute; top: 12px; left: 12px; background: rgba(0,0,0,0.7); color: #fff; font-size: 9.5px; padding: 4px 10px; border-radius: 10px; }
-.ss1-mode .ss1-card-body { padding: 18px 20px; }
-.ss1-mode .ss1-card-body h3 { font-family: var(--hf); font-size: 17px; margin: 0 0 6px; }
-.ss1-mode .ss1-finish-tag { font-size: 10.5px; color: var(--acc); font-weight: 700; margin-bottom: 10px; }
-.ss1-mode .ss1-specs { font-size: 11px; color: var(--muted); line-height: 1.5; margin-bottom: 12px; }
+.ss1-mode .ss1-head { margin-bottom: 14px; text-align: center; }
+.ss1-mode .ss1-head h2 { font-family: var(--hf); font-size: 24px; margin: 0 0 3px; }
+.ss1-mode .ss1-head p { font-size: 11px; color: var(--muted); }
+.ss1-mode .ss1-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 30px; }
+.ss1-mode .ss1-card { background: #ffffff; border-radius: 14px; overflow: hidden; border: 1px solid var(--line); box-shadow: 0 4px 14px rgba(0,0,0,0.04); display: flex; flex-direction: column; height: 410px; max-height: 410px; box-sizing: border-box; }
+.ss1-mode .ss1-card-img { height: 180px; min-height: 180px; max-height: 180px; background-size: cover; background-position: center; position: relative; }
+.ss1-mode .ss1-code { position: absolute; top: 10px; left: 10px; background: rgba(0,0,0,0.7); color: #fff; font-size: 8.5px; padding: 3px 8px; border-radius: 6px; }
+.ss1-mode .ss1-card-body { padding: 12px 14px 14px; display: flex; flex-direction: column; flex: 1; justify-content: space-between; box-sizing: border-box; }
+.ss1-mode .ss1-card-body h3 { font-family: var(--hf); font-size: 14.5px; margin: 0 0 4px; line-height: 1.25; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.ss1-mode .ss1-finish-tag { font-size: 10px; color: var(--acc); font-weight: 700; margin-bottom: 6px; }
+.ss1-mode .ss1-specs { font-size: 10.5px; color: var(--muted); line-height: 1.4; margin-bottom: 8px; }
 .ss1-mode .ss1-specs b { color: var(--ink); }
-.ss1-mode .ss1-foot { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--line); padding-top: 10px; }
-.ss1-mode .ss1-price { font-size: 15px; font-weight: 800; color: var(--acc); }
-.ss1-mode .ss1-moq { font-size: 10.5px; color: var(--muted); font-weight: 600; }
+.ss1-mode .ss1-foot { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--line); padding-top: 6px; margin-top: auto; }
+.ss1-mode .ss1-price { font-size: 15px; font-weight: 800; color: var(--acc); line-height: 1; }
+.ss1-mode .ss1-moq { font-size: 10px; color: var(--muted); font-weight: 600; }
 
 /* =========================================================================
    STYLE SUITE 2: RAINBOW & TEAKWOOD EXOTIC (ss2-mode Butterfly Bookmatch)
