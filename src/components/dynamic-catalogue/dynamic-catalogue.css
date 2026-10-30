@@ -1,0 +1,860 @@
+/* Dynamic Catalogue Studio & In-Place Design Editor CSS adapted from odop-kritika */
+
+/* ---------- Preview Area & Pages ---------- */
+.dyn-preview-container {
+  overflow: hidden;
+  background: linear-gradient(135deg, #1e2538 0%, #111827 100%);
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.4);
+  position: relative;
+  min-height: 500px;
+}
+
+.dyn-preview-scaler {
+  transform-origin: top left;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+#previewHost {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  width: 100%;
+}
+
+.pvpage {
+  position: relative;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.45);
+  border-radius: 4px;
+  background: #ffffff;
+  transition: box-shadow 0.2s ease;
+}
+
+.editing .pvpage {
+  cursor: default;
+}
+
+.editing [contenteditable=true] {
+  cursor: text !important;
+  user-select: text !important;
+  -webkit-user-select: text !important;
+  outline: 2px dashed #2563eb !important;
+  outline-offset: 3px !important;
+  background-color: rgba(37, 99, 235, 0.08) !important;
+  border-radius: 4px !important;
+  min-width: 1ch;
+}
+
+.pvpage .pg {
+  margin: 0 !important;
+}
+
+.pvtag {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+  background: rgba(15, 23, 42, 0.75);
+  backdrop-filter: blur(4px);
+  color: #f8fafc;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 99px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  pointer-events: none;
+  z-index: 10;
+}
+
+/* ---------- In-Place Design Editor Controls ---------- */
+.dz-sel {
+  position: absolute;
+  border: 2px solid #3b82f6;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.95), 0 0 0 4px rgba(59, 130, 246, 0.25);
+  cursor: default;
+  z-index: 500;
+  touch-action: none;
+  pointer-events: none; /* Allows text selection and typing inside the element */
+}
+
+/* Ensure handles, edge hitboxes and move pill always receive pointer events */
+.dz-sel i,
+.dz-sel .dz-border,
+.dz-sel .dz-move-handle {
+  pointer-events: auto !important;
+}
+
+/* Invisible full-edge drag hitboxes along each side */
+.dz-sel .dz-border {
+  position: absolute;
+  z-index: 510;
+}
+.dz-sel .dz-border-n {
+  top: -6px;
+  left: 12px;
+  right: 12px;
+  height: 12px;
+  cursor: ns-resize;
+}
+.dz-sel .dz-border-s {
+  bottom: -6px;
+  left: 12px;
+  right: 12px;
+  height: 12px;
+  cursor: ns-resize;
+}
+.dz-sel .dz-border-w {
+  left: -6px;
+  top: 12px;
+  bottom: 12px;
+  width: 12px;
+  cursor: ew-resize;
+}
+.dz-sel .dz-border-e {
+  right: -6px;
+  top: 12px;
+  bottom: 12px;
+  width: 12px;
+  cursor: ew-resize;
+}
+
+/* Corner handles */
+.dz-sel i.dz-corner {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  background: #ffffff;
+  border: 2px solid #2563eb;
+  border-radius: 3px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+  z-index: 525;
+  transition: transform 0.1s, background 0.1s;
+}
+.dz-sel i.dz-corner:hover {
+  background: #dbeafe;
+  border-color: #1d4ed8;
+  transform: scale(1.15);
+}
+
+.dz-sel i[data-h=nw] { left: -7px; top: -7px; cursor: nwse-resize; }
+.dz-sel i[data-h=ne] { right: -7px; top: -7px; cursor: nesw-resize; }
+.dz-sel i[data-h=sw] { left: -7px; bottom: -7px; cursor: nesw-resize; }
+.dz-sel i[data-h=se] { right: -7px; bottom: -7px; cursor: nwse-resize; }
+
+/* Edge handles with visible directional arrows ↔ and ↕ */
+.dz-sel i.dz-edge {
+  position: absolute;
+  background: #ffffff;
+  border: 2px solid #2563eb;
+  border-radius: 6px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+  z-index: 520;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  user-select: none;
+  transition: transform 0.1s, background 0.1s, color 0.1s;
+}
+.dz-sel i.dz-edge span {
+  font-size: 11px;
+  font-weight: 800;
+  color: #2563eb;
+  line-height: 1;
+  pointer-events: none;
+}
+.dz-sel i.dz-edge:hover {
+  background: #2563eb;
+  border-color: #1d4ed8;
+}
+.dz-sel i.dz-edge:hover span {
+  color: #ffffff;
+}
+
+.dz-sel i.dz-edge-e {
+  right: -8px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 16px;
+  height: 32px;
+  cursor: ew-resize;
+}
+.dz-sel i.dz-edge-e:hover {
+  transform: translateY(-50%) scale(1.1);
+}
+
+.dz-sel i.dz-edge-w {
+  left: -8px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 16px;
+  height: 32px;
+  cursor: ew-resize;
+}
+.dz-sel i.dz-edge-w:hover {
+  transform: translateY(-50%) scale(1.1);
+}
+
+.dz-sel i.dz-edge-n {
+  top: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 32px;
+  height: 16px;
+  cursor: ns-resize;
+}
+.dz-sel i.dz-edge-n:hover {
+  transform: translateX(-50%) scale(1.1);
+}
+
+.dz-sel i.dz-edge-s {
+  bottom: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 32px;
+  height: 16px;
+  cursor: ns-resize;
+}
+.dz-sel i.dz-edge-s:hover {
+  transform: translateX(-50%) scale(1.1);
+}
+
+.dz-sel .dz-move-handle {
+  position: absolute;
+  top: -32px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #2563eb;
+  color: #ffffff;
+  border: 1.5px solid #ffffff;
+  border-radius: 99px;
+  padding: 3px 12px;
+  font-size: 11px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  cursor: grab;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  white-space: nowrap;
+  width: auto;
+  height: auto;
+  user-select: none;
+  z-index: 600;
+}
+.dz-sel .dz-move-handle:active {
+  cursor: grabbing;
+  background: #1d4ed8;
+}
+
+/* Swap Image floating handle for selected photo on canvas */
+.dz-sel .dz-swap-handle {
+  position: absolute;
+  top: -34px;
+  left: 6px;
+  background: linear-gradient(135deg, #8b5cf6, #6d28d9);
+  color: #ffffff;
+  border: 1.5px solid #ffffff;
+  border-radius: 99px;
+  padding: 4px 12px;
+  font-size: 11px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(109, 40, 217, 0.5);
+  white-space: nowrap;
+  user-select: none;
+  z-index: 610;
+  pointer-events: auto !important;
+  transition: transform 0.15s ease, background 0.15s ease;
+}
+.dz-sel .dz-swap-handle:hover {
+  transform: scale(1.05);
+  background: linear-gradient(135deg, #7c3aed, #5b21b6);
+}
+.dz-sel.is-photo .dz-move-handle {
+  left: auto;
+  right: 6px;
+  transform: none;
+}
+
+/* Drop target highlight when dragging photos onto canvas */
+.dz-drop-target {
+  outline: 3px dashed #10b981 !important;
+  outline-offset: 4px !important;
+  box-shadow: 0 0 25px rgba(16, 185, 129, 0.6) !important;
+  transition: all 0.15s ease;
+}
+
+/* Draggable asset thumbnail in tray */
+.draggable-asset {
+  cursor: grab;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  user-select: none;
+}
+.draggable-asset:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.35);
+}
+.draggable-asset:active {
+  cursor: grabbing;
+  opacity: 0.8;
+}
+
+/* Drag & Drop Page Reorder Pill */
+.page-reorder-chip {
+  cursor: grab;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+.page-reorder-chip:active {
+  cursor: grabbing;
+}
+.page-reorder-chip.drag-over {
+  border-color: #3b82f6 !important;
+  background: rgba(59, 130, 246, 0.25) !important;
+  transform: scale(1.05);
+}
+
+.dz-hov {
+  position: absolute;
+  border: 2px dashed rgba(59, 130, 246, 0.75);
+  pointer-events: none;
+  z-index: 400;
+}
+
+/* ---------- Top Sticky Edit Panel ---------- */
+.hidden,
+.editpanel.hidden {
+  display: none !important;
+}
+
+.editpanel {
+  position: sticky;
+  top: 12px;
+  z-index: 300;
+  background: rgba(30, 41, 59, 0.95);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  border-radius: 14px;
+  padding: 10px 16px;
+  margin-bottom: 16px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+  color: #f1f5f9;
+}
+
+.ep-line {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin: 3px 0;
+}
+
+.ep-line b {
+  font-size: 14px;
+  color: #38bdf8;
+}
+
+.ep-hint {
+  font-size: 13px;
+  color: #cbd5e1;
+  flex: 1 1 200px;
+}
+
+.ep-line button {
+  padding: 6px 14px;
+  font-size: 13px;
+  border-radius: 8px;
+  background: rgba(51, 65, 85, 0.8);
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  color: #ffffff;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.ep-line button:hover {
+  background: rgba(71, 85, 105, 0.9);
+}
+
+.ep-line button.done {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  border-color: #059669;
+}
+
+.ep-line button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ---------- Floating Toolbar Next to Selected Element ---------- */
+.dz-bar {
+  position: fixed;
+  z-index: 2000;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 14px;
+  box-shadow: 0 16px 40px rgba(15, 23, 42, 0.28);
+  padding: 10px 14px;
+  width: 350px;
+  max-width: calc(100vw - 20px);
+  font-family: 'Poppins', sans-serif;
+  color: #0f172a;
+}
+
+.dz-bar .bar-row {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  margin: 5px 0;
+  flex-wrap: wrap;
+}
+
+.dz-bar .bar-row > span {
+  width: 44px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  flex: none;
+}
+
+.dz-bar button {
+  padding: 5px 8px;
+  font-size: 11.5px;
+  border-radius: 6px;
+  background: #f8fafc;
+  border: 1.5px solid #e2e8f0;
+  color: #1e293b;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.12s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dz-bar button:hover {
+  background: #e2e8f0;
+  border-color: #cbd5e1;
+}
+
+.dz-bar button.on {
+  background: #2563eb;
+  color: #ffffff;
+  border-color: #2563eb;
+}
+
+.dz-bar button.wide {
+  flex: 1;
+}
+
+.dz-bar select {
+  flex: 1;
+  min-width: 0;
+  padding: 5px 8px;
+  font-size: 11.5px;
+  border-radius: 6px;
+  border: 1.5px solid #cbd5e1;
+  background: #ffffff;
+  color: #0f172a;
+  outline: none;
+  font-weight: 600;
+}
+
+.dz-bar select:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+}
+
+.dz-bar input[type=range] {
+  flex: 1;
+  min-width: 0;
+  accent-color: #2563eb;
+}
+
+.dz-bar em {
+  font-style: normal;
+  font-size: 11.5px;
+  width: 38px;
+  text-align: right;
+  color: #64748b;
+}
+
+.dz-bar input[type=color] {
+  width: 34px;
+  height: 30px;
+  padding: 1px;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 8px;
+  background: #ffffff;
+  cursor: pointer;
+}
+
+.dz-bar .bar-end {
+  justify-content: flex-end;
+  border-top: 1px solid #e2e8f0;
+  padding-top: 8px;
+  margin-top: 8px;
+}
+
+.dz-bar .bar-layers button {
+  padding: 4px 8px;
+  font-size: 11px;
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dz-bar .bar-row-shapes {
+  align-items: flex-start;
+}
+
+.dz-bar .bar-row-shapes > span {
+  padding-top: 5px;
+}
+
+.dz-bar .shp-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  flex: 1;
+}
+
+.dz-bar .shp {
+  width: 32px;
+  height: 28px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+}
+
+.dz-bar .shp i {
+  display: block;
+  width: 14px;
+  height: 14px;
+  border: 1.5px solid currentColor;
+  background: rgba(37, 99, 235, 0.15);
+  box-sizing: border-box;
+}
+
+.dz-bar button.on.shp i {
+  background: rgba(255, 255, 255, 0.35);
+}
+
+.dz-bar .shp-original i { border-radius: 2px; width: 17px; height: 11px; }
+.dz-bar .shp-square i { border-radius: 0; }
+.dz-bar .shp-rounded i { border-radius: 4px; }
+.dz-bar .shp-circle i { border-radius: 50%; }
+.dz-bar .shp-arch i { border-radius: 7px 7px 0 0; }
+.dz-bar .shp-pill i { border-radius: 999px; width: 18px; height: 10px; }
+.dz-bar .shp-leaf i { border-radius: 7px 0 7px 0; }
+.dz-bar .shp-diamond i { border-radius: 0; width: 10px; height: 10px; transform: rotate(45deg); }
+.dz-bar .shp-hex i {
+  border: none;
+  background: currentColor;
+  clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%);
+  width: 14px;
+  height: 14px;
+}
+.dz-bar .shp-octagon i {
+  border: none;
+  background: currentColor;
+  clip-path: polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%);
+  width: 14px;
+  height: 14px;
+}
+.dz-bar .shp-shield i {
+  border: none;
+  background: currentColor;
+  clip-path: polygon(50% 0%, 100% 0%, 100% 68%, 50% 100%, 0% 68%, 0% 0%);
+  width: 13px;
+  height: 15px;
+}
+.dz-bar .shp-star i {
+  border: none;
+  background: currentColor;
+  clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
+  width: 15px;
+  height: 15px;
+}
+
+/* ---------- Template Categories & Cards Grid ---------- */
+.tgrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 14px;
+  margin-top: 14px;
+  max-height: 520px;
+  overflow-y: auto;
+  padding: 4px;
+  scrollbar-width: thin;
+}
+
+.tc {
+  border: 2px solid var(--border-subtle, #334155);
+  border-radius: 12px;
+  padding: 10px;
+  background: var(--bg-surface, #1e293b);
+  cursor: pointer;
+  transition: all 0.18s ease;
+  display: flex;
+  flex-direction: column;
+}
+
+.tc:hover {
+  transform: translateY(-2px);
+  border-color: #60a5fa;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+}
+
+.tc.on {
+  border-color: #3b82f6;
+  background: rgba(59, 130, 246, 0.15);
+  box-shadow: 0 0 0 1px #3b82f6;
+}
+
+.tc .th {
+  width: 100%;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #0f172a;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tc .ph0 {
+  height: 100%;
+  min-height: 85px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.tc .ph0 i {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: inline-block;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+}
+
+.tc b {
+  display: block;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-primary, #f8fafc);
+  line-height: 1.3;
+}
+
+.tc small {
+  display: block;
+  font-size: 11px;
+  color: var(--text-muted, #94a3b8);
+  margin-top: 3px;
+}
+
+.tback {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+/* ---------- Palette Swatches ---------- */
+.swatches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  margin-top: 8px;
+}
+
+.sw {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 2px solid #ffffff;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.15), 0 3px 8px rgba(0, 0, 0, 0.2);
+  cursor: pointer;
+  padding: 0;
+  transition: transform 0.12s ease;
+}
+
+.sw:hover {
+  transform: scale(1.15);
+}
+
+.sw.on {
+  box-shadow: 0 0 0 3px #3b82f6, 0 4px 12px rgba(59, 130, 246, 0.4);
+}
+
+.sw-orig {
+  width: auto;
+  height: 32px;
+  border-radius: 99px;
+  padding: 0 14px;
+  background: var(--bg-surface, #1e293b);
+  border: 1.5px solid var(--border-subtle, #334155);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-primary, #f8fafc);
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+.sw-orig.on {
+  border-color: #3b82f6;
+  background: rgba(59, 130, 246, 0.2);
+}
+
+/* ---------- Drag and Drop Enhancements ---------- */
+.dz-move-handle {
+  position: absolute;
+  top: -28px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #2563eb;
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  padding: 3px 10px;
+  border-radius: 9999px;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4), 0 1px 3px rgba(0, 0, 0, 0.2);
+  cursor: grab;
+  user-select: none;
+  white-space: nowrap;
+  pointer-events: auto;
+  z-index: 10002;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  transition: transform 0.1s ease, background 0.1s ease;
+}
+
+.dz-move-handle:hover {
+  background: #1d4ed8;
+  transform: translateX(-50%) scale(1.05);
+}
+
+.dz-move-handle:active {
+  cursor: grabbing;
+  background: #1e40af;
+}
+
+/* Glowing dropzone target when dragging photos over canvas elements */
+.dz-drop-target {
+  outline: 3px dashed #10b981 !important;
+  outline-offset: 4px !important;
+  box-shadow: 0 0 20px rgba(16, 185, 129, 0.6) !important;
+  background-color: rgba(16, 185, 129, 0.15) !important;
+  transition: all 0.15s ease-in-out !important;
+}
+
+/* Draggable asset cards */
+.draggable-asset-card {
+  cursor: grab;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+  user-select: none;
+}
+
+.draggable-asset-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+  border-color: #3b82f6 !important;
+}
+
+.draggable-asset-card:active {
+  cursor: grabbing;
+  opacity: 0.7;
+}
+
+/* Page reordering chips */
+.page-reorder-chip {
+  cursor: grab;
+  transition: transform 0.15s ease, background 0.15s ease;
+  user-select: none;
+}
+
+.page-reorder-chip:hover {
+  transform: translateY(-2px);
+  border-color: #3b82f6 !important;
+}
+
+.page-reorder-chip:active {
+  cursor: grabbing;
+}
+
+.page-reorder-chip.drag-over {
+  border-color: #10b981 !important;
+  background: rgba(16, 185, 129, 0.15) !important;
+}
+
+/* Custom User Elements on Page */
+.custom-user-el {
+  transition: outline 0.12s ease;
+  user-select: text;
+}
+
+.custom-user-el:hover {
+  outline: 1.5px dashed rgba(59, 130, 246, 0.6);
+  outline-offset: 2px;
+}
+
+.custom-user-el:focus {
+  outline: 2px solid #3b82f6 !important;
+  outline-offset: 2px;
+}
+
+.add-element-card {
+  transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.add-element-card:hover {
+  transform: translateY(-2px);
+  border-color: #2563eb !important;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.12);
+}
+
+/* Swap Image Modal Thumbnails & Overlay */
+.swap-thumb-card:hover {
+  transform: translateY(-2px);
+  border-color: #8b5cf6 !important;
+  box-shadow: 0 6px 18px rgba(139, 92, 246, 0.25) !important;
+}
+.swap-thumb-card .swap-hover-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(109, 40, 217, 0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 800;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+  backdrop-filter: blur(2px);
+}
+.swap-thumb-card:hover .swap-hover-overlay {
+  opacity: 1;
+}
+
+
+
