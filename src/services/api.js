@@ -23,31 +23,7 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-// Smart fallback interceptor: seamlessly fall back between local backend and remote live API
-api.interceptors.response.use(
-  (response) => response,
-  async (error) => {
-    const originalRequest = error.config;
-    if (!originalRequest || originalRequest._retryFallback) {
-      return Promise.reject(error);
-    }
 
-    if (typeof window !== "undefined" && window.location.hostname === "localhost") {
-      originalRequest._retryFallback = true;
-      const currentBase = originalRequest.baseURL || API_BASE_URL;
-      const isRemote = currentBase.includes("catlougeapi.geoplanetsolution.com");
-      const fallbackBase = isRemote
-        ? "http://localhost:5012/api"
-        : "https://catlougeapi.geoplanetsolution.com/api";
-
-      console.warn(`[API] Connection to ${currentBase} failed. Trying fallback ${fallbackBase}...`);
-      originalRequest.baseURL = fallbackBase;
-      return api(originalRequest);
-    }
-
-    return Promise.reject(error);
-  }
-);
 
 // --- AUTHENTICATION ---
 export const loginUser = async (credentials) => {
