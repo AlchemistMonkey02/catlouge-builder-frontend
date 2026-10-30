@@ -1,10 +1,17 @@
 import axios from "axios";
+import {
+  API_BASE_URL,
+  API_TIMEOUT,
+  API_ENDPOINTS,
+  getAbsoluteApiUrl,
+} from "../config/api.config";
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+// Re-export config and endpoints for direct access from any consumer
+export { API_BASE_URL, API_TIMEOUT, API_ENDPOINTS, getAbsoluteApiUrl };
 
 const api = axios.create({
-  baseURL: API_URL,
-  timeout: 45000,
+  baseURL: API_BASE_URL,
+  timeout: API_TIMEOUT,
 });
 
 // Attach stored auth token if available
@@ -16,42 +23,84 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+// Smart fallback interceptor: seamlessly fall back between local backend and remote live API
+api.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    const originalRequest = error.config;
+    if (!originalRequest || originalRequest._retryFallback) {
+      return Promise.reject(error);
+    }
+
+    if (typeof window !== "undefined" && window.location.hostname === "localhost") {
+      originalRequest._retryFallback = true;
+      const currentBase = originalRequest.baseURL || API_BASE_URL;
+      const isRemote = currentBase.includes("catlougeapi.geoplanetsolution.com");
+      const fallbackBase = isRemote
+        ? "http://localhost:5012/api"
+        : "https://catlougeapi.geoplanetsolution.com/api";
+
+      console.warn(`[API] Connection to ${currentBase} failed. Trying fallback ${fallbackBase}...`);
+      originalRequest.baseURL = fallbackBase;
+      return api(originalRequest);
+    }
+
+    return Promise.reject(error);
+  }
+);
+
+// --- AUTHENTICATION ---
+export const loginUser = async (credentials) => {
+  const { data } = await api.post(API_ENDPOINTS.AUTH.LOGIN, credentials);
+  return data;
+};
+
+export const registerUser = async (payload) => {
+  const { data } = await api.post(API_ENDPOINTS.AUTH.REGISTER, payload);
+  return data;
+};
+
+export const fetchCurrentUser = async () => {
+  const { data } = await api.get(API_ENDPOINTS.AUTH.ME);
+  return data;
+};
+
 // --- CATALOGUE PRODUCTS ---
 export const fetchCatalogueProducts = async (params = {}) => {
   const cleanParams = Object.fromEntries(
     Object.entries(params).filter(([, v]) => v !== "" && v !== undefined && v !== null)
   );
-  const { data } = await api.get("/catalogue-products", { params: cleanParams });
+  const { data } = await api.get(API_ENDPOINTS.CATALOGUE_PRODUCTS.BASE, { params: cleanParams });
   return data;
 };
 
 export const fetchCatalogueProductById = async (id) => {
-  const { data } = await api.get(`/catalogue-products/${id}`);
+  const { data } = await api.get(API_ENDPOINTS.CATALOGUE_PRODUCTS.BY_ID(id));
   return data;
 };
 
 export const createCatalogueProduct = async (payload) => {
-  const { data } = await api.post("/catalogue-products", payload);
+  const { data } = await api.post(API_ENDPOINTS.CATALOGUE_PRODUCTS.BASE, payload);
   return data;
 };
 
 export const updateCatalogueProduct = async (id, payload) => {
-  const { data } = await api.put(`/catalogue-products/${id}`, payload);
+  const { data } = await api.put(API_ENDPOINTS.CATALOGUE_PRODUCTS.BY_ID(id), payload);
   return data;
 };
 
 export const deleteCatalogueProduct = async (id) => {
-  const { data } = await api.delete(`/catalogue-products/${id}`);
+  const { data } = await api.delete(API_ENDPOINTS.CATALOGUE_PRODUCTS.BY_ID(id));
   return data;
 };
 
 export const duplicateCatalogueProduct = async (id) => {
-  const { data } = await api.post(`/catalogue-products/${id}/duplicate`);
+  const { data } = await api.post(API_ENDPOINTS.CATALOGUE_PRODUCTS.DUPLICATE(id));
   return data;
 };
 
 export const executeBulkActions = async (productIds, action, payload = {}) => {
-  const { data } = await api.post("/catalogue-products/bulk-actions", {
+  const { data } = await api.post(API_ENDPOINTS.CATALOGUE_PRODUCTS.BULK_ACTIONS, {
     productIds,
     action,
     payload,
@@ -60,39 +109,11 @@ export const executeBulkActions = async (productIds, action, payload = {}) => {
 };
 
 export const toggleProductFieldLock = async (id, field) => {
-  const { data } = await api.post(`/catalogue-products/${id}/toggle-lock`, { field });
+  const { data } = await api.post(API_ENDPOINTS.CATALOGUE_PRODUCTS.TOGGLE_LOCK(id), { field });
   return data;
 };
 
-// --- AI CONTENT ENGINE (Commented out - AI features removed) ---
-/*
-export const generateAiContent = async (payload) => {
-  const { data } = await api.post("/ai/generate", payload);
-  return data;
-};
-
-export const predictAiCategory = async (text) => {
-  const { data } = await api.post("/ai/predict-category", { text });
-  return data;
-};
-
-export const rewriteAiField = async (payload) => {
-  const { data } = await api.post("/ai/rewrite-field", payload);
-  return data;
-};
-
-export const extractProductFromUrl = async (url) => {
-  const { data } = await api.post("/ai/extract-from-url", { url });
-  return data;
-};
-
-export const extractProductFromPdf = async (formData) => {
-  const { data } = await api.post("/ai/extract-from-pdf", formData, {
-    headers: { "Content-Type": "multipart/form-data" },
-  });
-  return data;
-};
-*/
+// --- AI CONTENT ENGINE (Commented out / stubs) ---
 export const generateAiContent = async () => ({ data: {} });
 export const predictAiCategory = async () => ({ data: {} });
 export const rewriteAiField = async () => ({ data: {} });
@@ -101,54 +122,54 @@ export const extractProductFromPdf = async () => ({ data: {} });
 
 // --- BULK IMPORT ---
 export const uploadSpreadsheetForPreview = async (formData) => {
-  const { data } = await api.post("/bulk/upload", formData, {
+  const { data } = await api.post(API_ENDPOINTS.BULK.UPLOAD, formData, {
     headers: { "Content-Type": "multipart/form-data" },
   });
   return data;
 };
 
 export const processBulkImportJob = async (payload) => {
-  const { data } = await api.post("/bulk/process", payload);
+  const { data } = await api.post(API_ENDPOINTS.BULK.PROCESS, payload);
   return data;
 };
 
 export const fetchBatchStatus = async (batchId) => {
-  const { data } = await api.get(`/bulk/status/${batchId}`);
+  const { data } = await api.get(API_ENDPOINTS.BULK.STATUS(batchId));
   return data;
 };
 
 export const getDownloadTemplateUrl = (format = "xlsx") => {
-  return `${API_URL}/bulk/template/${format}`;
+  return getAbsoluteApiUrl(API_ENDPOINTS.BULK.TEMPLATE(format));
 };
 
 export const getDownloadErrorUrl = (batchId) => {
-  return `${API_URL}/bulk/errors/${batchId}`;
+  return getAbsoluteApiUrl(API_ENDPOINTS.BULK.ERRORS(batchId));
 };
 
 // --- IMAGE STUDIO ---
 export const auditImageCompliance = async (payload) => {
-  const { data } = await api.post("/images/audit-specs", payload);
+  const { data } = await api.post(API_ENDPOINTS.IMAGES.AUDIT_SPECS, payload);
   return data;
 };
 
 export const exportImageZipArchive = async (payload) => {
-  const response = await api.post("/images/export-zip", payload, {
+  const response = await api.post(API_ENDPOINTS.IMAGES.EXPORT_ZIP, payload, {
     responseType: "blob",
   });
   return response.data;
 };
 
 export const applyStudioImageToProduct = async (payload) => {
-  const { data } = await api.post("/images/apply-to-product", payload);
+  const { data } = await api.post(API_ENDPOINTS.IMAGES.APPLY_TO_PRODUCT, payload);
   return data;
 };
 
 export const createProductFromStudio = async (payload) => {
-  const { data } = await api.post("/images/create-from-studio", payload);
+  const { data } = await api.post(API_ENDPOINTS.IMAGES.CREATE_FROM_STUDIO, payload);
   return data;
 };
 
-// --- AI Image Studio functions commented out ---
+// --- AI Image Studio functions stubs ---
 export const generateAiStudioBackground = async () => ({ data: {} });
 export const neuralAiCutout = async () => ({ data: {} });
 export const fetchGeminiStudioPlan = async () => ({ success: false, message: "Gemini features disabled." });
@@ -229,7 +250,7 @@ export const clientSideUpscale = (imageBase64, scaleFactor = 2, sharpness = 1.35
 
 export const upscaleAndEnhanceImage = async (payload) => {
   try {
-    const { data } = await api.post("/images/upscale-enhance", payload);
+    const { data } = await api.post(API_ENDPOINTS.IMAGES.UPSCALE_ENHANCE, payload);
     if (data && (data.image || data.upscaled)) {
       return data;
     }
@@ -249,56 +270,56 @@ export const upscaleAndEnhanceImage = async (payload) => {
 
 // --- EXPORT & PUBLISHING ---
 export const fetchExportValidationReport = async (payload) => {
-  const { data } = await api.post("/export/validate-report", payload);
+  const { data } = await api.post(API_ENDPOINTS.EXPORT.VALIDATE_REPORT, payload);
   return data;
 };
 
 export const downloadMarketplaceExport = async (payload) => {
-  const response = await api.post("/export/download", payload, {
+  const response = await api.post(API_ENDPOINTS.EXPORT.DOWNLOAD, payload, {
     responseType: payload.format === "json" ? "json" : "blob",
   });
   return response.data;
 };
 
 export const publishToMarketplaceSandbox = async (payload) => {
-  const { data } = await api.post("/export/publish-sandbox", payload);
+  const { data } = await api.post(API_ENDPOINTS.EXPORT.PUBLISH_SANDBOX, payload);
   return data;
 };
 
 // --- ANALYTICS & BRAND KIT ---
 export const fetchDashboardAnalytics = async () => {
-  const { data } = await api.get("/analytics/dashboard");
+  const { data } = await api.get(API_ENDPOINTS.ANALYTICS.DASHBOARD);
   return data;
 };
 
 export const fetchOrganizationProfile = async () => {
-  const { data } = await api.get("/org/profile");
+  const { data } = await api.get(API_ENDPOINTS.ORG.PROFILE);
   return data;
 };
 
 export const updateOrganizationProfile = async (payload) => {
-  const { data } = await api.put("/org/profile", payload);
+  const { data } = await api.put(API_ENDPOINTS.ORG.PROFILE, payload);
   return data;
 };
 
 // --- MULTI-COMPANY BRAND PROFILES ---
 export const fetchCompanies = async () => {
-  const { data } = await api.get("/companies");
+  const { data } = await api.get(API_ENDPOINTS.COMPANIES.BASE);
   return data;
 };
 
 export const createCompanyProfile = async (payload) => {
-  const { data } = await api.post("/companies", payload);
+  const { data } = await api.post(API_ENDPOINTS.COMPANIES.BASE, payload);
   return data;
 };
 
 export const updateCompanyProfile = async (id, payload) => {
-  const { data } = await api.put(`/companies/${id}`, payload);
+  const { data } = await api.put(API_ENDPOINTS.COMPANIES.BY_ID(id), payload);
   return data;
 };
 
 export const deleteCompanyProfile = async (id) => {
-  const { data } = await api.delete(`/companies/${id}`);
+  const { data } = await api.delete(API_ENDPOINTS.COMPANIES.BY_ID(id));
   return data;
 };
 
@@ -307,12 +328,12 @@ export const fetchProducts = async (params = {}) => {
   const cleanParams = Object.fromEntries(
     Object.entries(params).filter(([, v]) => v !== "" && v !== undefined && v !== null)
   );
-  const { data } = await api.get("/products", { params: cleanParams });
+  const { data } = await api.get(API_ENDPOINTS.PRODUCTS.BASE, { params: cleanParams });
   return data;
 };
 
 export const fetchProductById = async (id) => {
-  const { data } = await api.get(`/products/${id}`);
+  const { data } = await api.get(API_ENDPOINTS.PRODUCTS.BY_ID(id));
   return data;
 };
 
@@ -321,27 +342,27 @@ export const fetchCatalogueRecords = async (params = {}) => {
   const cleanParams = Object.fromEntries(
     Object.entries(params).filter(([, v]) => v !== "" && v !== undefined && v !== null)
   );
-  const { data } = await api.get("/catalogue-records", { params: cleanParams });
+  const { data } = await api.get(API_ENDPOINTS.CATALOGUE_RECORDS.BASE, { params: cleanParams });
   return data;
 };
 
 export const fetchCatalogueRecordById = async (id) => {
-  const { data } = await api.get(`/catalogue-records/${id}`);
+  const { data } = await api.get(API_ENDPOINTS.CATALOGUE_RECORDS.BY_ID(id));
   return data;
 };
 
 export const createCatalogueRecord = async (payload) => {
-  const { data } = await api.post("/catalogue-records", payload);
+  const { data } = await api.post(API_ENDPOINTS.CATALOGUE_RECORDS.BASE, payload);
   return data;
 };
 
 export const updateCatalogueRecord = async (id, payload) => {
-  const { data } = await api.put(`/catalogue-records/${id}`, payload);
+  const { data } = await api.put(API_ENDPOINTS.CATALOGUE_RECORDS.BY_ID(id), payload);
   return data;
 };
 
 export const deleteCatalogueRecord = async (id) => {
-  const { data } = await api.delete(`/catalogue-records/${id}`);
+  const { data } = await api.delete(API_ENDPOINTS.CATALOGUE_RECORDS.BY_ID(id));
   return data;
 };
 
