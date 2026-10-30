@@ -7,15 +7,8 @@
  * - Helper function to build dynamic / absolute URLs
  */
 
-// Base API URL resolved from environment variable, fallback to production / internal port
-const resolveBaseUrl = () => {
-  const envUrl =
-    import.meta.env.VITE_API_URL || "https://catlougeapi.geoplanetsolution.com/api";
-  const trimmed = String(envUrl).trim().replace(/\/+$/, "");
-  return trimmed.endsWith("/api") ? trimmed : `${trimmed}/api`;
-};
-
-export const API_BASE_URL = resolveBaseUrl();
+// Direct backend API URL (direct URL without .env dependency)
+export const API_BASE_URL = "https://catlougeapi.geoplanetsolution.com/api";
 
 export const API_TIMEOUT = 45000;
 
