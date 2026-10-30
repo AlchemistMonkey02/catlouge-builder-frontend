@@ -7,8 +7,12 @@
  * - Helper function to build dynamic / absolute URLs
  */
 
-// Direct backend API URL (direct URL without .env dependency)
-export const API_BASE_URL = "https://catlougeapi.geoplanetsolution.com/api";
+// In development on localhost, "/api" routes through Vite reverse proxy to eliminate browser CORS blocks.
+// In production outside localhost, directly uses the production domain.
+export const API_BASE_URL =
+  typeof window !== "undefined" && window.location.hostname === "localhost"
+    ? "/api"
+    : "https://catlougeapi.geoplanetsolution.com/api";
 
 export const API_TIMEOUT = 45000;
 

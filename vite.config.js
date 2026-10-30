@@ -5,5 +5,17 @@ export default defineConfig({
   plugins: [react()],
   server: {
     port: 5173,
+    proxy: {
+      "/api": {
+        target: "https://catlougeapi.geoplanetsolution.com",
+        changeOrigin: true,
+        secure: false,
+      },
+      "/assets": {
+        target: "https://catlougeapi.geoplanetsolution.com",
+        changeOrigin: true,
+        secure: false,
+      },
+    },
   },
 });
