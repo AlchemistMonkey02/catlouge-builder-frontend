@@ -4,7 +4,21 @@
 const E = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const cap = s => (s || '').toUpperCase();
 const pn = n => String(n).padStart(2, '0');
-const bg = u => u ? `background-image:url(${u})` : '';
+const bg = u => (u && typeof u === 'string') ? `background-image:url('${u.replace(/'/g, "%27")}')` : '';
+const fmtWa = w => {
+  if (!w) return '';
+  let s = String(w).trim();
+  s = s.replace(/^(\+?91\s*)+/gi, '').replace(/^\+/, '').trim();
+  return `+91 ${s}`;
+};
+const fmtPrice = p => {
+  if (p == null || p === '') return '₹135 / sq.ft';
+  const s = String(p).trim();
+  if (s.startsWith('₹')) return s;
+  const num = Number(s.replace(/[^0-9.]/g, ''));
+  if (!isNaN(num) && num > 0) return `₹${num.toLocaleString('en-IN')} / sq.ft`;
+  return 'Price on Request';
+};
 
 const th = (name, bg, ink, muted, acc, dark, soft, line, onDark) => ({ name, bg, ink, muted, acc, dark, soft, line, onDark });
 
@@ -96,6 +110,7 @@ const head = (c, label, no) => `
     <div class="ss-head-brand">
       <span class="ss-stone-icon">🏛️</span>
       <strong>${E(c.info.ent || 'NATURAL SANDSTONE')}</strong>
+      <span class="ss-head-district" style="font-size:10px; color:var(--muted); font-weight:600; margin-left:8px;">&bull; District: ${E(c.info.district || 'Bundi, Rajasthan')} [ODOP: ${E(c.info.odopProduct || 'Sandstone')}]</span>
     </div>
     <span class="ss-head-tag">${E(label)}</span>
     <span class="ss-head-num">${pn(no)}</span>
@@ -104,8 +119,8 @@ const head = (c, label, no) => `
 
 const foot = c => `
   <div class="ss-foot">
-    <span>${E(c.info.ent || '')} &bull; Natural Architectural Sandstone &amp; Quarry Works</span>
-    <span>☎ ${E(c.info.mobile || '')} ${c.info.email ? `&bull; ${E(c.info.email)}` : ''}</span>
+    <span><b>${E(c.info.ent || '')}</b> &bull; 📍 District: ${E(c.info.district || 'Bundi, Rajasthan')} &bull; 🏷️ ODOP: ${E(c.info.odopProduct || 'Sandstone')}</span>
+    <span>💬 WhatsApp: <b>${E(fmtWa(c.info.whatsapp || c.info.mobile))}</b> ${c.info.email ? `&bull; ${E(c.info.email)}` : ''}</span>
   </div>
 `;
 
@@ -169,8 +184,15 @@ function t1_cover(c, t) {
   const i = c.info, hero = c.hero || (c.items[0] && c.items[0].img) || '';
   return `
     <div class="ss1-cover">
+      <div class="ss-odop-gov-banner">
+        <span class="ss-gov-emblem">🏛️</span>
+        <div class="ss-gov-text">
+          <strong>GOVERNMENT OF INDIA &bull; ONE DISTRICT ONE PRODUCT (ODOP) INITIATIVE</strong>
+          <span>DISTRICT: <b>${E(i.district || 'Bundi, Rajasthan')}</b> &bull; ODOP PRODUCT: <b>${E(i.odopProduct || 'Sandstone')}</b></span>
+        </div>
+      </div>
       <div class="ss1-arch-header">
-        <span class="ss1-tag">ROYAL RAJASTHAN STONE HERITAGE</span>
+        <span class="ss1-tag">DISTRICT: ${E(cap(i.district || 'Bundi, Rajasthan'))} &bull; ODOP: ${E(cap(i.odopProduct || 'Sandstone'))}</span>
         <h1 class="ss1-h1">${E(i.ent || 'Jodhpur Desert Gold Sandstone')}</h1>
         <div class="ss1-gold-line"></div>
       </div>
@@ -191,6 +213,87 @@ function t1_cover(c, t) {
   `;
 }
 
+
+function renderSandstoneProductCard(it, idx, c, prefix = 'snd') {
+  let rawImg = it.img || it.image;
+  if (rawImg && typeof rawImg === 'object') {
+    rawImg = rawImg.url || rawImg.img || (Array.isArray(rawImg.images) && rawImg.images[0]) || '';
+  }
+  if (!rawImg || typeof rawImg !== 'string') {
+    if (Array.isArray(it.images) && it.images[0]) {
+      const f = it.images[0];
+      rawImg = typeof f === 'string' ? f : (f?.url || f?.img || '');
+    }
+    if (!rawImg || typeof rawImg !== 'string') rawImg = it.angle1 || '/assets/sand-stone/Agra-Red-Sandstone-Sandblasted.jpg';
+  }
+  const cardImg = typeof rawImg === 'string' && rawImg ? rawImg : '/assets/sand-stone/Agra-Red-Sandstone-Sandblasted.jpg';
+  const cardPrice = fmtPrice(it.price || it.formattedPrice || 135);
+  const cardSku = it.sku || it.code || `#${prefix.toUpperCase()}-${pn(idx + 1)}`;
+  const cardName = (it.name || it.title || 'Royal Agra Red Sandstone').replace(/\s*\([^)]*Angle[^)]*\)/gi, '').trim();
+  const cardDesc = it.shortDescription || it.description || 'Natural sedimentary quartz sandstone with high weather resistance and rich texture.';
+  const cardTag = it.subcategory || it.productType || 'SANDSTONE';
+  const cardCraft = (c.info && c.info.ent) || it.brand || 'Heritage Sandstone Guild';
+
+  const specSize = it.size || '600x900 mm (25-30 mm Calibrated Sawn)';
+  const specMaterial = it.material || it.materialComposition || 'Natural Quartzite Sandstone';
+  const specFinish = it.finish || 'Sandblasted / Hand-Chiseled / Honed';
+  const specApp = it.application || it.useApplication || 'Exterior Facades, Cladding & Paving';
+  const specPriceRange = it.priceRange || `${cardPrice} – ₹190 / sq.ft`;
+  const specMoq = it.moq || '400 sq.ft (Project Lot)';
+
+  const safeImg = typeof cardImg === 'string' ? cardImg.replace(/'/g, '%27') : '/assets/sand-stone/Agra-Red-Sandstone-Sandblasted.jpg';
+
+  return `
+    <div class="ss-odop-card">
+      <div class="ss-odop-img" style="${bg(cardImg)}">
+        <img src="${safeImg}" alt="${E(cardName)}" class="ss-odop-img-el" onerror="this.onerror=null; this.src='/assets/sand-stone/Agra-Red-Sandstone-Sandblasted.jpg';" />
+        <span class="ss-odop-tag">${E(cap(cardTag))}</span>
+        <span class="ss-odop-district-chip">ODOP ${E(c.info.district ? c.info.district.split(',')[0].trim() : 'Bundi')}</span>
+      </div>
+      <div class="ss-odop-details">
+        <div class="ss-odop-meta-row">
+          <span class="ss-odop-sku-chip">SKU: ${E(cardSku)}</span>
+          <span class="ss-odop-moq-chip">MOQ: ${E(specMoq)}</span>
+        </div>
+        <h3>${E(cardName)}</h3>
+        <div class="ss-odop-desc-row">
+          <p class="ss-odop-desc">${E(cardDesc)}</p>
+        </div>
+        
+        <div class="ss-odop-spec-matrix">
+          <div class="ss-odop-spec-item" title="${E(specSize)}">
+            <span class="ss-odop-spec-lbl">📏 Size:</span>
+            <span class="ss-odop-spec-val">${E(specSize)}</span>
+          </div>
+          <div class="ss-odop-spec-item" title="${E(specMaterial)}">
+            <span class="ss-odop-spec-lbl">🏛️ Material:</span>
+            <span class="ss-odop-spec-val">${E(specMaterial)}</span>
+          </div>
+          <div class="ss-odop-spec-item" title="${E(specFinish)}">
+            <span class="ss-odop-spec-lbl">✨ Finish:</span>
+            <span class="ss-odop-spec-val">${E(specFinish)}</span>
+          </div>
+          <div class="ss-odop-spec-item" title="${E(specApp)}">
+            <span class="ss-odop-spec-lbl">🎯 Use:</span>
+            <span class="ss-odop-spec-val">${E(specApp)}</span>
+          </div>
+        </div>
+
+        <div class="ss-odop-foot">
+          <div class="ss-odop-price-block">
+            <span class="ss-odop-price">${E(cardPrice)}</span>
+            <span class="ss-odop-range">Range: ${E(specPriceRange)}</span>
+          </div>
+          <div class="ss-odop-contact-block">
+            <span class="ss-odop-craft">${E(cardCraft)}</span>
+            <span class="ss-odop-wa">💬 WA: ${E(fmtWa(c.info.whatsapp || c.info.mobile))}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
 function t1_products(c, no, slice, pageIdx, totalPages) {
   return `
     ${head(c, `ROYAL HERITAGE DIMENSION RANGE (${pageIdx}/${totalPages})`, no)}
@@ -198,26 +301,8 @@ function t1_products(c, no, slice, pageIdx, totalPages) {
       <h2>Desert Gold Architectural Formats</h2>
       <p>Precision calibrated slabs, palace jharokhas, and hand-chiseled masonry blocks</p>
     </div>
-    <div class="ss1-grid">
-      ${slice.map((it, idx) => `
-        <div class="ss1-card">
-          <div class="ss1-card-img" style="${bg(it.img)}">
-            <span class="ss1-code">${E(it.code || `#JDH-${pn(idx + 1)}`)}</span>
-          </div>
-          <div class="ss1-card-body">
-            <h3>${E(it.name)}</h3>
-            <div class="ss1-finish-tag">Heritage Jodhpur Sawn / Honed</div>
-            <div class="ss1-specs">
-              <div><b>Thickness:</b> ${E(it.thickness || '25 - 40 mm')}</div>
-              <div><b>Standard:</b> ASTM C616 Certified</div>
-            </div>
-            <div class="ss1-foot">
-              <span class="ss1-price">${E(it.price || 'Inquire Quote')}</span>
-              <span class="ss1-moq">Project Ready</span>
-            </div>
-          </div>
-        </div>
-      `).join('')}
+    <div class="ss-odop-grid">
+      ${slice.map((it, idx) => renderSandstoneProductCard(it, idx, c, 'snd')).join('')}
     </div>
     ${foot(c)}
   `;
@@ -250,30 +335,12 @@ function t2_cover(c, t) {
 function t2_products(c, no, slice, pageIdx, totalPages) {
   return `
     ${head(c, `EXOTIC VEINED SLAB SELECTION (${pageIdx}/${totalPages})`, no)}
-    <div class="ss2-head">
+    <div class="ss1-head">
       <h2>Continuous Vein Slabs &amp; Accent Panels</h2>
       <p>Sequential quarry gangsaw slabs calibrated for bookmatched installation</p>
     </div>
-    <div class="ss2-grid">
-      ${slice.map((it, idx) => `
-        <div class="ss2-card">
-          <div class="ss2-img" style="${bg(it.img)}">
-            <span class="ss2-pattern-tag">Flowing Veins</span>
-          </div>
-          <div class="ss2-info">
-            <h3>${E(it.name)}</h3>
-            <p class="ss2-note">Natural mineral swirls &bull; Honed satin smooth touch &bull; 6-side precision sawn.</p>
-            <div class="ss2-spec-row">
-              <span><b>Density:</b> 2.45 g/cm³</span>
-              <span><b>Finish:</b> Honed / Polished</span>
-            </div>
-            <div class="ss2-foot">
-              <span class="ss2-price">${E(it.price || 'Wholesale Inquire')}</span>
-              <span class="ss2-status">Gangsaw Ready</span>
-            </div>
-          </div>
-        </div>
-      `).join('')}
+    <div class="ss-odop-grid">
+      ${slice.map((it, idx) => renderSandstoneProductCard(it, idx, c, 'vn')).join('')}
     </div>
     ${foot(c)}
   `;
@@ -312,33 +379,13 @@ function t3_cover(c, t) {
 
 function t3_products(c, no, slice, pageIdx, totalPages) {
   return `
-    ${head(c, `FACADE CLADDING PANELS (${pageIdx}/${totalPages})`, no)}
-    <div class="ss3-head">
-      <h2>Calibrated Exterior Wall Cladding Formats</h2>
-      <p>Precision grooved edges for SS 316 dry-cladding Z-brackets and anchors</p>
+    ${head(c, `HAND-CARVED PALATIAL JALI & ARCHES (${pageIdx}/${totalPages})`, no)}
+    <div class="ss1-head">
+      <h2>Royal Heritage Architectural Elements</h2>
+      <p>Intricate geometric filigree jali screens, ornamental cornices, and fluted pillars</p>
     </div>
-    <div class="ss3-grid">
-      ${slice.map((it, idx) => `
-        <div class="ss3-card">
-          <div class="ss3-card-head">
-            <span>PANEL REF #${pn(idx + 1)}</span>
-            <span>${E(it.finish || 'Shotblasted / Honed')}</span>
-          </div>
-          <div class="ss3-img" style="${bg(it.img)}"></div>
-          <div class="ss3-body">
-            <h3>${E(it.name)}</h3>
-            <table class="ss3-tbl">
-              <tr><td>Sizes:</td><td><b>${E(it.size || '600x300 / 600x600 mm')}</b></td></tr>
-              <tr><td>Edge Profile:</td><td>Calibrated &amp; Chamfered</td></tr>
-              <tr><td>Anchor System:</td><td>Undercut / Kerf Slot Ready</td></tr>
-            </table>
-            <div class="ss3-foot">
-              <span class="ss3-price">${E(it.price || 'Project Rate')}</span>
-              <span class="ss3-sqft">Per Sq. Ft / Meter</span>
-            </div>
-          </div>
-        </div>
-      `).join('')}
+    <div class="ss-odop-grid">
+      ${slice.map((it, idx) => renderSandstoneProductCard(it, idx, c, 'jli')).join('')}
     </div>
     ${foot(c)}
   `;
@@ -374,31 +421,13 @@ function t4_cover(c, t) {
 
 function t4_products(c, no, slice, pageIdx, totalPages) {
   return `
-    ${head(c, `RUSTIC ROCKFACE WALL SELECTION (${pageIdx}/${totalPages})`, no)}
-    <div class="ss4-head">
-      <h2>Hand-Split Ledger Stone &amp; Masonry Strips</h2>
-      <p>Natural cleft relief surface &bull; Suitable for interior accent walls and heavy exterior cladding</p>
+    ${head(c, `LANDSCAPE & MONOLITHIC PAVING (${pageIdx}/${totalPages})`, no)}
+    <div class="ss1-head">
+      <h2>Heavy-Duty Natural Split Paving</h2>
+      <p>Natural cleft cobbles, steppers, and thermal-treated flags for landscape architecture</p>
     </div>
-    <div class="ss4-grid">
-      ${slice.map((it, idx) => `
-        <div class="ss4-card">
-          <div class="ss4-img" style="${bg(it.img)}">
-            <span class="ss4-relief">3D Natural Relief</span>
-          </div>
-          <div class="ss4-info">
-            <h3>${E(it.name)}</h3>
-            <p class="ss4-desc">Hand-chiseled face &bull; Sawn flat back for rapid adhesive installation.</p>
-            <div class="ss4-specs">
-              <span><b>Thickness:</b> 20-35 mm varied relief</span>
-              <span><b>Type:</b> Split Face</span>
-            </div>
-            <div class="ss4-foot">
-              <span class="ss4-price">${E(it.price || 'Direct Yard Price')}</span>
-              <span class="ss4-stock">In Stock</span>
-            </div>
-          </div>
-        </div>
-      `).join('')}
+    <div class="ss-odop-grid">
+      ${slice.map((it, idx) => renderSandstoneProductCard(it, idx, c, 'pvg')).join('')}
     </div>
     ${foot(c)}
   `;
@@ -433,31 +462,13 @@ function t5_cover(c, t) {
 
 function t5_products(c, no, slice, pageIdx, totalPages) {
   return `
-    ${head(c, `PATIO PAVERS & POOL COPING (${pageIdx}/${totalPages})`, no)}
-    <div class="ss5-head">
-      <h2>Calibrated Outdoor Paving &amp; Edge Profiles</h2>
-      <p>Precision 6-side sawn pavers with anti-skid sandblasted or tumbled texture</p>
+    ${head(c, `RAINBOW & TEAKWOOD EXOTIC COLLECTION (${pageIdx}/${totalPages})`, no)}
+    <div class="ss1-head">
+      <h2>Naturally Striped Mineral Vein Formats</h2>
+      <p>Warm desert amber and golden woodgrain bands for contemporary facades</p>
     </div>
-    <div class="ss5-grid">
-      ${slice.map((it, idx) => `
-        <div class="ss5-card">
-          <div class="ss5-img" style="${bg(it.img)}">
-            <span class="ss5-edge-badge">${E(it.finish || 'Tumbled / Bullnose')}</span>
-          </div>
-          <div class="ss5-body">
-            <h3>${E(it.name)}</h3>
-            <div class="ss5-specs-pill">
-              <span>Size: ${E(it.size || '600x900 mm')}</span>
-              <span>Calibrated: 22 mm</span>
-            </div>
-            <p class="ss5-note">Cool-touch surface under summer heat &bull; Salt and chlorine resistant.</p>
-            <div class="ss5-foot">
-              <span class="ss5-price">${E(it.price || 'Wholesale Paving')}</span>
-              <span class="ss5-pallet">Crate Packed</span>
-            </div>
-          </div>
-        </div>
-      `).join('')}
+    <div class="ss-odop-grid">
+      ${slice.map((it, idx) => renderSandstoneProductCard(it, idx, c, 'rnb')).join('')}
     </div>
     ${foot(c)}
   `;
@@ -495,30 +506,13 @@ function t6_cover(c, t) {
 
 function t6_products(c, no, slice, pageIdx, totalPages) {
   return `
-    ${head(c, `MONOLITHIC STEPS & COBBLES (${pageIdx}/${totalPages})`, no)}
-    <div class="ss6-head">
-      <h2>Dimensional Steps, Curbs &amp; Driveway Sets</h2>
-      <p>Solid quarry blocks &bull; Flame-textured or natural split top for non-skid vehicular traction</p>
+    ${head(c, `VENTILATED FACADE CLADDING TILES (${pageIdx}/${totalPages})`, no)}
+    <div class="ss1-head">
+      <h2>Dry-Clad Engineered Exterior Panels</h2>
+      <p>Precision grooved kerf-cut panels for mechanical steel bracket facades</p>
     </div>
-    <div class="ss6-grid">
-      ${slice.map((it, idx) => `
-        <div class="ss6-card">
-          <div class="ss6-img" style="${bg(it.img)}">
-            <span class="ss6-code">#MST-${pn(idx + 1)}</span>
-          </div>
-          <div class="ss6-info">
-            <h3>${E(it.name)}</h3>
-            <div class="ss6-data">
-              <div><b>Format:</b> Solid Quarry Cut</div>
-              <div><b>Dimensions:</b> ${E(it.size || 'Standard Specification')}</div>
-            </div>
-            <div class="ss6-foot">
-              <span class="ss6-price">${E(it.price || 'Bulk Quarry Rate')}</span>
-              <span class="ss6-moq">Full Truckload</span>
-            </div>
-          </div>
-        </div>
-      `).join('')}
+    <div class="ss-odop-grid">
+      ${slice.map((it, idx) => renderSandstoneProductCard(it, idx, c, 'fcd')).join('')}
     </div>
     ${foot(c)}
   `;
@@ -549,31 +543,13 @@ function t7_cover(c, t) {
 
 function t7_products(c, no, slice, pageIdx, totalPages) {
   return `
-    ${head(c, `CARVED JALIS & ARCHITECTURAL MOTIFS (${pageIdx}/${totalPages})`, no)}
-    <div class="ss7-head">
-      <h2>Pierced Stone Screens &amp; Ornamentation</h2>
-      <p>Custom CNC precision cutting combined with hereditary artisan hand-chiseling</p>
+    ${head(c, `SHOTBLASTED & TUMBLED POOL SURROUNDS (${pageIdx}/${totalPages})`, no)}
+    <div class="ss1-head">
+      <h2>Antique &amp; High-Traction Calibrated Formats</h2>
+      <p>Soft rounded edges and slip-resistant surface for luxury pools and garden courts</p>
     </div>
-    <div class="ss7-grid">
-      ${slice.map((it, idx) => `
-        <div class="ss7-card">
-          <div class="ss7-img" style="${bg(it.img)}">
-            <span class="ss7-lattice-tag">Pierced Jali</span>
-          </div>
-          <div class="ss7-info">
-            <h3>${E(it.name)}</h3>
-            <p class="ss7-note">Custom pattern designs &bull; 40-50mm thick solid natural sandstone panel.</p>
-            <div class="ss7-specs">
-              <span>Thickness: ${E(it.thickness || '40-50 mm')}</span>
-              <span>Craft: Hand &amp; CNC</span>
-            </div>
-            <div class="ss7-foot">
-              <span class="ss7-price">${E(it.price || 'Custom Drawing Quote')}</span>
-              <span class="ss7-craft">Atelier Made</span>
-            </div>
-          </div>
-        </div>
-      `).join('')}
+    <div class="ss-odop-grid">
+      ${slice.map((it, idx) => renderSandstoneProductCard(it, idx, c, 'tbl')).join('')}
     </div>
     ${foot(c)}
   `;
@@ -612,34 +588,13 @@ function t8_cover(c, t) {
 
 function t8_products(c, no, slice, pageIdx, totalPages) {
   return `
-    ${head(c, `EXPORT SPECIFICATION MATRIX (${pageIdx}/${totalPages})`, no)}
-    <div class="ss8-head">
-      <h2>Export Crated Stone Formats &amp; Loading Specs</h2>
-      <p>Precision calibration tolerance &plusmn;1mm &bull; Seaworthy reinforced crate packaging</p>
+    ${head(c, `EXPORT SPECIFICATION DOSSIER (${pageIdx}/${totalPages})`, no)}
+    <div class="ss1-head">
+      <h2>Containerized Global Port Logistics</h2>
+      <p>Direct export consignments packed in IPPC fumigated seaworthy wooden crates</p>
     </div>
-    <div class="ss8-grid">
-      ${slice.map((it, idx) => `
-        <div class="ss8-card">
-          <div class="ss8-card-head">
-            <span>EXPORT BATCH #${pn(idx + 1)}</span>
-            <span>ASTM COMPLIANT</span>
-          </div>
-          <div class="ss8-img" style="${bg(it.img)}"></div>
-          <div class="ss8-body">
-            <h3>${E(it.name)}</h3>
-            <table class="ss8-tbl">
-              <tr><td>Finish:</td><td><b>${E(it.finish || 'Honed / Sawn')}</b></td></tr>
-              <tr><td>Density:</td><td>2.45 - 2.50 g/cm³</td></tr>
-              <tr><td>Water Abs:</td><td>&lt;1.9%</td></tr>
-              <tr><td>Packaging:</td><td>Fumigated Wooden Crates</td></tr>
-            </table>
-            <div class="ss8-foot">
-              <span class="ss8-price">${E(it.price || 'FOB Mundra Rate')}</span>
-              <span class="ss8-moq">1x20ft FCL</span>
-            </div>
-          </div>
-        </div>
-      `).join('')}
+    <div class="ss-odop-grid">
+      ${slice.map((it, idx) => renderSandstoneProductCard(it, idx, c, 'exp')).join('')}
     </div>
     ${foot(c)}
   `;
@@ -746,6 +701,201 @@ function render(t, ctx) {
 }
 
 const CSS = `
+/* ODOP Bundi Card Matrix Styles */
+.ss-odop-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  padding: 0;
+  width: 100%;
+  box-sizing: border-box;
+  margin-top: 4px;
+  margin-bottom: 24px;
+}
+.ss-odop-card {
+  background: #ffffff;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  box-shadow: 0 4px 14px rgba(0,0,0,0.04);
+  display: flex;
+  flex-direction: column;
+  height: 370px;
+  max-height: 370px;
+  min-height: 0;
+  box-sizing: border-box;
+}
+.ss-odop-img {
+  height: 140px;
+  min-height: 140px;
+  max-height: 140px;
+  background-size: cover;
+  background-position: center;
+  position: relative;
+  overflow: hidden;
+  background-color: var(--soft, #fdf8f6);
+}
+.ss-odop-img-el {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.ss-odop-tag {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  background: var(--dark, #7c2d12);
+  color: #fff;
+  font-size: 8.5px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 4px;
+  letter-spacing: 0.05em;
+}
+.ss-odop-district-chip {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: rgba(0,0,0,0.7);
+  color: #fff;
+  font-size: 8.5px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 4px;
+}
+.ss-odop-details {
+  padding: 6px 10px 8px;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  justify-content: space-between;
+}
+.ss-odop-meta-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2px;
+}
+.ss-odop-sku-chip {
+  font-size: 8.5px;
+  font-family: monospace;
+  font-weight: 700;
+  color: var(--acc, #c2410c);
+}
+.ss-odop-moq-chip {
+  font-size: 8px;
+  background: rgba(194, 65, 12, 0.08);
+  color: #c2410c;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-weight: 700;
+}
+.ss-odop-details h3 {
+  font-family: var(--hf, serif);
+  font-size: 13.5px;
+  margin: 0 0 2px;
+  color: var(--ink, #1c1917);
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.ss-odop-desc-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+.ss-odop-desc {
+  font-size: 9.5px;
+  color: var(--muted, #57534e);
+  margin: 0;
+  line-height: 1.25;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
+}
+.ss-odop-spec-matrix {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 3px 6px;
+  background: rgba(194, 65, 12, 0.04);
+  border: 1px solid rgba(194, 65, 12, 0.12);
+  border-radius: 6px;
+  padding: 5px 8px;
+  margin: 4px 0 6px 0;
+  font-size: 9.5px;
+}
+.ss-odop-spec-item {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.ss-odop-spec-lbl {
+  font-weight: 700;
+  color: #c2410c;
+  font-size: 9px;
+}
+.ss-odop-spec-val {
+  color: #1c1917;
+  font-weight: 600;
+  font-size: 9.5px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.ss-odop-foot {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top: 1px solid var(--line, #e7e5e4);
+  padding-top: 6px;
+  margin-top: 2px;
+}
+.ss-odop-price-block {
+  display: flex;
+  flex-direction: column;
+}
+.ss-odop-price {
+  font-size: 13.5px;
+  font-weight: 800;
+  color: var(--acc, #c2410c);
+  line-height: 1;
+}
+.ss-odop-range {
+  font-size: 8px;
+  color: var(--muted, #78716c);
+  margin-top: 2px;
+  font-weight: 600;
+}
+.ss-odop-contact-block {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+.ss-odop-craft {
+  font-size: 8.5px;
+  font-weight: 700;
+  color: var(--ink, #292524);
+  white-space: nowrap;
+  max-width: 140px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.ss-odop-wa {
+  font-size: 8px;
+  color: #c2410c;
+  font-weight: 700;
+  margin-top: 2px;
+}
+
+
 .pg.sandstone-pg {
   width: 794px;
   height: 1123px;
@@ -764,12 +914,12 @@ const CSS = `
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding-bottom: 12px;
+  padding-bottom: 8px;
   border-bottom: 1.5px solid var(--line);
   font-size: 11px;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  margin-bottom: 24px;
+  margin-bottom: 12px;
 }
 .sandstone-pg .ss-head-brand { display: flex; align-items: center; gap: 6px; color: var(--ink); }
 .sandstone-pg .ss-stone-icon { font-size: 14px; }
@@ -778,17 +928,32 @@ const CSS = `
 
 .sandstone-pg .ss-foot {
   position: absolute;
-  bottom: 28px;
+  bottom: 16px;
   left: 44px;
   right: 44px;
   display: flex;
   justify-content: space-between;
-  padding-top: 10px;
+  padding-top: 8px;
   border-top: 1px solid var(--line);
-  font-size: 10.5px;
+  font-size: 9.5px;
   color: var(--muted);
   letter-spacing: 0.06em;
 }
+
+.ss-odop-gov-banner {
+  background: linear-gradient(90deg, #7c2d12, #c2410c);
+  color: #ffffff;
+  padding: 6px 12px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+  border: 1px solid #f59e0b;
+}
+.ss-gov-emblem { font-size: 18px; }
+.ss-gov-text strong { display: block; font-size: 9px; letter-spacing: 0.05em; }
+.ss-gov-text span { font-size: 8px; opacity: 0.95; }
 
 /* Contact Page Styles */
 .sandstone-pg .ss-contact-wrap { margin-top: 10px; }
@@ -814,6 +979,7 @@ const CSS = `
   font-family: var(--hf);
   font-size: 34px;
   margin: 0 0 10px;
+  color: var(--onDark, #ffffff);
 }
 .sandstone-pg .ss-contact-p {
   font-size: 13px;

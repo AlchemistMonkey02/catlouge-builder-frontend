@@ -4,7 +4,21 @@
 const E = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const cap = s => (s || '').toUpperCase();
 const pn = n => String(n).padStart(2, '0');
-const bg = u => u ? `background-image:url(${u})` : '';
+const bg = u => (u && typeof u === 'string') ? `background-image:url('${u.replace(/'/g, "%27")}')` : '';
+const fmtWa = w => {
+  if (!w) return '';
+  let s = String(w).trim();
+  s = s.replace(/^(\+?91\s*)+/gi, '').replace(/^\+/, '').trim();
+  return `+91 ${s}`;
+};
+const fmtPrice = p => {
+  if (p == null || p === '') return '₹180 / kg';
+  const s = String(p).trim();
+  if (s.startsWith('₹')) return s;
+  const num = Number(s.replace(/[^0-9.]/g, ''));
+  if (!isNaN(num) && num > 0) return `₹${num.toLocaleString('en-IN')} / kg`;
+  return 'Price on Request';
+};
 
 const th = (name, bg, ink, muted, acc, dark, soft, line, onDark) => ({ name, bg, ink, muted, acc, dark, soft, line, onDark });
 
@@ -97,6 +111,7 @@ const head = (c, label, no) => `
     <div class="g-head-brand">
       <span class="g-leaf-icon">🧄</span>
       <strong>${E(c.info.ent || 'PREMIUM GARLIC')}</strong>
+      <span class="g-head-district" style="font-size:10px; color:var(--muted); font-weight:600; margin-left:8px;">&bull; District: ${E(c.info.district || 'Baran, Rajasthan')} [ODOP: ${E(c.info.odopProduct || 'Garlic')}]</span>
     </div>
     <span class="g-head-tag">${E(label)}</span>
     <span class="g-head-num">${pn(no)}</span>
@@ -105,8 +120,8 @@ const head = (c, label, no) => `
 
 const foot = c => `
   <div class="g-foot">
-    <span>${E(c.info.ent || '')} &bull; Fresh Garlic &amp; Agro Commodity</span>
-    <span>☎ ${E(c.info.mobile || '')} ${c.info.email ? `&bull; ${E(c.info.email)}` : ''}</span>
+    <span><b>${E(c.info.ent || '')}</b> &bull; 📍 District: ${E(c.info.district || 'Baran, Rajasthan')} &bull; 🏷️ ODOP: ${E(c.info.odopProduct || 'Garlic')}</span>
+    <span>💬 WhatsApp: <b>${E(fmtWa(c.info.whatsapp || c.info.mobile))}</b> ${c.info.email ? `&bull; ${E(c.info.email)}` : ''}</span>
   </div>
 `;
 
@@ -171,11 +186,18 @@ function t1_cover(c, t) {
   const i = c.info, hero = c.hero || (c.items[0] && c.items[0].img) || '';
   return `
     <div class="t1-cover">
+      <div class="g-odop-gov-banner">
+        <span class="g-gov-emblem">🏛️</span>
+        <div class="g-gov-text">
+          <strong>GOVERNMENT OF INDIA &bull; ONE DISTRICT ONE PRODUCT (ODOP) INITIATIVE</strong>
+          <span>DISTRICT: <b>${E(i.district || 'Baran, Rajasthan')}</b> &bull; ODOP PRODUCT: <b>${E(i.odopProduct || 'Garlic')}</b></span>
+        </div>
+      </div>
       <div class="t1-hero" style="${bg(hero)}">
         <div class="t1-hero-overlay"></div>
         <div class="t1-seal">🌱 100% ORGANIC CERTIFIED</div>
         <div class="t1-hero-text">
-          <span class="t1-sub">${E(cap(i.district || 'KOTA / MALWA'))} ORGANIC FARMS</span>
+          <span class="t1-sub">DISTRICT: ${E(cap(i.district || 'Baran, Rajasthan'))} &bull; ODOP: ${E(cap(i.odopProduct || 'Garlic'))}</span>
           <h1 class="t1-h1">${E(i.ent || 'Fresh Garlic Harvest')}</h1>
         </div>
       </div>
@@ -194,6 +216,87 @@ function t1_cover(c, t) {
   `;
 }
 
+
+function renderGarlicProductCard(it, idx, c, prefix = 'grl') {
+  let rawImg = it.img || it.image;
+  if (rawImg && typeof rawImg === 'object') {
+    rawImg = rawImg.url || rawImg.img || (Array.isArray(rawImg.images) && rawImg.images[0]) || '';
+  }
+  if (!rawImg || typeof rawImg !== 'string') {
+    if (Array.isArray(it.images) && it.images[0]) {
+      const f = it.images[0];
+      rawImg = typeof f === 'string' ? f : (f?.url || f?.img || '');
+    }
+    if (!rawImg || typeof rawImg !== 'string') rawImg = it.angle1 || '/assets/garlic/garlic-01.jpeg';
+  }
+  const cardImg = typeof rawImg === 'string' && rawImg ? rawImg : '/assets/garlic/garlic-01.jpeg';
+  const cardPrice = fmtPrice(it.price || it.formattedPrice || 180);
+  const cardSku = it.sku || it.code || `#${prefix.toUpperCase()}-${pn(idx + 1)}`;
+  const cardName = (it.name || it.title || 'Grade-A Export Fresh Garlic Bulbs').replace(/\s*\([^)]*Angle[^)]*\)/gi, '').trim();
+  const cardDesc = it.shortDescription || it.description || 'Sun-cured large caliber garlic bulbs from Malwa soil with papery white skins and rich aromatic allicin.';
+  const cardTag = it.subcategory || it.productType || 'EXPORT GARLIC';
+  const cardCraft = (c.info && c.info.ent) || it.brand || 'Malwa Agro Producer Co.';
+
+  const specSize = it.size || '50 - 65 mm (Grade A+ Large)';
+  const specMaterial = it.material || it.materialComposition || '100% Organically Grown Malwa Garlic';
+  const specFinish = it.finish || 'Sun-Cured Export Clean White Skin';
+  const specApp = it.application || it.useApplication || 'Commercial Culinary, Dehydration & Export';
+  const specPriceRange = it.priceRange || `${cardPrice} – ₹240 / kg`;
+  const specMoq = it.moq || '500 kg (Wholesale Lot)';
+
+  const safeImg = typeof cardImg === 'string' ? cardImg.replace(/'/g, '%27') : '/assets/garlic/garlic-01.jpeg';
+
+  return `
+    <div class="g-odop-card">
+      <div class="g-odop-img" style="${bg(cardImg)}">
+        <img src="${safeImg}" alt="${E(cardName)}" class="g-odop-img-el" onerror="this.onerror=null; this.src='/assets/garlic/garlic-01.jpeg';" />
+        <span class="g-odop-tag">${E(cap(cardTag))}</span>
+        <span class="g-odop-district-chip">ODOP ${E(c.info.district ? c.info.district.split(',')[0].trim() : 'Baran')}</span>
+      </div>
+      <div class="g-odop-details">
+        <div class="g-odop-meta-row">
+          <span class="g-odop-sku-chip">SKU: ${E(cardSku)}</span>
+          <span class="g-odop-moq-chip">MOQ: ${E(specMoq)}</span>
+        </div>
+        <h3>${E(cardName)}</h3>
+        <div class="g-odop-desc-row">
+          <p class="g-odop-desc">${E(cardDesc)}</p>
+        </div>
+        
+        <div class="g-odop-spec-matrix">
+          <div class="g-odop-spec-item" title="${E(specSize)}">
+            <span class="g-odop-spec-lbl">📏 Size:</span>
+            <span class="g-odop-spec-val">${E(specSize)}</span>
+          </div>
+          <div class="g-odop-spec-item" title="${E(specMaterial)}">
+            <span class="g-odop-spec-lbl">🌱 Material:</span>
+            <span class="g-odop-spec-val">${E(specMaterial)}</span>
+          </div>
+          <div class="g-odop-spec-item" title="${E(specFinish)}">
+            <span class="g-odop-spec-lbl">✨ Finish:</span>
+            <span class="g-odop-spec-val">${E(specFinish)}</span>
+          </div>
+          <div class="g-odop-spec-item" title="${E(specApp)}">
+            <span class="g-odop-spec-lbl">🎯 Use:</span>
+            <span class="g-odop-spec-val">${E(specApp)}</span>
+          </div>
+        </div>
+
+        <div class="g-odop-foot">
+          <div class="g-odop-price-block">
+            <span class="g-odop-price">${E(cardPrice)}</span>
+            <span class="g-odop-range">Range: ${E(specPriceRange)}</span>
+          </div>
+          <div class="g-odop-contact-block">
+            <span class="g-odop-craft">${E(cardCraft)}</span>
+            <span class="g-odop-wa">💬 WA: ${E(fmtWa(c.info.whatsapp || c.info.mobile))}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
 function t1_products(c, no, slice, pageIdx, totalPages) {
   return `
     ${head(c, `ORGANIC HARVEST RANGE (PAGE ${pageIdx}/${totalPages})`, no)}
@@ -201,35 +304,8 @@ function t1_products(c, no, slice, pageIdx, totalPages) {
       <h2>Naturally Sun-Cured Bulb Varieties</h2>
       <p>Graded by diameter caliber, clove density, and skin layer tightness</p>
     </div>
-    <div class="t1-prod-grid">
-      ${slice.map((it, idx) => {
-        const cleanName = (it.name || '').replace(/\s*\([^)]*Angle[^)]*\)/gi, '').trim();
-        const cleanSize = (!it.size || it.size === 'x cm' || it.size === 'nullxnull cm') ? '50 - 65 mm' : it.size;
-        const cleanGrade = (!it.finish || it.finish.includes('Angle')) ? 'A+ Export Grade' : it.finish;
-        return `
-        <div class="t1-card">
-          <div class="t1-card-img" style="${bg(it.img)}">
-            <span class="t1-code">${E(it.code || `#ORG-${pn(idx + 1)}`)}</span>
-          </div>
-          <div class="t1-card-info">
-            <h3>${E(cleanName)}</h3>
-            <div class="t1-tags">
-              <span class="t1-tag">🌱 Organic Soil</span>
-              <span class="t1-tag">✓ Clean Roots</span>
-            </div>
-            <div class="t1-specs">
-              <div><b>Caliber:</b> ${E(cleanSize)}</div>
-              <div><b>Grade:</b> ${E(cleanGrade)}</div>
-              <div><b>Packaging:</b> 10kg/25kg Mesh Bag</div>
-            </div>
-            <div class="t1-price-row">
-              <span class="t1-price">${E(it.price || 'Wholesale Inquire')}</span>
-              <span class="t1-moq">${it.moq ? `MOQ: ${E(it.moq)}` : 'Bulk Available'}</span>
-            </div>
-          </div>
-        </div>
-      `;
-      }).join('')}
+    <div class="g-odop-grid">
+      ${slice.map((it, idx) => renderGarlicProductCard(it, idx, c, 'org')).join('')}
     </div>
     ${foot(c)}
   `;
@@ -270,37 +346,12 @@ function t2_cover(c, t) {
 function t2_products(c, no, slice, pageIdx, totalPages) {
   return `
     ${head(c, `TECHNICAL SPECIFICATION MATRIX (${pageIdx}/${totalPages})`, no)}
-    <div class="t2-blueprint-head">
+    <div class="t1-prod-header">
       <h2>Calibrated Export Sizing &amp; Bulk Packing</h2>
-      <span>Optical mechanical sorting &bull; Mesh bag &amp; carton box packings</span>
+      <p>Optical mechanical sorting &bull; Mesh bag &amp; carton box packings</p>
     </div>
-    <div class="t2-prod-grid">
-      ${slice.map((it, idx) => {
-        const cleanName = (it.name || '').replace(/\s*\([^)]*Angle[^)]*\)/gi, '').trim();
-        const cleanSize = (!it.size || it.size === 'x cm' || it.size === 'nullxnull cm') ? '50-60 mm' : it.size;
-        return `
-        <div class="t2-spec-card">
-          <div class="t2-card-head">
-            <span class="t2-ref">${E(it.code || `#EXP-${pn(idx + 1)}`)}</span>
-            <span class="t2-fob">FOB / CIF COMPLIANT</span>
-          </div>
-          <div class="t2-img" style="${bg(it.img)}"></div>
-          <div class="t2-card-body">
-            <h3 class="t2-name">${E(cleanName)}</h3>
-            <table class="t2-tbl">
-              <tr><td>Diameter:</td><td><b>${E(cleanSize)}</b></td></tr>
-              <tr><td>Moisture:</td><td>&lt;64% (Cured)</td></tr>
-              <tr><td>Defect Rate:</td><td>&lt;1.0%</td></tr>
-              <tr><td>Pack Type:</td><td>${E(it.material || '10kg Mesh Bag')}</td></tr>
-            </table>
-            <div class="t2-foot">
-              <span class="t2-rate">${E(it.price || 'Market Rate')}</span>
-              <span class="t2-moq">1x40ft FCL</span>
-            </div>
-          </div>
-        </div>
-      `;
-      }).join('')}
+    <div class="g-odop-grid">
+      ${slice.map((it, idx) => renderGarlicProductCard(it, idx, c, 'exp')).join('')}
     </div>
     ${foot(c)}
   `;
@@ -335,30 +386,12 @@ function t3_cover(c, t) {
 function t3_products(c, no, slice, pageIdx, totalPages) {
   return `
     ${head(c, `CULINARY & FOOD SERVICE SELECTION (${pageIdx}/${totalPages})`, no)}
-    <div class="t3-header">
+    <div class="t1-prod-header">
       <h2>Commercial Kitchen &amp; Food-Processing Formats</h2>
       <p>Cleaned, sorted, and hygienic packaging for instant culinary integration</p>
     </div>
-    <div class="t3-prod-grid">
-      ${slice.map((it, idx) => `
-        <div class="t3-card">
-          <div class="t3-plate" style="${bg(it.img)}">
-            <span class="t3-pill">${E(it.finish || 'Grade A')}</span>
-          </div>
-          <div class="t3-info">
-            <h3>${E(it.name)}</h3>
-            <p class="t3-desc">Pure aromatic profile &bull; Vacuum sealed for 12 months freshness preservation.</p>
-            <div class="t3-spec-row">
-              <span><b>Pack:</b> 1kg / 5kg / 20kg</span>
-              <span><b>Shelf Life:</b> 365 Days</span>
-            </div>
-            <div class="t3-bottom">
-              <span class="t3-price">${E(it.price || 'Wholesale Quote')}</span>
-              <span class="t3-moq">HoReCa Ready</span>
-            </div>
-          </div>
-        </div>
-      `).join('')}
+    <div class="g-odop-grid">
+      ${slice.map((it, idx) => renderGarlicProductCard(it, idx, c, 'cul')).join('')}
     </div>
     ${foot(c)}
   `;
@@ -396,43 +429,12 @@ function t4_cover(c, t) {
 function t4_products(c, no, slice, pageIdx, totalPages) {
   return `
     ${head(c, `WHOLESALE COMMODITY MATRIX (${pageIdx}/${totalPages})`, no)}
-    <div class="t4-matrix-head">
+    <div class="t1-prod-header">
       <h2>Wholesale Rate &amp; Container Specification Grid</h2>
-      <span>Real-time FOB quotes &bull; Standardized commercial export grading</span>
+      <p>Real-time FOB quotes &bull; Standardized commercial export grading</p>
     </div>
-    <div class="t4-table-wrap">
-      <table class="t4-table">
-        <thead>
-          <tr>
-            <th style="width:70px">Photo</th>
-            <th>Variety &amp; Code</th>
-            <th>Caliber (mm)</th>
-            <th>Standard Packing</th>
-            <th>40ft FCL Cap</th>
-            <th>MOQ</th>
-            <th>Price / Quote</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${slice.map((it, idx) => `
-            <tr>
-              <td><div class="t4-thumb" style="${bg(it.img)}"></div></td>
-              <td>
-                <b>${E(it.name)}</b>
-                <small>${E(it.code || `#WHS-${pn(idx + 1)}`)} &bull; ${E(it.finish || 'Grade A')}</small>
-              </td>
-              <td><b>${E(it.size || '50-60 mm')}</b></td>
-              <td>${E(it.material || '20kg Red Mesh Bag')}</td>
-              <td>1,400 Bags (28 MT)</td>
-              <td>${it.moq ? E(it.moq) : '5 MT'}</td>
-              <td><span class="t4-price-badge">${E(it.price || 'Market Rates')}</span></td>
-            </tr>
-          `).join('')}
-        </tbody>
-      </table>
-    </div>
-    <div class="t4-reefer-note">
-      <b>⚠️ Reefer Logistics Notice:</b> Container pre-cooling required. Moisture levels strictly verified below 65% before container sealing.
+    <div class="g-odop-grid">
+      ${slice.map((it, idx) => renderGarlicProductCard(it, idx, c, 'whs')).join('')}
     </div>
     ${foot(c)}
   `;
@@ -465,23 +467,12 @@ function t5_cover(c, t) {
 function t5_products(c, no, slice, pageIdx, totalPages) {
   return `
     ${head(c, `HEIRLOOM HARVEST SELECTION (${pageIdx}/${totalPages})`, no)}
-    <div class="t5-journal-head">
-      <h2>Cultivated Varieties &amp; Artisan Bunches</h2>
-      <p>Direct farm-gate selections &bull; Naturally dried with full intact braided stalks</p>
+    <div class="t1-prod-header">
+      <h2>Rare Heirloom &amp; High-Allicin Strains</h2>
+      <p>Heritage seed lines cultivated in mineral-rich Chambal and Malwa alluvial black soil</p>
     </div>
-    <div class="t5-polaroid-grid">
-      ${slice.map((it, idx) => `
-        <div class="t5-polaroid">
-          <div class="t5-polaroid-photo" style="${bg(it.img)}">
-            <span class="t5-seal-pin">📍</span>
-          </div>
-          <div class="t5-polaroid-caption">
-            <h3>${E(it.name)}</h3>
-            <div class="t5-desc-note">${it.size ? `Caliber: ${E(it.size)} &bull; ` : ''}Hand-Sorted Heritage Selection</div>
-            <div class="t5-price-tag">${E(it.price || 'Direct Farm Pricing')}</div>
-          </div>
-        </div>
-      `).join('')}
+    <div class="g-odop-grid">
+      ${slice.map((it, idx) => renderGarlicProductCard(it, idx, c, 'hrl')).join('')}
     </div>
     ${foot(c)}
   `;
@@ -519,30 +510,12 @@ function t6_cover(c, t) {
 function t6_products(c, no, slice, pageIdx, totalPages) {
   return `
     ${head(c, `GOURMET SPECIALTY COLLECTION (${pageIdx}/${totalPages})`, no)}
-    <div class="t6-head-dark">
+    <div class="t1-prod-header">
       <h2>Aged Black Garlic &amp; Infusions</h2>
       <p>Artisanal culinary treasures for Michelin-starred dining and nutraceuticals</p>
     </div>
-    <div class="t6-spotlight-grid">
-      ${slice.map((it, idx) => `
-        <div class="t6-card">
-          <div class="t6-img" style="${bg(it.img)}">
-            <span class="t6-code-gold">${E(it.code || `#GLD-${pn(idx + 1)}`)}</span>
-          </div>
-          <div class="t6-info">
-            <h3 class="t6-prod-name">${E(it.name)}</h3>
-            <p class="t6-notes">Sweet umami profile, balsamic complexity, soft spreadable texture.</p>
-            <div class="t6-details">
-              <div><b>Format:</b> ${E(it.material || 'Whole Aged Bulb / Peeled')}</div>
-              <div><b>Origin:</b> Single-Origin Certified</div>
-            </div>
-            <div class="t6-foot">
-              <span class="t6-price">${E(it.price || 'Gourmet Quote')}</span>
-              <span class="t6-badge">Artisan Batch</span>
-            </div>
-          </div>
-        </div>
-      `).join('')}
+    <div class="g-odop-grid">
+      ${slice.map((it, idx) => renderGarlicProductCard(it, idx, c, 'gld')).join('')}
     </div>
     ${foot(c)}
   `;
@@ -584,32 +557,12 @@ function t7_cover(c, t) {
 function t7_products(c, no, slice, pageIdx, totalPages) {
   return `
     ${head(c, `CONTAINER LOAD SPECIFICATIONS (${pageIdx}/${totalPages})`, no)}
-    <div class="t7-marine-head">
+    <div class="t1-prod-header">
       <h2>Marine Container Graded Shipments</h2>
       <p>Packed in UV-resistant high-ventilation polypropylene mesh bags</p>
     </div>
-    <div class="t7-grid">
-      ${slice.map((it, idx) => `
-        <div class="t7-bay-card">
-          <div class="t7-bay-header">
-            <span>BAY CARGO #${pn(idx + 1)}</span>
-            <span class="t7-cal">${E(it.size || '55mm+')}</span>
-          </div>
-          <div class="t7-img" style="${bg(it.img)}"></div>
-          <div class="t7-bay-body">
-            <h3>${E(it.name)}</h3>
-            <div class="t7-bay-specs">
-              <div><span>Ventilation:</span> 15 CMH</div>
-              <div><span>RH Range:</span> 65% - 70%</div>
-              <div><span>Inspection:</span> SGS / Phytosanitary</div>
-            </div>
-            <div class="t7-bay-foot">
-              <span class="t7-price">${E(it.price || 'FOB Mundra')}</span>
-              <span class="t7-lead">Transit: 14-25 Days</span>
-            </div>
-          </div>
-        </div>
-      `).join('')}
+    <div class="g-odop-grid">
+      ${slice.map((it, idx) => renderGarlicProductCard(it, idx, c, 'bay')).join('')}
     </div>
     ${foot(c)}
   `;
@@ -647,30 +600,12 @@ function t8_cover(c, t) {
 function t8_products(c, no, slice, pageIdx, totalPages) {
   return `
     ${head(c, `ARTISAN GROWERS CATALOGUE (${pageIdx}/${totalPages})`, no)}
-    <div class="t8-head">
+    <div class="t1-prod-header">
       <h2>Direct Producer Batches &amp; Braided Bundles</h2>
       <p>Harvested, cured, and hand-bundled by our certified grower collective</p>
     </div>
-    <div class="t8-grid">
-      ${slice.map((it, idx) => `
-        <div class="t8-card">
-          <div class="t8-card-img" style="${bg(it.img)}">
-            <span class="t8-batch-tag">BATCH #${pn(idx + 1)}</span>
-          </div>
-          <div class="t8-card-content">
-            <h3>${E(it.name)}</h3>
-            <p class="t8-farm-loc">Farm Gate Origin: Chambal Basin Sector</p>
-            <div class="t8-spec-chips">
-              <span>${E(it.size || '45-55 mm')}</span>
-              <span>${E(it.material || 'Braided / Loose')}</span>
-            </div>
-            <div class="t8-foot">
-              <span class="t8-rate">${E(it.price || 'Direct Farm Rate')}</span>
-              <span class="t8-fair">Fair-Trade Certified</span>
-            </div>
-          </div>
-        </div>
-      `).join('')}
+    <div class="g-odop-grid">
+      ${slice.map((it, idx) => renderGarlicProductCard(it, idx, c, 'grw')).join('')}
     </div>
     ${foot(c)}
   `;
@@ -680,7 +615,7 @@ function t8_products(c, no, slice, pageIdx, totalPages) {
    PAGE COUNT & MAIN RENDER DISPATCHER
    ========================================================================= */
 function pageCount(t, n) {
-  return 1 + Math.ceil(Math.max(1, n) / (t.id === 'garlic-1' ? 4 : t.id === 'garlic-4' ? 6 : 4)) + 1;
+  return 1 + Math.ceil(Math.max(1, n) / 4) + 1;
 }
 
 function render(t, ctx) {
@@ -736,7 +671,7 @@ function render(t, ctx) {
     }
   } else if (t.id === 'garlic-4') {
     P.push(wrap(t4_cover(c, t), 'g4-mode'));
-    const perPage = 6;
+    const perPage = 4;
     const totalPages = Math.ceil(items.length / perPage) || 1;
     for (let k = 0; k < items.length; k += perPage) {
       P.push(wrap(t4_products(c, ++no, items.slice(k, k + perPage), Math.floor(k / perPage) + 1, totalPages), 'g4-mode'));
@@ -780,6 +715,201 @@ function render(t, ctx) {
 }
 
 const CSS = `
+/* ODOP Baran Card Matrix Styles */
+.g-odop-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  padding: 0;
+  width: 100%;
+  box-sizing: border-box;
+  margin-top: 4px;
+  margin-bottom: 24px;
+}
+.g-odop-card {
+  background: #ffffff;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  box-shadow: 0 4px 14px rgba(0,0,0,0.04);
+  display: flex;
+  flex-direction: column;
+  height: 370px;
+  max-height: 370px;
+  min-height: 0;
+  box-sizing: border-box;
+}
+.g-odop-img {
+  height: 140px;
+  min-height: 140px;
+  max-height: 140px;
+  background-size: cover;
+  background-position: center;
+  position: relative;
+  overflow: hidden;
+  background-color: var(--soft, #f0fdf4);
+}
+.g-odop-img-el {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.g-odop-tag {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  background: var(--dark, #14532d);
+  color: #fff;
+  font-size: 8.5px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 4px;
+  letter-spacing: 0.05em;
+}
+.g-odop-district-chip {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: rgba(0,0,0,0.7);
+  color: #fff;
+  font-size: 8.5px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 4px;
+}
+.g-odop-details {
+  padding: 6px 10px 8px;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  justify-content: space-between;
+}
+.g-odop-meta-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2px;
+}
+.g-odop-sku-chip {
+  font-size: 8.5px;
+  font-family: monospace;
+  font-weight: 700;
+  color: var(--acc, #15803d);
+}
+.g-odop-moq-chip {
+  font-size: 8px;
+  background: rgba(22, 101, 52, 0.08);
+  color: #166534;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-weight: 700;
+}
+.g-odop-details h3 {
+  font-family: var(--hf, serif);
+  font-size: 13.5px;
+  margin: 0 0 2px;
+  color: var(--ink, #1f2937);
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.g-odop-desc-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+.g-odop-desc {
+  font-size: 9.5px;
+  color: var(--muted, #4b5563);
+  margin: 0;
+  line-height: 1.25;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
+}
+.g-odop-spec-matrix {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 3px 6px;
+  background: rgba(22, 101, 52, 0.04);
+  border: 1px solid rgba(22, 101, 52, 0.12);
+  border-radius: 6px;
+  padding: 5px 8px;
+  margin: 4px 0 6px 0;
+  font-size: 9.5px;
+}
+.g-odop-spec-item {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.g-odop-spec-lbl {
+  font-weight: 700;
+  color: #166534;
+  font-size: 9px;
+}
+.g-odop-spec-val {
+  color: #1f2937;
+  font-weight: 600;
+  font-size: 9.5px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.g-odop-foot {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top: 1px solid var(--line, #e5e7eb);
+  padding-top: 6px;
+  margin-top: 2px;
+}
+.g-odop-price-block {
+  display: flex;
+  flex-direction: column;
+}
+.g-odop-price {
+  font-size: 13.5px;
+  font-weight: 800;
+  color: var(--acc, #15803d);
+  line-height: 1;
+}
+.g-odop-range {
+  font-size: 8px;
+  color: var(--muted, #6b7280);
+  margin-top: 2px;
+  font-weight: 600;
+}
+.g-odop-contact-block {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+.g-odop-craft {
+  font-size: 8.5px;
+  font-weight: 700;
+  color: var(--ink, #374151);
+  white-space: nowrap;
+  max-width: 140px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.g-odop-wa {
+  font-size: 8px;
+  color: #166534;
+  font-weight: 700;
+  margin-top: 2px;
+}
+
+
 .pg.garlic-pg {
   width: 794px;
   height: 1123px;
@@ -798,12 +928,12 @@ const CSS = `
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding-bottom: 12px;
+  padding-bottom: 8px;
   border-bottom: 1.5px solid var(--line);
   font-size: 11px;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  margin-bottom: 24px;
+  margin-bottom: 12px;
 }
 .garlic-pg .g-head-brand { display: flex; align-items: center; gap: 6px; color: var(--ink); }
 .garlic-pg .g-leaf-icon { font-size: 14px; }
@@ -812,17 +942,32 @@ const CSS = `
 
 .garlic-pg .g-foot {
   position: absolute;
-  bottom: 28px;
+  bottom: 16px;
   left: 44px;
   right: 44px;
   display: flex;
   justify-content: space-between;
-  padding-top: 10px;
+  padding-top: 8px;
   border-top: 1px solid var(--line);
-  font-size: 10.5px;
+  font-size: 9.5px;
   color: var(--muted);
   letter-spacing: 0.06em;
 }
+
+.g-odop-gov-banner {
+  background: linear-gradient(90deg, #1b4332, #2d6a4f);
+  color: #ffffff;
+  padding: 6px 12px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+  border: 1px solid #52b788;
+}
+.g-gov-emblem { font-size: 18px; }
+.g-gov-text strong { display: block; font-size: 9px; letter-spacing: 0.05em; }
+.g-gov-text span { font-size: 8px; opacity: 0.95; }
 
 /* Contact Page Styles */
 .garlic-pg .g-contact-wrap { margin-top: 10px; }
@@ -848,6 +993,7 @@ const CSS = `
   font-family: var(--hf);
   font-size: 34px;
   margin: 0 0 10px;
+  color: var(--onDark, #ffffff);
 }
 .garlic-pg .g-contact-p {
   font-size: 13px;

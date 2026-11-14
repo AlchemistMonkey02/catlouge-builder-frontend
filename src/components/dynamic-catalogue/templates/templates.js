@@ -45,18 +45,18 @@ const covers = {
 const run = (c, label, no) => `<div class="t-run"><span>${E(c.info.ent).toUpperCase()}</span><span>${label}</span><span>${pn(no)}</span></div>`;
 const pfoot = c => `<div class="t-pfoot"><span>${E(c.info.ent).toUpperCase()} · ${E(c.info.district || '').toUpperCase()}</span><span>${E(c.info.mobile || '')}</span></div>`;
 const prods = {
-  grid: { per: 8, html: (c, items, no) => `${run(c, E(c.info.product || 'PRODUCTS').toUpperCase(), no)}
+  grid: { per: 4, html: (c, items, no) => `${run(c, E(c.info.product || 'PRODUCTS').toUpperCase(), no)}
     <div class="t-lab">THE COLLECTION</div><h3 class="t-ptitle">${E(c.title1)} <i>${E(c.title2)}</i></h3>
     <div class="t-g4">${items.map(it => `<div><div class="ph t-p34" style="${bgi(it.img)}"></div><div class="t-nm">${E(it.name)}</div><div class="t-sp">${E(spec(it))}</div><div class="t-pr">${E(it.price)}</div></div>`).join('')}</div>${pfoot(c)}` },
   specrows: { per: 3, html: (c, items, no) => `${run(c, 'SPECIFICATIONS', no)}<h3 class="t-ptitle">${E(c.title1)} <i>${E(c.title2)}</i></h3>
     ${items.map((it, k) => `<div class="t-item" style="top:${140 + k * 288}px"><div class="ph t-iph" style="${bgi(it.img)}"></div><div class="t-itx"><div class="t-nm2">${E(it.name)}</div>
       <div class="t-sg">${[['Size', it.size], ['Material', it.material], ['Colour', it.colour], ['Min. order', it.moq]].filter(r => r[1]).map(r => `<div><span>${r[0]}</span><b>${E(r[1])}</b></div>`).join('')}</div>
       <div class="t-pr2">${E(it.price)}</div></div></div>`).join('')}${pfoot(c)}` },
-  masonry: { per: 5, html: (c, items, no) => {
-    const sp = [[4, 3], [2, 3], [2, 2], [2, 2], [2, 2]];
+  masonry: { per: 4, html: (c, items, no) => {
+    const sp = [[3, 3], [3, 3], [3, 3], [3, 3]];
     return `${run(c, 'THE COLLECTION', no)}<h3 class="t-ptitle">${E(c.title1)} <i>${E(c.title2)}</i></h3>
-    <div class="t-mas">${items.map((it, k) => `<div class="c ph" style="grid-column:span ${(sp[k] || [2,2])[0]};grid-row:span ${(sp[k] || [2,2])[1]};${bgi(it.img)}"><span>${E(it.name)}<small>${E([it.size, it.price].filter(Boolean).join(' · '))}</small></span></div>`).join('')}</div>${pfoot(c)}`; } },
-  table: { per: 5, html: (c, items, no) => `${run(c, 'PRODUCTS &amp; PRICE LIST', no)}<h3 class="t-ptitle">${E(c.title1)} <i>${E(c.title2)}</i></h3>
+    <div class="t-mas">${items.map((it, k) => `<div class="c ph" style="grid-column:span ${(sp[k] || [3,3])[0]};grid-row:span ${(sp[k] || [3,3])[1]};${bgi(it.img)}"><span>${E(it.name)}<small>${E([it.size, it.price].filter(Boolean).join(' · '))}</small></span></div>`).join('')}</div>${pfoot(c)}`; } },
+  table: { per: 4, html: (c, items, no) => `${run(c, 'PRODUCTS &amp; PRICE LIST', no)}<h3 class="t-ptitle">${E(c.title1)} <i>${E(c.title2)}</i></h3>
     <div class="t-tb"><div class="t-tr h"><span>Photo</span><span>Product</span><span>Size</span><span>Packing / finish</span><span>MOQ</span><span>Price</span></div>
     ${items.map(it => `<div class="t-tr"><div class="ph t-tph" style="${bgi(it.img)}"></div><div><b>${E(it.name)}</b><span class="g">${E(it.colour || 'Standard')}</span></div><span>${E(it.size || '-')}</span><span>${E(it.material || '-')}</span><span>${E(it.moq || '-')}</span><b>${E(it.price)}</b></div>`).join('')}</div>${pfoot(c)}` },
   cards2: { per: 4, html: (c, items, no) => `${run(c, 'OUR RANGE', no)}<h3 class="t-ptitle">${E(c.title1)} <i>${E(c.title2)}</i></h3>
@@ -213,8 +213,8 @@ const CSS = `
 .tp .t-seal span{display:block;font-size:8px;letter-spacing:.2em;margin-top:6px}
 .tp .t-brandf{position:absolute;left:60px;right:60px;top:850px;text-align:center;font-family:var(--hf);font-weight:var(--hw);line-height:1.15}
 .tp .t-subf2{position:absolute;left:0;right:0;top:960px;text-align:center;font-size:11px;letter-spacing:.35em;color:var(--muted)}
-.tp .t-g4{position:absolute;left:44px;right:44px;top:170px;display:grid;grid-template-columns:repeat(4,1fr);gap:22px 14px}
-.tp .t-p34{height:196px}
+.tp .t-g4{position:absolute;left:44px;right:44px;top:170px;display:grid;grid-template-columns:repeat(2,1fr);gap:20px 24px}
+.tp .t-p34{height:270px;border-radius:8px}
 .tp .t-g3{position:absolute;left:44px;right:44px;top:170px;display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
 .tp .t-tall{height:640px;margin-bottom:12px}
 .tp .t-item{position:absolute;left:44px;right:44px;height:262px;background:var(--surface);display:flex;border-left:5px solid var(--acc)}
@@ -271,11 +271,11 @@ const CSS = `
 function pageCount(tpl, nItems){ return 1 + (tpl.withStory ? 1 : 0) + Math.ceil(nItems / prods[tpl.prod].per) + 1; }
 
 function render(tpl, ctx){
-  const copy = Object.assign({}, ctx.copy || (window.getCopy && window.getCopy(ctx.info)) || {});
+  const copy = Object.assign({}, ctx.copy || (typeof window !== 'undefined' && window.getCopy && window.getCopy(ctx.info)) || {});
   const tidyCut = (t, n) => { t = String(t).trim(); if (t.length <= n) return t; const cut = t.slice(0, n), dot = cut.lastIndexOf('. ');
     if (dot > n * .5) return cut.slice(0, dot + 1); return cut.slice(0, cut.lastIndexOf(' ')).replace(/[\s,;:\-–]+$/, '') + '…'; };
   const pool = copy.titlePool || [['Quality', 'Excellence'], ['Signature', 'Collection']];
-  const ti = window.CONTENT ? window.CONTENT.hash(tpl.id) % pool.length : 0, tt = pool[ti] || pool[0];
+  const ti = (typeof window !== 'undefined' && window.CONTENT) ? window.CONTENT.hash(tpl.id) % pool.length : 0, tt = pool[ti] || pool[0];
   copy.titleA = (copy.storyTitle ? copy.storyTitle[0] : 'Curated').replace(/,$/, ''); copy.titleB = copy.storyTitle ? copy.storyTitle[1] : 'Collection';
   const th = tpl.theme, c = Object.assign({}, ctx, {
     copy, year: new Date().getFullYear(), hero: (ctx.heroImg || (ctx.items[0] && ctx.items[0].img) || ''), title1: tt[0], title2: tt[1],

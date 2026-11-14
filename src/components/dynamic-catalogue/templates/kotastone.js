@@ -4,7 +4,21 @@
 const E = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const cap = s => (s || '').toUpperCase();
 const pn = n => String(n).padStart(2, '0');
-const bg = u => u ? `background-image:url(${u})` : '';
+const bg = u => (u && typeof u === 'string') ? `background-image:url('${u.replace(/'/g, "%27")}')` : '';
+const fmtWa = w => {
+  if (!w) return '';
+  let s = String(w).trim();
+  s = s.replace(/^(\+?91\s*)+/gi, '').replace(/^\+/, '').trim();
+  return `+91 ${s}`;
+};
+const fmtPrice = p => {
+  if (p == null || p === '') return '₹85 / sq.ft';
+  const s = String(p).trim();
+  if (s.startsWith('₹')) return s;
+  const num = Number(s.replace(/[^0-9.]/g, ''));
+  if (!isNaN(num) && num > 0) return `₹${num.toLocaleString('en-IN')} / sq.ft`;
+  return 'Price on Request';
+};
 
 let uid = 0;
 const cut = (img, x, y, w, h, pts, extra) => {
@@ -102,6 +116,7 @@ const head = (c, label, no) => `
     <div class="ks-head-brand">
       <span>🏛️</span>
       <strong>${E(c.info.ent || 'KOTA BLUE-GREEN LIMESTONE')}</strong>
+      <span class="ks-head-district" style="font-size:10px; color:var(--muted); font-weight:600; margin-left:8px;">&bull; District: ${E(c.info.district || 'Jhalawar, Rajasthan')} [ODOP: ${E(c.info.odopProduct || 'Kota Stone')}]</span>
     </div>
     <span class="ks-head-tag">${E(label)}</span>
     <span class="ks-head-num">${pn(no)}</span>
@@ -110,8 +125,8 @@ const head = (c, label, no) => `
 
 const foot = c => `
   <div class="ks-foot">
-    <span>${E(c.info.ent || '')} &bull; Natural Kota Stone Limestone Works</span>
-    <span>☎ ${E(c.info.mobile || '')} ${c.info.email ? `&bull; ${E(c.info.email)}` : ''}</span>
+    <span><b>${E(c.info.ent || '')}</b> &bull; 📍 District: ${E(c.info.district || 'Jhalawar, Rajasthan')} &bull; 🏷️ ODOP: ${E(c.info.odopProduct || 'Kota Stone')}</span>
+    <span>💬 WhatsApp: <b>${E(fmtWa(c.info.whatsapp || c.info.mobile))}</b> ${c.info.email ? `&bull; ${E(c.info.email)}` : ''}</span>
   </div>
 `;
 
@@ -175,12 +190,19 @@ function t1_cover(c, t) {
   const i = c.info, hero = c.hero || (c.items[0] && c.items[0].img) || '';
   return `
     <div class="ks1-cover">
+      <div class="ks-odop-gov-banner">
+        <span class="ks-gov-emblem">🏛️</span>
+        <div class="ks-gov-text">
+          <strong>GOVERNMENT OF INDIA &bull; ONE DISTRICT ONE PRODUCT (ODOP) INITIATIVE</strong>
+          <span>DISTRICT: <b>${E(i.district || 'Jhalawar, Rajasthan')}</b> &bull; ODOP PRODUCT: <b>${E(i.odopProduct || 'Kota Stone')}</b></span>
+        </div>
+      </div>
       <div class="ks1-cut-hero">
         ${cut(hero, 0, 0, 706, 540, [[0, 0], [100, 0], [100, 80], [0, 100]])}
         <div class="ks1-badge-abs">ARCHITECTURAL LIMESTONE</div>
       </div>
       <div class="ks1-body">
-        <span class="ks1-sub">NATURAL FINE-GRAINED CALCAREOUS STONE</span>
+        <span class="ks1-sub">DISTRICT: ${E(cap(i.district || 'Jhalawar, Rajasthan'))} &bull; ODOP: ${E(cap(i.odopProduct || 'Kota Stone'))}</span>
         <h1 class="ks1-title">${E(i.ent || 'Classic Kota Stone Architectural Collection')}</h1>
         <p class="ks1-p">${E(i.desc || 'Celebrated across government complexes, railway stations, and residential estates. Exceptionally dense natural limestone renowned for its non-porous structure, cooling thermal properties, and centuries of wear resistance.')}</p>
         <div class="ks1-metric-row">
@@ -193,33 +215,96 @@ function t1_cover(c, t) {
   `;
 }
 
+
+function renderKotaStoneProductCard(it, idx, c, prefix = 'kts') {
+  let rawImg = it.img || it.image;
+  if (rawImg && typeof rawImg === 'object') {
+    rawImg = rawImg.url || rawImg.img || (Array.isArray(rawImg.images) && rawImg.images[0]) || '';
+  }
+  if (!rawImg || typeof rawImg !== 'string') {
+    if (Array.isArray(it.images) && it.images[0]) {
+      const f = it.images[0];
+      rawImg = typeof f === 'string' ? f : (f?.url || f?.img || '');
+    }
+    if (!rawImg || typeof rawImg !== 'string') rawImg = it.angle1 || '/assets/kota-stone/Blue-Kota-Stone-Tiles-1.jpg';
+  }
+  const cardImg = typeof rawImg === 'string' && rawImg ? rawImg : '/assets/kota-stone/Blue-Kota-Stone-Tiles-1.jpg';
+  const cardPrice = fmtPrice(it.price || it.formattedPrice || 85);
+  const cardSku = it.sku || it.code || `#${prefix.toUpperCase()}-${pn(idx + 1)}`;
+  const cardName = (it.name || it.title || 'Kota Stone Architectural Slab').replace(/\s*\([^)]*Angle[^)]*\)/gi, '').trim();
+  const cardDesc = it.shortDescription || it.description || 'Natural fine-grained limestone with non-slip texture and high compressive strength.';
+  const cardTag = it.subcategory || it.productType || 'ARCHITECTURAL STONE';
+  const cardCraft = (c.info && c.info.ent) || it.brand || 'Kota Stone Quarry Guild';
+
+  const specSize = it.size || '600x600 mm (18-20 mm Calibrated)';
+  const specMaterial = it.material || it.materialComposition || 'Natural Indurated Limestone (Kota Stone)';
+  const specFinish = it.finish || 'Mirror High Polish / Honed';
+  const specApp = it.application || it.useApplication || 'Heavy Commercial Flooring & Corridors';
+  const specPriceRange = it.priceRange || `${cardPrice} – ₹120 / sq.ft`;
+  const specMoq = it.moq || '500 sq.ft (Quarry Lot)';
+
+  const safeImg = typeof cardImg === 'string' ? cardImg.replace(/'/g, '%27') : '/assets/kota-stone/Blue-Kota-Stone-Tiles-1.jpg';
+
+  return `
+    <div class="ks-odop-card">
+      <div class="ks-odop-img" style="${bg(cardImg)}">
+        <img src="${safeImg}" alt="${E(cardName)}" class="ks-odop-img-el" onerror="this.onerror=null; this.src='/assets/kota-stone/Blue-Kota-Stone-Tiles-1.jpg';" />
+        <span class="ks-odop-tag">${E(cap(cardTag))}</span>
+        <span class="ks-odop-district-chip">ODOP ${E(c.info.district ? c.info.district.split(',')[0].trim() : 'Jhalawar')}</span>
+      </div>
+      <div class="ks-odop-details">
+        <div class="ks-odop-meta-row">
+          <span class="ks-odop-sku-chip">SKU: ${E(cardSku)}</span>
+          <span class="ks-odop-moq-chip">MOQ: ${E(specMoq)}</span>
+        </div>
+        <h3>${E(cardName)}</h3>
+        <div class="ks-odop-desc-row">
+          <p class="ks-odop-desc">${E(cardDesc)}</p>
+        </div>
+        
+        <div class="ks-odop-spec-matrix">
+          <div class="ks-odop-spec-item" title="${E(specSize)}">
+            <span class="ks-odop-spec-lbl">📏 Size:</span>
+            <span class="ks-odop-spec-val">${E(specSize)}</span>
+          </div>
+          <div class="ks-odop-spec-item" title="${E(specMaterial)}">
+            <span class="ks-odop-spec-lbl">🏛️ Material:</span>
+            <span class="ks-odop-spec-val">${E(specMaterial)}</span>
+          </div>
+          <div class="ks-odop-spec-item" title="${E(specFinish)}">
+            <span class="ks-odop-spec-lbl">✨ Finish:</span>
+            <span class="ks-odop-spec-val">${E(specFinish)}</span>
+          </div>
+          <div class="ks-odop-spec-item" title="${E(specApp)}">
+            <span class="ks-odop-spec-lbl">🎯 Use:</span>
+            <span class="ks-odop-spec-val">${E(specApp)}</span>
+          </div>
+        </div>
+
+        <div class="ks-odop-foot">
+          <div class="ks-odop-price-block">
+            <span class="ks-odop-price">${E(cardPrice)}</span>
+            <span class="ks-odop-range">Range: ${E(specPriceRange)}</span>
+          </div>
+          <div class="ks-odop-contact-block">
+            <span class="ks-odop-craft">${E(cardCraft)}</span>
+            <span class="ks-odop-wa">💬 WA: ${E(fmtWa(c.info.whatsapp || c.info.mobile))}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
 function t1_products(c, no, slice, pageIdx, totalPages) {
   return `
     ${head(c, `ARCHITECTURAL STONE RANGE (${pageIdx}/${totalPages})`, no)}
     <div class="ks1-head">
       <h2>Naturally Split &amp; Calibrated Slabs</h2>
-      <p>Precision calibrated 18mm / 25mm thickness for uniform mortar and adhesive bedding</p>
+      <p>Precision calibrated thickness for uniform mortar and adhesive bedding</p>
     </div>
-    <div class="ks1-grid">
-      ${slice.map((it, idx) => `
-        <div class="ks1-card">
-          <div class="ks1-img" style="${bg(it.img)}">
-            <span class="ks1-code">${E(it.code || `#KTS-${pn(idx + 1)}`)}</span>
-          </div>
-          <div class="ks1-info">
-            <h3>${E(it.name)}</h3>
-            <div class="ks1-tags">
-              <span>${E(it.finish || 'Mirror Polish / Honed')}</span>
-              <span>${E(it.size || '600x600 mm')}</span>
-            </div>
-            <p class="ks1-note">Fine-grained dense matrix with zero surface flaking &bull; Non-slip traction.</p>
-            <div class="ks1-foot">
-              <span class="ks1-price">${E(it.price || 'Quarry Rate')}</span>
-              <span class="ks1-stock">Ready Stock</span>
-            </div>
-          </div>
-        </div>
-      `).join('')}
+    <div class="ks-odop-grid">
+      ${slice.map((it, idx) => renderKotaStoneProductCard(it, idx, c, 'kts')).join('')}
     </div>
     ${foot(c)}
   `;
@@ -257,30 +342,12 @@ function t2_cover(c, t) {
 function t2_products(c, no, slice, pageIdx, totalPages) {
   return `
     ${head(c, `SURFACE FINISH COLLECTION (${pageIdx}/${totalPages})`, no)}
-    <div class="ks2-head">
+    <div class="ks1-head">
       <h2>Mirror, Honed &amp; Leathered Slabs</h2>
       <p>Precision automated polishing lines delivering glass-like flatness and velvety relief</p>
     </div>
-    <div class="ks2-grid">
-      ${slice.map((it, idx) => `
-        <div class="ks2-card">
-          <div class="ks2-card-img" style="${bg(it.img)}">
-            <span class="ks2-finish-badge">${E(it.finish || 'Mirror Gloss')}</span>
-          </div>
-          <div class="ks2-card-body">
-            <h3>${E(it.name)}</h3>
-            <p class="ks2-card-p">Diamond head polished &bull; Zero micropores &bull; Stain resistant seal ready.</p>
-            <div class="ks2-card-specs">
-              <span><b>Thickness:</b> ${E(it.thickness || '20 mm Sawn')}</span>
-              <span><b>Edges:</b> Machine Chamfered</span>
-            </div>
-            <div class="ks2-card-foot">
-              <span class="ks2-price">${E(it.price || 'Wholesale Quote')}</span>
-              <span class="ks2-status">Calibrated</span>
-            </div>
-          </div>
-        </div>
-      `).join('')}
+    <div class="ks-odop-grid">
+      ${slice.map((it, idx) => renderKotaStoneProductCard(it, idx, c, 'mir')).join('')}
     </div>
     ${foot(c)}
   `;
@@ -315,31 +382,13 @@ function t3_cover(c, t) {
 
 function t3_products(c, no, slice, pageIdx, totalPages) {
   return `
-    ${head(c, `COURTYARD & PATIO TILES (${pageIdx}/${totalPages})`, no)}
-    <div class="ks3-head">
-      <h2>Courtyard Slabs &amp; Natural Walkways</h2>
-      <p>Hand-cut and machine-cut tiles calibrated for traditional outdoor courtyards</p>
+    ${head(c, `WARM TERRACOTTA COURTYARD (${pageIdx}/${totalPages})`, no)}
+    <div class="ks1-head">
+      <h2>Colonnade &amp; Courtyard Paving Formats</h2>
+      <p>Warm desert ochre and chocolate brown limestone pavers</p>
     </div>
-    <div class="ks3-grid">
-      ${slice.map((it, idx) => `
-        <div class="ks3-card">
-          <div class="ks3-img" style="${bg(it.img)}">
-            <span class="ks3-badge">${E(it.finish || 'Natural Split')}</span>
-          </div>
-          <div class="ks3-info">
-            <h3>${E(it.name)}</h3>
-            <p class="ks3-desc">Earthy warm tones &bull; Hand-dressed edges for heritage authenticity.</p>
-            <div class="ks3-meta">
-              <span><b>Size:</b> ${E(it.size || '560x560 mm')}</span>
-              <span><b>Type:</b> Kota Brown / Blue</span>
-            </div>
-            <div class="ks3-foot">
-              <span class="ks3-price">${E(it.price || 'Yard Pricing')}</span>
-              <span class="ks3-ready">Bulk Available</span>
-            </div>
-          </div>
-        </div>
-      `).join('')}
+    <div class="ks-odop-grid">
+      ${slice.map((it, idx) => renderKotaStoneProductCard(it, idx, c, 'crt')).join('')}
     </div>
     ${foot(c)}
   `;
@@ -379,42 +428,13 @@ function t4_cover(c, t) {
 
 function t4_products(c, no, slice, pageIdx, totalPages) {
   return `
-    ${head(c, `COMMERCIAL INFRASTRUCTURE SPECIFICATION (${pageIdx}/${totalPages})`, no)}
-    <div class="ks4-head">
-      <h2>High-Density Paving Slabs &amp; Platform Copings</h2>
-      <p>Precision calibrated 25mm to 35mm thickness for high-impact commercial installations</p>
+    ${head(c, `CIVIC & INFRASTRUCTURE STONE (${pageIdx}/${totalPages})`, no)}
+    <div class="ks1-head">
+      <h2>High-Compaction Commercial Flooring</h2>
+      <p>Engineered for high footfall transit terminals, hospitals, and educational corridors</p>
     </div>
-    <div class="ks4-table-wrap">
-      <table class="ks4-table">
-        <thead>
-          <tr>
-            <th style="width:70px">Photo</th>
-            <th>Designation &amp; Code</th>
-            <th>Thickness</th>
-            <th>Compressive</th>
-            <th>Surface Finish</th>
-            <th>Rate / Sq Ft</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${slice.map((it, idx) => `
-            <tr>
-              <td><div class="ks4-thumb" style="${bg(it.img)}"></div></td>
-              <td>
-                <b>${E(it.name)}</b>
-                <small>${E(it.code || `#INF-${pn(idx + 1)}`)} &bull; Standard Blue Limestone</small>
-              </td>
-              <td><b>${E(it.thickness || '25-30 mm')}</b></td>
-              <td>140 MPa Verified</td>
-              <td>${E(it.finish || 'Honed Non-Skid')}</td>
-              <td><span class="ks4-price">${E(it.price || 'Contract Rate')}</span></td>
-            </tr>
-          `).join('')}
-        </tbody>
-      </table>
-    </div>
-    <div class="ks4-infra-note">
-      <b>📌 Project Logistics:</b> High-capacity rail and truck container dispatch available directly from Ramganjmandi mining railhead.
+    <div class="ks-odop-grid">
+      ${slice.map((it, idx) => renderKotaStoneProductCard(it, idx, c, 'cvc')).join('')}
     </div>
     ${foot(c)}
   `;
@@ -449,31 +469,13 @@ function t5_cover(c, t) {
 
 function t5_products(c, no, slice, pageIdx, totalPages) {
   return `
-    ${head(c, `LANDSCAPE & POOLSIDE TILES (${pageIdx}/${totalPages})`, no)}
-    <div class="ks5-head">
-      <h2>Landscape Steppers, Copings &amp; Tumbled Pavers</h2>
-      <p>Precision tumbled edges &bull; Cool barefoot feel under direct sunlight</p>
+    ${head(c, `MONOLITHIC POOL SURROUNDS (${pageIdx}/${totalPages})`, no)}
+    <div class="ks1-head">
+      <h2>Non-Slip Pool Coping &amp; Wet Area Pavers</h2>
+      <p>Micro-textured slip-resistant limestone safe for barefoot moisture exposure</p>
     </div>
-    <div class="ks5-grid">
-      ${slice.map((it, idx) => `
-        <div class="ks5-card">
-          <div class="ks5-img" style="${bg(it.img)}">
-            <span class="ks5-finish">${E(it.finish || 'Tumbled Edge')}</span>
-          </div>
-          <div class="ks5-info">
-            <h3>${E(it.name)}</h3>
-            <p class="ks5-note">Slip-resistant wet texture &bull; Organic softened bullnose coping.</p>
-            <div class="ks5-specs">
-              <span><b>Thickness:</b> 25 mm Calibrated</span>
-              <span><b>Grip:</b> SRT 70+</span>
-            </div>
-            <div class="ks5-foot">
-              <span class="ks5-price">${E(it.price || 'Inquire Price')}</span>
-              <span class="ks5-ready">Villa Grade</span>
-            </div>
-          </div>
-        </div>
-      `).join('')}
+    <div class="ks-odop-grid">
+      ${slice.map((it, idx) => renderKotaStoneProductCard(it, idx, c, 'pol')).join('')}
     </div>
     ${foot(c)}
   `;
@@ -510,31 +512,13 @@ function t6_cover(c, t) {
 
 function t6_products(c, no, slice, pageIdx, totalPages) {
   return `
-    ${head(c, `DIMENSIONAL CLADDING SLABS (${pageIdx}/${totalPages})`, no)}
-    <div class="ks6-head">
-      <h2>Calibrated Wall Cladding &amp; Feature Panels</h2>
-      <p>Precision edge chamfered and grooved for mechanical anchor installation</p>
+    ${head(c, `PALATIAL JHAROKHA & MASONRY (${pageIdx}/${totalPages})`, no)}
+    <div class="ks1-head">
+      <h2>Precision CNC &amp; Architectural Carving</h2>
+      <p>Monolithic hand-dressed columns, lattice screens, and palace balustrades</p>
     </div>
-    <div class="ks6-grid">
-      ${slice.map((it, idx) => `
-        <div class="ks6-card">
-          <div class="ks6-img" style="${bg(it.img)}">
-            <span class="ks6-cal">Calibrated 18mm</span>
-          </div>
-          <div class="ks6-info">
-            <h3>${E(it.name)}</h3>
-            <p class="ks6-p">Uniform gauge thickness &bull; Micro-honed velvety surface.</p>
-            <div class="ks6-meta">
-              <span><b>Finish:</b> ${E(it.finish || 'Honed Satin')}</span>
-              <span><b>Size:</b> ${E(it.size || 'Sawn Slabs')}</span>
-            </div>
-            <div class="ks6-foot">
-              <span class="ks6-price">${E(it.price || 'Gangsaw Rate')}</span>
-              <span class="ks6-moq">Project Sawn</span>
-            </div>
-          </div>
-        </div>
-      `).join('')}
+    <div class="ks-odop-grid">
+      ${slice.map((it, idx) => renderKotaStoneProductCard(it, idx, c, 'jhr')).join('')}
     </div>
     ${foot(c)}
   `;
@@ -569,31 +553,13 @@ function t7_cover(c, t) {
 
 function t7_products(c, no, slice, pageIdx, totalPages) {
   return `
-    ${head(c, `COBBLES & CHEQUERED RAMPS (${pageIdx}/${totalPages})`, no)}
-    <div class="ks7-head">
-      <h2>Hand-Dressed Driveway Cobbles &amp; Grooved Tiles</h2>
-      <p>Rough cleft texture for maximum tire and pedestrian grip under wet monsoon conditions</p>
+    ${head(c, `HEAVY-DUTY PARKING & DRIVEWAY (${pageIdx}/${totalPages})`, no)}
+    <div class="ks1-head">
+      <h2>Chequered &amp; Diamond Paver Matrix</h2>
+      <p>High vehicular load tolerance for ramps, basement driveways, and plazas</p>
     </div>
-    <div class="ks7-grid">
-      ${slice.map((it, idx) => `
-        <div class="ks7-card">
-          <div class="ks7-img" style="${bg(it.img)}">
-            <span class="ks7-traction">Grip Grooved</span>
-          </div>
-          <div class="ks7-body">
-            <h3>${E(it.name)}</h3>
-            <p class="ks7-desc">Natural hand-chiseled cleft &bull; Resists oil stains and tire friction.</p>
-            <div class="ks7-specs">
-              <span><b>Thickness:</b> ${E(it.thickness || '40-60 mm')}</span>
-              <span><b>Type:</b> Split Cobble</span>
-            </div>
-            <div class="ks7-foot">
-              <span class="ks7-price">${E(it.price || 'Direct Yard Quote')}</span>
-              <span class="ks7-unit">Per Piece / Ton</span>
-            </div>
-          </div>
-        </div>
-      `).join('')}
+    <div class="ks-odop-grid">
+      ${slice.map((it, idx) => renderKotaStoneProductCard(it, idx, c, 'prk')).join('')}
     </div>
     ${foot(c)}
   `;
@@ -632,34 +598,13 @@ function t8_cover(c, t) {
 
 function t8_products(c, no, slice, pageIdx, totalPages) {
   return `
-    ${head(c, `EXPORT CRATED SPECIFICATIONS (${pageIdx}/${totalPages})`, no)}
-    <div class="ks8-head">
-      <h2>Crated Paving Tiles &amp; Sawn Slabs</h2>
-      <p>Precision calibration tolerance &plusmn;1mm &bull; Fumigated ISPM-15 wooden crate packaging</p>
+    ${head(c, `MASTER QUARRY EXPORT DOSSIER (${pageIdx}/${totalPages})`, no)}
+    <div class="ks1-head">
+      <h2>Containerized Maritime Bulk Shipments</h2>
+      <p>Gangsaw slabs and calibrated tiles crated with ISPM-15 certified fumigated wooden boxes</p>
     </div>
-    <div class="ks8-grid">
-      ${slice.map((it, idx) => `
-        <div class="ks8-card">
-          <div class="ks8-card-head">
-            <span>EXPORT CRATE #${pn(idx + 1)}</span>
-            <span>CE / ASTM TESTED</span>
-          </div>
-          <div class="ks8-img" style="${bg(it.img)}"></div>
-          <div class="ks8-body">
-            <h3>${E(it.name)}</h3>
-            <table class="ks8-tbl">
-              <tr><td>Format:</td><td><b>${E(it.size || '600x600 mm')}</b></td></tr>
-              <tr><td>Finish:</td><td>${E(it.finish || 'Honed / Sawn')}</td></tr>
-              <tr><td>Density:</td><td>2.68 g/cm³ (High Density)</td></tr>
-              <tr><td>Packing:</td><td>Heavy Wooden Crates</td></tr>
-            </table>
-            <div class="ks8-foot">
-              <span class="ks8-price">${E(it.price || 'FOB Mundra Rate')}</span>
-              <span class="ks8-moq">1x20ft FCL</span>
-            </div>
-          </div>
-        </div>
-      `).join('')}
+    <div class="ks-odop-grid">
+      ${slice.map((it, idx) => renderKotaStoneProductCard(it, idx, c, 'qur')).join('')}
     </div>
     ${foot(c)}
   `;
@@ -669,7 +614,7 @@ function t8_products(c, no, slice, pageIdx, totalPages) {
    PAGE COUNT & MAIN RENDER DISPATCHER
    ========================================================================= */
 function pageCount(t, n) {
-  return 1 + Math.ceil(Math.max(1, n) / (t.id === 'ks-b4' ? 6 : 4)) + 1;
+  return 1 + Math.ceil(Math.max(1, n) / 4) + 1;
 }
 
 function render(t, ctx) {
@@ -724,7 +669,7 @@ function render(t, ctx) {
     }
   } else if (t.id === 'ks-b4') {
     P.push(wrap(t4_cover(c, t), 'ks4-mode'));
-    const perPage = 6;
+    const perPage = 4;
     const totalPages = Math.ceil(items.length / perPage) || 1;
     for (let k = 0; k < items.length; k += perPage) {
       P.push(wrap(t4_products(c, ++no, items.slice(k, k + perPage), Math.floor(k / perPage) + 1, totalPages), 'ks4-mode'));
@@ -766,6 +711,201 @@ function render(t, ctx) {
 }
 
 const CSS = `
+/* ODOP Jhalawar Stone Card Matrix Styles */
+.ks-odop-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  padding: 0;
+  width: 100%;
+  box-sizing: border-box;
+  margin-top: 4px;
+  margin-bottom: 24px;
+}
+.ks-odop-card {
+  background: #ffffff;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  box-shadow: 0 4px 14px rgba(0,0,0,0.04);
+  display: flex;
+  flex-direction: column;
+  height: 370px;
+  max-height: 370px;
+  min-height: 0;
+  box-sizing: border-box;
+}
+.ks-odop-img {
+  height: 140px;
+  min-height: 140px;
+  max-height: 140px;
+  background-size: cover;
+  background-position: center;
+  position: relative;
+  overflow: hidden;
+  background-color: var(--soft, #f8fafc);
+}
+.ks-odop-img-el {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.ks-odop-tag {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  background: var(--dark, #0f172a);
+  color: #fff;
+  font-size: 8.5px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 4px;
+  letter-spacing: 0.05em;
+}
+.ks-odop-district-chip {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: rgba(0,0,0,0.7);
+  color: #fff;
+  font-size: 8.5px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 4px;
+}
+.ks-odop-details {
+  padding: 6px 10px 8px;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  justify-content: space-between;
+}
+.ks-odop-meta-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2px;
+}
+.ks-odop-sku-chip {
+  font-size: 8.5px;
+  font-family: monospace;
+  font-weight: 700;
+  color: var(--acc, #0284c7);
+}
+.ks-odop-moq-chip {
+  font-size: 8px;
+  background: rgba(2, 132, 199, 0.08);
+  color: #0369a1;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-weight: 700;
+}
+.ks-odop-details h3 {
+  font-family: var(--hf, serif);
+  font-size: 13.5px;
+  margin: 0 0 2px;
+  color: var(--ink, #0f172a);
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.ks-odop-desc-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+.ks-odop-desc {
+  font-size: 9.5px;
+  color: var(--muted, #475569);
+  margin: 0;
+  line-height: 1.25;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
+}
+.ks-odop-spec-matrix {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 3px 6px;
+  background: rgba(2, 132, 199, 0.04);
+  border: 1px solid rgba(2, 132, 199, 0.12);
+  border-radius: 6px;
+  padding: 5px 8px;
+  margin: 4px 0 6px 0;
+  font-size: 9.5px;
+}
+.ks-odop-spec-item {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.ks-odop-spec-lbl {
+  font-weight: 700;
+  color: #0369a1;
+  font-size: 9px;
+}
+.ks-odop-spec-val {
+  color: #0f172a;
+  font-weight: 600;
+  font-size: 9.5px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.ks-odop-foot {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top: 1px solid var(--line, #e2e8f0);
+  padding-top: 6px;
+  margin-top: 2px;
+}
+.ks-odop-price-block {
+  display: flex;
+  flex-direction: column;
+}
+.ks-odop-price {
+  font-size: 13.5px;
+  font-weight: 800;
+  color: var(--acc, #0284c7);
+  line-height: 1;
+}
+.ks-odop-range {
+  font-size: 8px;
+  color: var(--muted, #64748b);
+  margin-top: 2px;
+  font-weight: 600;
+}
+.ks-odop-contact-block {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+.ks-odop-craft {
+  font-size: 8.5px;
+  font-weight: 700;
+  color: var(--ink, #334155);
+  white-space: nowrap;
+  max-width: 140px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.ks-odop-wa {
+  font-size: 8px;
+  color: #0369a1;
+  font-weight: 700;
+  margin-top: 2px;
+}
+
+
 .pg.kotastone-pg {
   width: 794px;
   height: 1123px;
@@ -784,12 +924,12 @@ const CSS = `
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding-bottom: 12px;
+  padding-bottom: 8px;
   border-bottom: 1.5px solid var(--line);
   font-size: 11px;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  margin-bottom: 24px;
+  margin-bottom: 12px;
 }
 .kotastone-pg .ks-head-brand { display: flex; align-items: center; gap: 6px; color: var(--ink); }
 .kotastone-pg .ks-head-tag { color: var(--acc); font-weight: 700; }
@@ -797,17 +937,32 @@ const CSS = `
 
 .kotastone-pg .ks-foot {
   position: absolute;
-  bottom: 28px;
+  bottom: 16px;
   left: 44px;
   right: 44px;
   display: flex;
   justify-content: space-between;
-  padding-top: 10px;
+  padding-top: 8px;
   border-top: 1px solid var(--line);
-  font-size: 10.5px;
+  font-size: 9.5px;
   color: var(--muted);
   letter-spacing: 0.06em;
 }
+
+.ks-odop-gov-banner {
+  background: linear-gradient(90deg, #1c1917, #3f4a3c);
+  color: #ffffff;
+  padding: 6px 12px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+  border: 1px solid #c5a059;
+}
+.ks-gov-emblem { font-size: 18px; }
+.ks-gov-text strong { display: block; font-size: 9px; letter-spacing: 0.05em; }
+.ks-gov-text span { font-size: 8px; opacity: 0.95; }
 
 /* Contact Page Styles */
 .kotastone-pg .ks-contact-wrap { margin-top: 10px; }
@@ -833,6 +988,7 @@ const CSS = `
   font-family: var(--hf);
   font-size: 34px;
   margin: 0 0 10px;
+  color: var(--onDark, #ffffff);
 }
 .kotastone-pg .ks-contact-p {
   font-size: 13px;

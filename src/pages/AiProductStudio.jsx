@@ -34,6 +34,7 @@ import {
   RotateCw,
   Search,
   Package,
+  BookOpen,
 } from "lucide-react";
 import {
   fetchCompanies,
@@ -1273,7 +1274,21 @@ export default function AiProductStudio() {
         res.message || "Studio photo successfully placed onto catalogue product!"
       );
       setIsPlaceModalOpen(false);
-      setTimeout(() => setActionSuccessMessage(""), 5000);
+
+      // Save directly into custom gallery so it's immediately available in Catalogue Studio too
+      try {
+        const existing = JSON.parse(localStorage.getItem("catalogue_custom_gallery") || "[]");
+        const updated = [studioDataUrl, ...existing.filter((u) => u !== studioDataUrl)].slice(0, 30);
+        localStorage.setItem("catalogue_custom_gallery", JSON.stringify(updated));
+      } catch (_) {}
+
+      if (location.state?.returnTo) {
+        setTimeout(() => {
+          navigate(location.state.returnTo);
+        }, 1200);
+      } else {
+        setTimeout(() => setActionSuccessMessage(""), 5000);
+      }
     } catch (err) {
       const errMsg = err.response?.data?.message || err.message;
       alert("Failed to place image on catalogue product: " + errMsg);
@@ -1304,13 +1319,52 @@ export default function AiProductStudio() {
         res.message || `New product '${res.data?.name}' created successfully in catalogue!`
       );
       setIsCreateModalOpen(false);
-      setTimeout(() => setActionSuccessMessage(""), 5000);
+
+      // Save directly into custom gallery so it's immediately available in Catalogue Studio too
+      try {
+        const existing = JSON.parse(localStorage.getItem("catalogue_custom_gallery") || "[]");
+        const updated = [studioDataUrl, ...existing.filter((u) => u !== studioDataUrl)].slice(0, 30);
+        localStorage.setItem("catalogue_custom_gallery", JSON.stringify(updated));
+      } catch (_) {}
+
+      if (location.state?.returnTo) {
+        setTimeout(() => {
+          navigate(location.state.returnTo);
+        }, 1200);
+      } else {
+        setTimeout(() => setActionSuccessMessage(""), 5000);
+      }
     } catch (err) {
       const errMsg = err.response?.data?.message || err.message;
       alert("Failed to create product from studio: " + errMsg);
     } finally {
       setIsSavingToCatalogue(false);
     }
+  };
+
+  // Direct Send to Dynamic Catalogue Studio without downloading
+  const handleSendDirectlyToCatalogueStudio = () => {
+    const canvas = outputCanvasRef.current;
+    if (!canvas) return;
+    const studioDataUrl = canvas.toDataURL("image/jpeg", 0.95);
+
+    try {
+      const existing = JSON.parse(localStorage.getItem("catalogue_custom_gallery") || "[]");
+      const updated = [studioDataUrl, ...existing.filter((u) => u !== studioDataUrl)].slice(0, 30);
+      localStorage.setItem("catalogue_custom_gallery", JSON.stringify(updated));
+    } catch (e) {
+      console.warn("Could not save to catalogue_custom_gallery", e);
+    }
+
+    if (selectedTargetProductId) {
+      applyStudioImageToProduct({
+        productId: selectedTargetProductId,
+        imageUrl: studioDataUrl,
+        backgroundType: selectedStage === "amazon_pure_white" ? "white" : "studio",
+      }).catch((e) => console.warn("Failed background auto-apply to product:", e));
+    }
+
+    navigate(`/pdf-catalogue${selectedCompanyId ? `?companyId=${selectedCompanyId}` : ""}`);
   };
 
   const filteredProducts = products.filter((p) => {
@@ -1380,24 +1434,47 @@ export default function AiProductStudio() {
           >
             <Layers size={13} /> {expandAllPanels ? "Tabs View" : "Expand All"}
           </button>
-          {/* Gemini API Key button commented out */}
-          {/*
+
+          {/* Send to Catalogue Studio Gallery without download */}
           <button
+            type="button"
             className="btn btn-outline btn-sm"
-            onClick={() => setIsConfiguringApiKey(true)}
-            style={{ fontWeight: 600, display: "inline-flex", alignItems: "center", gap: "5px", fontSize: "0.78rem" }}
-            title="Configure optional custom Gemini API Key"
+            onClick={handleSendDirectlyToCatalogueStudio}
+            style={{
+              fontWeight: 700,
+              fontSize: "0.8rem",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "5px",
+              color: "#6366f1",
+              borderColor: "#6366f1",
+              background: "rgba(99, 102, 241, 0.08)",
+            }}
+            title="Import directly into Catalogue Studio Gallery & open PDF catalogue"
           >
-            <Key size={13} /> {geminiApiKey ? "Key Set" : "Add Key"}
+            <BookOpen size={14} /> Send to Catalogue Studio ➔
           </button>
-          */}
+
+          {/* Place directly on existing product */}
           <button
-            className="btn btn-outline btn-sm"
+            className="btn btn-primary btn-sm"
             onClick={() => setIsPlaceModalOpen(true)}
-            style={{ fontWeight: 600, fontSize: "0.78rem" }}
+            style={{
+              fontWeight: 800,
+              fontSize: "0.82rem",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "6px",
+              background: "linear-gradient(135deg, #10b981 0%, #059669 100%)",
+              borderColor: "#10b981",
+              boxShadow: "0 3px 10px rgba(16, 185, 129, 0.3)",
+              padding: "6px 14px",
+            }}
+            title="Directly apply this studio image to a catalogue product without downloading"
           >
-            <FolderPlus size={14} /> Place on Product
+            <Sparkles size={14} /> Use in Catalogue Directly
           </button>
+
           <button
             className="btn btn-outline btn-sm"
             onClick={() => setIsCreateModalOpen(true)}
@@ -1405,15 +1482,78 @@ export default function AiProductStudio() {
           >
             <Plus size={14} /> Create Product
           </button>
+
           <button
-            className="btn btn-primary btn-sm"
+            className="btn btn-outline btn-sm"
             onClick={() => handleDownload("jpeg")}
-            style={{ fontWeight: 700, display: "flex", alignItems: "center", gap: "5px", fontSize: "0.78rem" }}
+            style={{ fontWeight: 600, display: "flex", alignItems: "center", gap: "5px", fontSize: "0.78rem" }}
+            title="Save high-res copy to your computer"
           >
-            <Download size={14} /> Download Master
+            <Download size={14} /> Download File
           </button>
         </div>
       </div>
+
+      {/* Contextual Incoming Product Banner */}
+      {location.state?.productName && (
+        <div
+          className="card"
+          style={{
+            background: "linear-gradient(135deg, rgba(16, 185, 129, 0.12) 0%, rgba(99, 102, 241, 0.12) 100%)",
+            border: "1.5px solid #10b981",
+            padding: "0.65rem 1rem",
+            marginBottom: "0.75rem",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            flexWrap: "wrap",
+            gap: "0.5rem",
+            borderRadius: "10px",
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <span style={{ fontSize: "1.1rem" }}>📍</span>
+            <span style={{ fontSize: "0.86rem", color: "var(--text-primary)" }}>
+              Editing Master Image for: <strong style={{ color: "#10b981" }}>{location.state.productName}</strong>
+            </span>
+            <span style={{ fontSize: "0.75rem", color: "var(--text-secondary)" }}>
+              (Click "✓ Save Directly to Product" to apply without downloading)
+            </span>
+          </div>
+
+          <div style={{ display: "flex", gap: "6px" }}>
+            <button
+              type="button"
+              className="btn btn-primary btn-sm"
+              onClick={handleConfirmPlaceOnProduct}
+              disabled={isSavingToCatalogue}
+              style={{
+                fontWeight: 800,
+                fontSize: "0.8rem",
+                background: "linear-gradient(135deg, #10b981 0%, #059669 100%)",
+                borderColor: "#10b981",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "5px",
+                padding: "6px 14px",
+              }}
+            >
+              {isSavingToCatalogue ? <RefreshCw size={14} className="spin" /> : <Check size={14} />}
+              <span>✓ Save Directly to Product</span>
+            </button>
+            {location.state?.returnTo && (
+              <button
+                type="button"
+                className="btn btn-outline btn-sm"
+                onClick={() => navigate(location.state.returnTo)}
+                style={{ fontSize: "0.78rem" }}
+              >
+                Back to Catalogue
+              </button>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Success Notification Alert */}
       {actionSuccessMessage && (
@@ -2105,6 +2245,92 @@ export default function AiProductStudio() {
                   + {badge}
                 </button>
               ))}
+            </div>
+          </div>
+
+          {/* DIRECT CATALOGUE IMPORT ACTION STRIP (NO DOWNLOAD NEEDED) */}
+          <div
+            className="card"
+            style={{
+              width: "100%",
+              padding: "0.85rem 1rem",
+              background: "linear-gradient(135deg, rgba(16, 185, 129, 0.08) 0%, rgba(99, 102, 241, 0.08) 100%)",
+              border: "1.5px solid #10b981",
+              borderRadius: "12px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              flexWrap: "wrap",
+              gap: "0.75rem",
+              boxShadow: "0 4px 15px rgba(16, 185, 129, 0.12)",
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+              <div
+                style={{
+                  width: "34px",
+                  height: "34px",
+                  borderRadius: "9px",
+                  background: "#10b981",
+                  color: "#fff",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  flexShrink: 0,
+                  boxShadow: "0 2px 8px rgba(16, 185, 129, 0.35)",
+                }}
+              >
+                <Sparkles size={18} />
+              </div>
+              <div>
+                <div style={{ fontWeight: 800, fontSize: "0.88rem", color: "var(--text-primary)" }}>
+                  Import Directly to Catalogue (No Downloading Needed)
+                </div>
+                <div style={{ fontSize: "0.74rem", color: "var(--text-secondary)" }}>
+                  Finished editing? Save this studio photo directly to catalogue products or PDF brochure layouts.
+                </div>
+              </div>
+            </div>
+
+            <div style={{ display: "flex", gap: "0.5rem", alignItems: "center", flexWrap: "wrap" }}>
+              <button
+                type="button"
+                className="btn btn-primary btn-sm"
+                onClick={() => setIsPlaceModalOpen(true)}
+                style={{
+                  fontWeight: 800,
+                  fontSize: "0.82rem",
+                  background: "linear-gradient(135deg, #10b981 0%, #059669 100%)",
+                  borderColor: "#10b981",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "6px",
+                  padding: "7px 15px",
+                  boxShadow: "0 3px 10px rgba(16, 185, 129, 0.3)",
+                }}
+              >
+                <FolderPlus size={15} /> Apply to Catalogue Product
+              </button>
+
+              <button
+                type="button"
+                className="btn btn-outline btn-sm"
+                onClick={handleSendDirectlyToCatalogueStudio}
+                style={{
+                  fontWeight: 750,
+                  fontSize: "0.82rem",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "6px",
+                  padding: "7px 14px",
+                  color: "#6366f1",
+                  borderColor: "#6366f1",
+                  background: "rgba(99, 102, 241, 0.08)",
+                }}
+                title="Send photo to Dynamic Catalogue Studio gallery and launch PDF generator"
+              >
+                <BookOpen size={15} /> Open in Catalogue Studio ➔
+              </button>
             </div>
           </div>
         </div>

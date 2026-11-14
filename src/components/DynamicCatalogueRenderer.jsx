@@ -59,6 +59,38 @@ export default function DynamicCatalogueRenderer({
     };
   }, [products, designConfig.showProductQr, currentCompany._id]);
 
+  // Strict Government ODOP Alignment:
+  // Kota -> Kota Doria | Baran -> Garlic | Jhalawar -> Kota Stone | Bundi -> Sandstone
+  const compInd = (currentCompany.industry || "").toLowerCase();
+  const compProd = (currentCompany.odopProduct || "").toLowerCase();
+  const compDist = (currentCompany.district || "").toLowerCase();
+  const compName = (currentCompany.name || "").toLowerCase();
+  const firstCat = (products[0]?.category || "").toLowerCase();
+
+  let resolvedDistrict = "Kota, Rajasthan";
+  let resolvedOdopProduct = "Kota Doria";
+
+  if (compProd.includes("garlic") || compInd.includes("garlic") || compDist.includes("baran") || compName.includes("garlic") || firstCat.includes("garlic")) {
+    resolvedDistrict = "Baran, Rajasthan";
+    resolvedOdopProduct = "Garlic";
+  } else if (compProd.includes("kota stone") || compInd.includes("kota stone") || compDist.includes("jhalawar") || compName.includes("kota stone") || firstCat.includes("kota stone") || (firstCat.includes("stone") && !firstCat.includes("sand"))) {
+    resolvedDistrict = "Jhalawar, Rajasthan";
+    resolvedOdopProduct = "Kota Stone";
+  } else if (compProd.includes("sand") || compInd.includes("sand") || compDist.includes("bundi") || compName.includes("sand") || firstCat.includes("sand")) {
+    resolvedDistrict = "Bundi, Rajasthan";
+    resolvedOdopProduct = "Sandstone";
+  } else {
+    resolvedDistrict = "Kota, Rajasthan";
+    resolvedOdopProduct = "Kota Doria";
+  }
+
+  if (currentCompany.district && currentCompany.district !== "India" && !currentCompany.district.includes("Bangalore") && !currentCompany.district.includes("Karnataka")) {
+    resolvedDistrict = currentCompany.district;
+  }
+  if (currentCompany.odopProduct) {
+    resolvedOdopProduct = currentCompany.odopProduct;
+  }
+
   // Extract config tokens with safe fallbacks
   const {
     primaryColor = "#4E5C43",
@@ -240,6 +272,9 @@ export default function DynamicCatalogueRenderer({
                 </div>
                 <div style={{ fontSize: "0.72rem", color: textColor, opacity: 0.75 }}>
                   {currentCompany.industry || "Signature Brand Portfolio"}
+                </div>
+                <div style={{ fontSize: "0.72rem", color: "#15803d", fontWeight: 700, marginTop: "2px" }}>
+                  📍 District: {resolvedDistrict} • ODOP: {resolvedOdopProduct}
                 </div>
               </div>
             </div>
@@ -500,6 +535,9 @@ export default function DynamicCatalogueRenderer({
                 <div style={{ fontSize: "0.85rem", opacity: 0.85, marginTop: "2px" }}>
                   {currentCompany.tagline}
                 </div>
+                <div style={{ fontSize: "0.80rem", color: "#34d399", fontWeight: 750, marginTop: "4px" }}>
+                  📍 ODOP District: {resolvedDistrict} • Sector: {resolvedOdopProduct}
+                </div>
               </div>
 
               <div style={{ background: "rgba(255,255,255,0.15)", padding: "6px 16px", borderRadius: "20px", fontSize: "0.76rem", fontWeight: 800 }}>
@@ -534,11 +572,19 @@ export default function DynamicCatalogueRenderer({
                           <td style={{ padding: "10px 14px", width: "80px" }}>
                             <img src={p.image || p.imageUrl || "/assets/reference/p4_1.jpg"} alt={p.name} style={{ width: "65px", height: "65px", objectFit: "cover", borderRadius: "6px" }} />
                           </td>
-                          <td style={{ padding: "10px 14px", maxWidth: "260px" }}>
+                          <td style={{ padding: "10px 14px", maxWidth: "280px" }}>
                             <div style={{ fontWeight: 800, fontSize: "0.95rem", color: textColor, fontFamily: headingFont }}>{p.name}</div>
                             {showDescription && (
-                              <div style={{ fontSize: "0.76rem", opacity: 0.75, marginTop: "2px", lineHeight: 1.4 }}>{p.shortDescription || p.description}</div>
+                              <div style={{ fontSize: "0.76rem", opacity: 0.75, marginTop: "2px", lineHeight: 1.4 }}>
+                                {p.shortDescription || p.description}
+                              </div>
                             )}
+                            <div style={{ fontSize: "0.71rem", color: textColor, opacity: 0.85, marginTop: "4px", display: "flex", flexWrap: "wrap", gap: "6px" }}>
+                              <span>📏 <b>{p.size || "Standard"}</b></span>
+                              <span>🧵 <b>{p.material || p.materialComposition || "Natural"}</b></span>
+                              <span>✨ <b>{p.finish || "Export Grade"}</b></span>
+                              <span>🎯 <b>{p.application || p.useApplication || "Wholesale"}</b></span>
+                            </div>
                           </td>
                           {showCategory && <td style={{ padding: "10px 14px", fontWeight: 600 }}>{p.category || "General"}</td>}
                           {showSku && (
@@ -643,10 +689,28 @@ export default function DynamicCatalogueRenderer({
                         </h3>
 
                         {showDescription && (
-                          <p style={{ fontSize: "0.80rem", color: textColor, opacity: 0.8, lineHeight: 1.45, margin: "0 0 0.85rem 0", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
-                            {p.shortDescription || p.description}
-                          </p>
+                          <div style={{ marginBottom: "6px" }}>
+                            <p style={{ fontSize: "0.80rem", color: textColor, opacity: 0.8, lineHeight: 1.4, margin: "0 0 4px 0", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
+                              {p.shortDescription || p.description}
+                            </p>
+                          </div>
                         )}
+
+                        {/* Four Mandatory ODOP Spec Points Matrix */}
+                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "4px 8px", background: `${pageBg}`, border: `1px solid ${cardBorderColor}`, borderRadius: "6px", padding: "6px 8px", margin: "6px 0 8px", fontSize: "0.74rem" }}>
+                          <div style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }} title={p.size || "Standard Format"}>
+                            <strong style={{ opacity: 0.7 }}>📏 Size:</strong> {p.size || "Standard Format"}
+                          </div>
+                          <div style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }} title={p.material || p.materialComposition || "Premium Natural"}>
+                            <strong style={{ opacity: 0.7 }}>🧵 Material:</strong> {p.material || p.materialComposition || "Premium Natural"}
+                          </div>
+                          <div style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }} title={p.finish || "Export Quality Standard"}>
+                            <strong style={{ opacity: 0.7 }}>✨ Finish:</strong> {p.finish || "Export Quality Standard"}
+                          </div>
+                          <div style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }} title={p.application || p.useApplication || "Wholesale & Retail"}>
+                            <strong style={{ opacity: 0.7 }}>🎯 Use:</strong> {p.application || p.useApplication || "Wholesale & Retail"}
+                          </div>
+                        </div>
 
                         <div style={{ marginTop: "auto", paddingTop: "0.75rem", borderTop: `1px solid ${cardBorderColor}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                           <div>
@@ -655,19 +719,25 @@ export default function DynamicCatalogueRenderer({
                                 {currencySymbol}{p.price ? p.price.toLocaleString() : "P.O.R."}
                               </div>
                             )}
-                            {showMrp && mrp > (p.price || 0) && (
-                              <div style={{ fontSize: "0.70rem", opacity: 0.5, textDecoration: "line-through" }}>
-                                MRP: {currencySymbol}{mrp.toLocaleString()}
-                              </div>
-                            )}
+                            <div style={{ fontSize: "0.70rem", opacity: 0.65 }}>
+                              Range: {p.priceRange || `${currencySymbol}${p.price ? p.price.toLocaleString() : "1,450"} – ${currencySymbol}${mrp ? mrp.toLocaleString() : "5,200"}`}
+                            </div>
+                            <div style={{ fontSize: "0.68rem", color: accentColor, fontWeight: 700, marginTop: "2px" }}>
+                              📦 MOQ: {p.moq || "10 Pieces (Wholesale)"}
+                            </div>
                           </div>
 
-                          {showProductQr && qrData && (
-                            <div style={{ textAlign: "center", flexShrink: 0 }}>
-                              <img src={qrData} alt="Product QR" style={{ width: "42px", height: "42px", background: "#ffffff", padding: "2px", borderRadius: "4px", border: `1px solid ${cardBorderColor}`, display: "block" }} />
-                              <span style={{ fontSize: "0.56rem", fontWeight: 700, color: primaryColor, display: "block", marginTop: "1px" }}>SCAN</span>
+                          <div style={{ textAlign: "right", display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "3px" }}>
+                            {showProductQr && qrData && (
+                              <div style={{ textAlign: "center" }}>
+                                <img src={qrData} alt="Product QR" style={{ width: "42px", height: "42px", background: "#ffffff", padding: "2px", borderRadius: "4px", border: `1px solid ${cardBorderColor}`, display: "block" }} />
+                                <span style={{ fontSize: "0.56rem", fontWeight: 700, color: primaryColor, display: "block", marginTop: "1px" }}>PART A QR</span>
+                              </div>
+                            )}
+                            <div style={{ fontSize: "0.70rem", color: "#15803d", fontWeight: 700 }}>
+                              💬 WA: +91 {currentCompany.whatsappNumber || (currentCompany.contact && (currentCompany.contact.phone || currentCompany.contact.mobile)) || "9414123456"}
                             </div>
-                          )}
+                          </div>
                         </div>
                       </div>
                     </div>

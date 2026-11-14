@@ -11,11 +11,6 @@ export default defineConfig({
         changeOrigin: true,
         secure: false,
       },
-      "/assets": {
-        target: "https://catlougeapi.geoplanetsolution.com",
-        changeOrigin: true,
-        secure: false,
-      },
     },
   },
 });

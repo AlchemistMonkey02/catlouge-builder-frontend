@@ -106,9 +106,16 @@ const rec = () => {
   return EDITS[uid];
 };
 
-const hex = c => {
+const hex = (c, fallback = '#000000') => {
+  if (!c || c === 'transparent' || c === 'rgba(0, 0, 0, 0)') return fallback;
   const m = /(\d+)[, ]+(\d+)[, ]+(\d+)/.exec(c || '');
-  return m ? '#' + [1, 2, 3].map(i => (+m[i]).toString(16).padStart(2, '0')).join('') : '#000000';
+  return m ? '#' + [1, 2, 3].map(i => (+m[i]).toString(16).padStart(2, '0')).join('') : fallback;
+};
+
+const hexBg = (c, fallback = '#ffffff') => {
+  if (!c || c === 'transparent' || c === 'rgba(0, 0, 0, 0)') return fallback;
+  const m = /(\d+)[, ]+(\d+)[, ]+(\d+)/.exec(c || '');
+  return m ? '#' + [1, 2, 3].map(i => (+m[i]).toString(16).padStart(2, '0')).join('') : fallback;
 };
 
 function clean(node) {
@@ -190,6 +197,7 @@ export function applyEdit(el, ed, photoUrl) {
     s.fontFamily = ed.fontFamily || '';
   }
   if (ed.color) s.color = ed.color;
+  if (ed.bg !== undefined) s.backgroundColor = ed.bg;
   if (ed.bold !== undefined) {
     s.fontWeight = ed.bold ? '700' : 'normal';
   }
@@ -527,8 +535,9 @@ function onDown(e) {
   layers = list;
   select(target, pv, true);
 
-  // If text: START INLINE EDITING INSTANTLY ON SINGLE CLICK!
-  if (!photo && isText(target)) {
+  // If leaf text: START INLINE EDITING INSTANTLY ON SINGLE CLICK!
+  const isLeafText = target && isText(target) && (!target.children.length || ![...target.children].some(c => /^(DIV|P|H[1-6]|SECTION|ARTICLE|HEADER|FOOTER|TABLE|UL|OL)$/i.test(c.tagName)));
+  if (!photo && isLeafText) {
     startText(target);
     return; // Don't prevent default so cursor caret positions naturally!
   }
@@ -645,7 +654,7 @@ export function startText(targetEl) {
   editingEl.style.outline = '2px dashed #3b82f6';
   editingEl.style.outlineOffset = '2px';
   editingEl.style.cursor = 'text';
-  editingEl.focus();
+  try { editingEl.focus({ preventScroll: true }); } catch (_) { editingEl.focus(); }
 
   editingEl.onkeydown = (e) => {
     if ((e.key === 'Delete' || e.key === 'Backspace') && !editingEl.textContent.trim()) {
@@ -729,7 +738,16 @@ const labelOf = el => {
   if (el.tagName === 'IMG') return 'Product Photo';
   if (el.tagName === 'SVG' || el.tagName === 'svg' || (el.querySelector && el.querySelector('image'))) return 'Cut Frame';
   if (isPhoto(el)) return 'Photo';
-  return 'Text: ' + (el.textContent.trim().slice(0, 16) || '…');
+  const tag = el.tagName ? el.tagName.toUpperCase() : '';
+  const text = el.textContent ? el.textContent.trim().slice(0, 16) : '';
+  if (/^H[1-6]$/.test(tag)) return `${tag}: ${text || 'Heading'}`;
+  if (tag === 'SPAN' || (el.classList && el.classList.value && el.classList.value.includes('badge'))) return `Badge: ${text || 'Tag'}`;
+  if (tag === 'P') return `Paragraph: ${text || 'Text'}`;
+  if (el.children && [...el.children].some(c => /^(DIV|P|H[1-6])$/i.test(c.tagName))) {
+    const cls = el.className && typeof el.className === 'string' ? el.className.split(' ')[0] : '';
+    return cls ? `Card (${cls})` : 'Container Card';
+  }
+  return text ? `Text: ${text}` : 'Element';
 };
 const safe = t => String(t || '').replace(/</g, '&lt;');
 
@@ -874,8 +892,15 @@ function drawBar() {
       '<button type="button" data-act="openswapmodal" style="width:100%;background:linear-gradient(135deg,#8b5cf6,#6d28d9);color:#ffffff;font-weight:800;font-size:12px;padding:6px 14px;border:none;border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;box-shadow:0 3px 10px rgba(109,40,217,0.4);">' +
         '🔄 Swap Image (Photo Bank & Products)' +
       '</button>' +
-    '</div>' +
-    '<div class="bar-row bar-row-shapes"><span>Shape</span><div class="shp-grid">' + SHP.map(([k, t]) => '<button type="button" class="shp shp-' + k + ' ' + ((ed.shape || 'original') === k ? 'on' : '') + '" data-shape="' + k + '" title="' + t + '"><i></i></button>').join('') + '</div></div>' +
+    '</div>';
+    const cs = getComputedStyle(sel.el);
+    h += '<div class="bar-row bar-row-shapes"><span>Shape</span><div class="shp-grid">' + SHP.map(([k, t]) => '<button type="button" class="shp shp-' + k + ' ' + ((ed.shape || 'original') === k ? 'on' : '') + '" data-shape="' + k + '" title="' + t + '"><i></i></button>').join('') + '</div></div>' +
+      '<div class="bar-row"><span>Frame</span>' +
+        '<label style="display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;color:#334155;cursor:pointer;" title="Background fill or frame color">' +
+          '<span>Bg</span><input type="color" id="bBgColor" value="' + (ed.bg || hexBg(cs.backgroundColor, '#ffffff')) + '" title="Background fill color" />' +
+        '</label>' +
+        '<button type="button" data-act="clearbg" title="Clear background (transparent)" style="font-size:10.5px;padding:3px 7px;">Clear Bg</button>' +
+      '</div>' +
       '<div class="bar-row"><span>Size</span><input type="range" id="bSize" min="30" max="200" value="' + curScale + '" title="Make photo smaller or bigger"><em id="bSizeV">' + curScale + '%</em></div>' +
       '<div class="bar-row"><span>Photo</span><select id="bPhoto" title="Swap with another product photo"><option value="">Keep current photo</option>' +
       items.map((it, i) => '<option value="' + i + '" ' + (ed.photo === i ? 'selected' : '') + '>Item ' + (i + 1) + ': ' + safe((it.name || '').slice(0, 26)) + '</option>').join('') + '</select></div>' +
@@ -904,7 +929,7 @@ function drawBar() {
         '</select>' +
       '</div>' +
 
-      // 3. Size, Emphasis & Color
+      // 3. Size & Font Emphasis
       '<div class="bar-row">' +
         '<span>Style</span>' +
         '<button type="button" data-fs="0.9" title="Decrease font size" style="font-weight:700;">A&minus;</button>' +
@@ -912,7 +937,18 @@ function drawBar() {
         '<button type="button" data-act="bold" class="' + (isBold ? 'on' : '') + '" title="Bold (B)" style="font-weight:800;"><b>B</b></button>' +
         '<button type="button" data-act="italic" class="' + (isItalic ? 'on' : '') + '" title="Italic / Emphasis (I)" style="font-style:italic;font-family:serif;font-weight:700;"><i>I</i></button>' +
         '<button type="button" data-act="underline" class="' + (isUnderline ? 'on' : '') + '" title="Underline (U)"><u>U</u></button>' +
-        '<input type="color" id="bColor" value="' + (ed.color || hex(cs.color)) + '" title="Text color">' +
+      '</div>' +
+
+      // 4. Color Controls: Text Font Color & Background Fill Color
+      '<div class="bar-row">' +
+        '<span>Colors</span>' +
+        '<label style="display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;color:#334155;cursor:pointer;" title="Text font color (or selected words color)">' +
+          '<span>Text</span><input type="color" id="bColor" value="' + (ed.color || hex(cs.color, '#000000')) + '" title="Text color" />' +
+        '</label>' +
+        '<label style="display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;color:#334155;cursor:pointer;" title="Background fill color (or highlight color)">' +
+          '<span>Bg</span><input type="color" id="bBgColor" value="' + (ed.bg || hexBg(cs.backgroundColor, '#ffffff')) + '" title="Background fill color" />' +
+        '</label>' +
+        '<button type="button" data-act="clearbg" title="Clear background (transparent)" style="font-size:10.5px;padding:3px 7px;">Clear Bg</button>' +
       '</div>' +
 
       // 4. Text Casing (Uppercase, Lowercase, Capitalize, Normal)
@@ -1174,6 +1210,23 @@ function onBar(ev) {
   } else if (d.act === 'hide') {
     snapshot();
     setEdit({ hide: !ed.hide });
+  } else if (d.act === 'clearbg') {
+    snapshot();
+    const selObj = window.getSelection();
+    const hasSelection = selObj && !selObj.isCollapsed && sel && sel.el.contains(selObj.anchorNode);
+    if (hasSelection) {
+      document.execCommand('hiliteColor', false, 'transparent');
+      const all = rec();
+      all[sel.key] = Object.assign({}, all[sel.key] || {}, { html: clean(sel.el) });
+      if (window.onCatalogueTextEdited) window.onCatalogueTextEdited(sel.el);
+      place();
+      return;
+    }
+    setEdit({ bg: 'transparent' });
+    if (sel && sel.el) sel.el.style.backgroundColor = 'transparent';
+    place();
+    drawBar();
+    return;
   } else if (d.act === 'resetone') {
     snapshot();
     delete rec()[sel.key];
@@ -1228,6 +1281,17 @@ function onBarInput(ev) {
     setEdit({ color: colorVal }, true, true);
     return;
   }
+  if (ev.target.id === 'bBgColor') {
+    const colorVal = ev.target.value;
+    const selObj = window.getSelection();
+    const hasSelection = selObj && !selObj.isCollapsed && sel.el.contains(selObj.anchorNode);
+    if (hasSelection) {
+      document.execCommand('hiliteColor', false, colorVal);
+      return;
+    }
+    setEdit({ bg: colorVal }, true, true);
+    return;
+  }
 }
 
 function onBarChange(ev) {
@@ -1270,6 +1334,21 @@ function onBarChange(ev) {
     }
     snapshot();
     setEdit({ color: colorVal });
+  } else if (ev.target.id === 'bBgColor') {
+    const colorVal = ev.target.value;
+    const selObj = window.getSelection();
+    const hasSelection = selObj && !selObj.isCollapsed && sel.el.contains(selObj.anchorNode);
+    if (hasSelection) {
+      document.execCommand('hiliteColor', false, colorVal);
+      snapshot();
+      const all = rec();
+      all[sel.key] = Object.assign({}, all[sel.key] || {}, { html: clean(sel.el) });
+      if (window.onCatalogueTextEdited) window.onCatalogueTextEdited(sel.el);
+      place();
+      return;
+    }
+    snapshot();
+    setEdit({ bg: colorVal });
   } else if (ev.target.id === 'bPhoto') {
     snapshot();
     const v = ev.target.value;

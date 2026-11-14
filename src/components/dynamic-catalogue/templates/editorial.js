@@ -45,18 +45,27 @@ const sentences = s => (s || '').split(/(?<=[.!?])\s+/).filter(Boolean);
 
 function cover(c, t){
   const i = c.info, big = fsz(i.ent, 46, 32, 18);
-  if (t.cover === 'bleed') return `<div class="e-bleedph" style="${bgi(c.hero)}"></div>
+  const odopBanner = `
+    <div style="position:absolute;left:46px;right:46px;top:14px;background:linear-gradient(90deg, #1e3a8a, #1e40af);color:#ffffff;padding:5px 12px;border-radius:6px;display:flex;align-items:center;gap:8px;z-index:40;border:1px solid #3b82f6;">
+      <span style="font-size:16px">🏛️</span>
+      <div style="display:flex;flex-direction:column;line-height:1.2;">
+        <strong style="font-size:8.5px;letter-spacing:0.06em">GOVERNMENT OF INDIA &bull; ONE DISTRICT ONE PRODUCT (ODOP) INITIATIVE</strong>
+        <span style="font-size:8px;opacity:0.95">DISTRICT: <b>${E(i.district || 'Rajasthan')}</b> &bull; ODOP PRODUCT: <b>${E(i.odopProduct || i.product || 'Registered Craft')}</b></span>
+      </div>
+    </div>
+  `;
+  if (t.cover === 'bleed') return `${odopBanner}<div class="e-bleedph" style="${bgi(c.hero)}"></div>
     <div class="e-bleedcard"><div class="e-run2"><span>VOLUME I</span><span>${E(cap(i.district || 'COLLECTION'))}</span><span>${c.year}</span></div>
     <div class="e-brand" style="font-size:${big}px">${E(cap(i.ent))}</div><div class="e-rule"></div><div class="e-tag">${E(c.tagline)}</div>
-    <div class="e-bot">THE ${E(cap(i.product || 'PRODUCT'))} EDIT · CATALOGUE<br><span>${E(c.useShort)}</span></div></div>`;
-  if (t.cover === 'frame') return `<div class="e-frame"></div><div class="e-run2" style="position:absolute;left:46px;right:46px;top:44px"><span>VOLUME I</span><span>CRAFTED IN ${E(cap(i.district || 'INDIA'))}</span><span>${c.year}</span></div>
+    <div class="e-bot">THE ${E(cap(i.odopProduct || i.product || 'PRODUCT'))} EDIT · CATALOGUE<br><span>${E(c.useShort)}</span></div></div>`;
+  if (t.cover === 'frame') return `${odopBanner}<div class="e-frame"></div><div class="e-run2" style="position:absolute;left:46px;right:46px;top:44px"><span>VOLUME I</span><span>CRAFTED IN ${E(cap(i.district || 'INDIA'))}</span><span>${c.year}</span></div>
     <div class="e-fphoto" style="${bgi(c.hero)}"></div><div class="e-brand" style="top:760px;font-size:${big}px">${E(cap(i.ent))}</div>
-    <div class="e-sub" style="top:850px">${E(cap(i.product || 'COLLECTION'))}</div><div class="e-rule" style="top:890px"></div><div class="e-tag" style="top:915px">${E(c.tagline)}</div>
-    <div class="e-bot" style="bottom:62px">THE ${E(cap(i.product || 'PRODUCT'))} EDIT · CATALOGUE<br><span>${E(c.useShort)}</span></div>`;
-  return `<div class="e-frame"></div><div class="e-run2" style="position:absolute;left:46px;right:46px;top:44px"><span>VOLUME I</span><span>SIGNATURE COLLECTION</span><span>${c.year}</span></div>
+    <div class="e-sub" style="top:850px">${E(cap(i.odopProduct || i.product || 'COLLECTION'))}</div><div class="e-rule" style="top:890px"></div><div class="e-tag" style="top:915px">${E(c.tagline)}</div>
+    <div class="e-bot" style="bottom:62px">THE ${E(cap(i.odopProduct || i.product || 'PRODUCT'))} EDIT · CATALOGUE<br><span>${E(c.useShort)}</span></div>`;
+  return `${odopBanner}<div class="e-frame"></div><div class="e-run2" style="position:absolute;left:46px;right:46px;top:44px"><span>VOLUME I</span><span>SIGNATURE COLLECTION</span><span>${c.year}</span></div>
     <div class="e-arch"><div style="${bgi(c.hero)}"></div></div><div class="e-brand" style="top:690px;font-size:${big}px">${E(cap(i.ent))}</div>
-    <div class="e-sub" style="top:768px">${E(cap(i.district || ''))} · ${E(cap(i.product || 'CATALOGUE'))}</div><div class="e-rule" style="top:812px"></div>
-    <div class="e-tag" style="top:836px">${E(c.tagline)}</div><div class="e-bot" style="bottom:70px">THE ${E(cap(i.product || 'PRODUCT'))} EDIT · CATALOGUE<br><span>${E(c.useShort)}</span></div>`;
+    <div class="e-sub" style="top:768px">${E(cap(i.district || ''))} · ${E(cap(i.odopProduct || i.product || 'CATALOGUE'))}</div><div class="e-rule" style="top:812px"></div>
+    <div class="e-tag" style="top:836px">${E(c.tagline)}</div><div class="e-bot" style="bottom:70px">THE ${E(cap(i.odopProduct || i.product || 'PRODUCT'))} EDIT · CATALOGUE<br><span>${E(c.useShort)}</span></div>`;
 }
 
 function story(c, t, no){

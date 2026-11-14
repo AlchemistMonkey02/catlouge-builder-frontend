@@ -386,18 +386,21 @@ export default function PdfCatalogueGenerator() {
   const [isCompanyModalOpen, setIsCompanyModalOpen] = useState(false);
   const [newCompany, setNewCompany] = useState({
     name: "",
-    tagline: "Natural • Durable • Timeless",
-    industry: "Granite & Natural Stone",
+    tagline: "Certified ODOP Heritage Excellence",
+    industry: "Kota Doria Handlooms & Sarees",
+    odopProduct: "Kota Doria",
+    district: "Kota, Rajasthan",
+    state: "Rajasthan",
     logoUrl: "/assets/reference/p1_2.png",
     brandColors: { primary: "#4E5C43", secondary: "#1C1917", accent: "#C5A059" },
     contact: {
-      email: "info@supremestones.in",
-      phone: "+91 9066804666",
-      website: "https://www.supremestones.in",
-      address: "15 16-1A, 21st Mile Stone, Malle Nalsandra, Jigani, Nallasandra, Karnataka – 560083",
+      email: "contact@enterprise.in",
+      phone: "+91 94600 77112",
+      website: "https://www.odop-rajasthan.gov.in",
+      address: "Bunkar Seva Kendra Road, Kaithun, Kota District, Rajasthan – 325001",
     },
-    legal: { gstNumber: "29AAGCS1234F1Z9", taxId: "TAX-ID-99221", currency: "INR" },
-    wholesaleTerms: "We trade across India with Nationwide Coverage, ensuring smooth execution from selection to completion.",
+    legal: { gstNumber: "08AAAKK3344D1Z2", taxId: "TAX-ID-99221", currency: "INR" },
+    wholesaleTerms: "Certified One District One Product (ODOP) enterprise with verified batch provenance.",
   });
 
   const pdfPrintRef = useRef(null);
@@ -461,38 +464,168 @@ export default function PdfCatalogueGenerator() {
     }
   };
 
-  const currentCompany = companies.find((c) => c._id === selectedCompanyId) || companies[0] || {};
+  const rawCompany = companies.find((c) => c._id === selectedCompanyId) || companies[0] || {};
+  const currentCompany = useMemo(() => {
+    const cName = (rawCompany.name || "").toLowerCase();
+    const cInd = (rawCompany.industry || "").toLowerCase();
+    const cProd = (rawCompany.odopProduct || "").toLowerCase();
+    const cDist = (rawCompany.district || "").toLowerCase();
+
+    // Priority 1: User explicitly configured district and odopProduct in company registration
+    let matchedDistrict = (rawCompany.district && rawCompany.district.trim() !== "India") ? rawCompany.district : "";
+    let matchedOdop = (rawCompany.odopProduct && rawCompany.odopProduct.trim()) ? rawCompany.odopProduct : "";
+
+    // Clear legacy default mismatch (e.g. Garlic/Stone company defaulted to Kota Doria)
+    if (matchedOdop === "Kota Doria" && (cName.includes("garlic") || cInd.includes("garlic") || (cName.includes("stone") && !cName.includes("sand")) || (cInd.includes("stone") && !cInd.includes("sand")) || cName.includes("sand"))) {
+      matchedOdop = "";
+      matchedDistrict = "";
+    }
+
+    // Priority 2: If either is missing, deduce from odopProduct, district, industry, or company name
+    if (!matchedOdop || !matchedDistrict) {
+      if (cProd.includes("doria") || cProd.includes("handloom") || cProd.includes("saree") || cDist.includes("kota")) {
+        if (!matchedDistrict) matchedDistrict = "Kota, Rajasthan";
+        if (!matchedOdop) matchedOdop = "Kota Doria";
+      } else if (cProd.includes("garlic") || cProd.includes("lahsun") || cDist.includes("baran")) {
+        if (!matchedDistrict) matchedDistrict = "Baran, Rajasthan";
+        if (!matchedOdop) matchedOdop = "Garlic";
+      } else if (cProd.includes("stone") || cProd.includes("limestone") || cDist.includes("jhalawar")) {
+        if (!matchedDistrict) matchedDistrict = "Jhalawar, Rajasthan";
+        if (!matchedOdop) matchedOdop = "Kota Stone";
+      } else if (cProd.includes("sand") || cDist.includes("bundi")) {
+        if (!matchedDistrict) matchedDistrict = "Bundi, Rajasthan";
+        if (!matchedOdop) matchedOdop = "Sandstone";
+      } else {
+        const fullText = `${cName} ${cInd}`.toLowerCase();
+        if (fullText.includes("doria") || fullText.includes("saree") || fullText.includes("handloom") || fullText.includes("kaithun") || fullText.includes("parampara")) {
+          if (!matchedDistrict) matchedDistrict = "Kota, Rajasthan";
+          if (!matchedOdop) matchedOdop = "Kota Doria";
+        } else if (fullText.includes("garlic") || fullText.includes("baran")) {
+          if (!matchedDistrict) matchedDistrict = "Baran, Rajasthan";
+          if (!matchedOdop) matchedOdop = "Garlic";
+        } else if (fullText.includes("kota stone") || fullText.includes("limestone") || fullText.includes("jhalawar") || (fullText.includes("stone") && !fullText.includes("sand"))) {
+          if (!matchedDistrict) matchedDistrict = "Jhalawar, Rajasthan";
+          if (!matchedOdop) matchedOdop = "Kota Stone";
+        } else if (fullText.includes("sand") || fullText.includes("bundi")) {
+          if (!matchedDistrict) matchedDistrict = "Bundi, Rajasthan";
+          if (!matchedOdop) matchedOdop = "Sandstone";
+        }
+      }
+    }
+
+    return {
+      ...rawCompany,
+      district: matchedDistrict || rawCompany.district || "Kota, Rajasthan",
+      odopProduct: matchedOdop || rawCompany.odopProduct || "Kota Doria",
+      state: rawCompany.state || (matchedDistrict.includes("Rajasthan") ? "Rajasthan" : "Rajasthan"),
+    };
+  }, [rawCompany]);
+
   const primaryColor = currentCompany.brandColors?.primary || "#4E5C43";
   const secondaryColor = currentCompany.brandColors?.secondary || "#1C1917";
 
   // Products belonging to the current company, with specialty product matching
   const companyProducts = useMemo(() => {
     const cName = (currentCompany.name || "").toLowerCase();
-    const direct = allProducts.filter((p) => {
-      if (p.companyId === selectedCompanyId) return true;
-      if (selectedCompanyId && p.brand?.toLowerCase() === cName) return true;
-      if (cName.includes("garlic") && (p.category?.toLowerCase()?.includes("garlic") || p.brand?.toLowerCase()?.includes("garlic"))) return true;
-      if ((cName.includes("kota stone") || cName.includes("limestone")) && (p.category?.toLowerCase()?.includes("kota") || p.brand?.toLowerCase()?.includes("kota"))) return true;
-      if (cName.includes("sand") && (p.category?.toLowerCase()?.includes("sand") || p.brand?.toLowerCase()?.includes("sand"))) return true;
-      if (cName.includes("doria") && (p.category?.toLowerCase()?.includes("doria") || p.brand?.toLowerCase()?.includes("doria"))) return true;
+    const cInd = (currentCompany.industry || "").toLowerCase();
+    const cProd = (currentCompany.odopProduct || "").toLowerCase();
+    const cDist = (currentCompany.district || "").toLowerCase();
+
+    // 1. Direct match by companyId
+    const byId = allProducts.filter((p) => p.companyId === selectedCompanyId);
+    if (byId.length > 0) return byId;
+
+    // 2. Direct match by brand name
+    if (selectedCompanyId && cName) {
+      const byBrand = allProducts.filter((p) => p.brand?.toLowerCase() === cName);
+      if (byBrand.length > 0) return byBrand;
+    }
+
+    // 3. Match by category / specialty keywords prioritizing ODOP Product selection
+    const specialtyFiltered = allProducts.filter((p) => {
+      const pText = `${p.name || ""} ${p.category || ""} ${p.subcategory || ""} ${p.brand || ""}`.toLowerCase();
+      if (cProd.includes("doria") || cProd.includes("handloom") || cProd.includes("saree") || cDist.includes("kota")) {
+        return pText.includes("doria") || pText.includes("saree") || pText.includes("handloom") || pText.includes("chikankari") || pText.includes("dupatta");
+      }
+      if (cProd.includes("garlic") || cProd.includes("lahsun") || cDist.includes("baran")) {
+        return pText.includes("garlic") || pText.includes("clove") || pText.includes("lahsun");
+      }
+      if (cProd.includes("stone") || cDist.includes("jhalawar")) {
+        return pText.includes("kota") || pText.includes("limestone");
+      }
+      if (cProd.includes("sand") || cDist.includes("bundi")) {
+        return pText.includes("sand") || pText.includes("sandstone");
+      }
+      const fullText = `${cName} ${cInd}`.toLowerCase();
+      if (fullText.includes("doria") || fullText.includes("handloom")) {
+        return pText.includes("doria") || pText.includes("saree") || pText.includes("handloom") || pText.includes("chikankari");
+      }
+      if (fullText.includes("garlic")) {
+        return pText.includes("garlic") || pText.includes("clove");
+      }
+      if (fullText.includes("stone")) {
+        return pText.includes("kota") || pText.includes("limestone");
+      }
+      if (fullText.includes("sand")) {
+        return pText.includes("sand") || pText.includes("sandstone");
+      }
       return false;
     });
-    return direct.length > 0 ? direct : allProducts;
-  }, [allProducts, selectedCompanyId, currentCompany.name]);
+
+    if (specialtyFiltered.length > 0) return specialtyFiltered;
+
+    return allProducts;
+  }, [allProducts, selectedCompanyId, currentCompany]);
 
   // When clicking a different company
   const handleSelectCompany = (comp) => {
     setSelectedCompanyId(comp._id);
     const cName = (comp.name || "").toLowerCase();
-    let compProds = allProducts.filter((p) => {
-      if (p.companyId === comp._id) return true;
-      if (p.brand?.toLowerCase() === cName) return true;
-      if (cName.includes("garlic") && (p.category?.toLowerCase()?.includes("garlic") || p.brand?.toLowerCase()?.includes("garlic"))) return true;
-      if ((cName.includes("kota stone") || cName.includes("limestone")) && (p.category?.toLowerCase()?.includes("kota") || p.brand?.toLowerCase()?.includes("kota"))) return true;
-      if (cName.includes("sand") && (p.category?.toLowerCase()?.includes("sand") || p.brand?.toLowerCase()?.includes("sand"))) return true;
-      if (cName.includes("doria") && (p.category?.toLowerCase()?.includes("doria") || p.brand?.toLowerCase()?.includes("doria"))) return true;
-      return false;
-    });
+    const cInd = (comp.industry || "").toLowerCase();
+    const cProd = (comp.odopProduct || "").toLowerCase();
+    const cDist = (comp.district || "").toLowerCase();
+
+    // 1. Direct match by companyId
+    let compProds = allProducts.filter((p) => p.companyId === comp._id);
+
+    // 2. Direct match by brand name
+    if (compProds.length === 0 && cName) {
+      compProds = allProducts.filter((p) => p.brand?.toLowerCase() === cName);
+    }
+
+    // 3. Match by category / specialty keywords prioritizing ODOP Product
+    if (compProds.length === 0) {
+      compProds = allProducts.filter((p) => {
+        const pText = `${p.name || ""} ${p.category || ""} ${p.subcategory || ""} ${p.brand || ""}`.toLowerCase();
+        if (cProd.includes("doria") || cProd.includes("handloom") || cProd.includes("saree") || cDist.includes("kota")) {
+          return pText.includes("doria") || pText.includes("saree") || pText.includes("handloom") || pText.includes("chikankari") || pText.includes("dupatta");
+        }
+        if (cProd.includes("garlic") || cProd.includes("lahsun") || cDist.includes("baran")) {
+          return pText.includes("garlic") || pText.includes("clove") || pText.includes("lahsun");
+        }
+        if (cProd.includes("stone") || cDist.includes("jhalawar")) {
+          return pText.includes("kota") || pText.includes("limestone");
+        }
+        if (cProd.includes("sand") || cDist.includes("bundi")) {
+          return pText.includes("sand") || pText.includes("sandstone");
+        }
+        const fullText = `${cName} ${cInd}`.toLowerCase();
+        if (fullText.includes("doria") || fullText.includes("handloom")) {
+          return pText.includes("doria") || pText.includes("saree") || pText.includes("handloom") || pText.includes("chikankari");
+        }
+        if (fullText.includes("garlic")) {
+          return pText.includes("garlic") || pText.includes("clove");
+        }
+        if (fullText.includes("stone")) {
+          return pText.includes("kota") || pText.includes("limestone");
+        }
+        if (fullText.includes("sand")) {
+          return pText.includes("sand") || pText.includes("sandstone");
+        }
+        return false;
+      });
+    }
+
     if (compProds.length === 0) compProds = allProducts;
     setSelectedProductIds(compProds.map((p) => p._id));
     syncAndGenerateQrs(comp);
@@ -625,6 +758,7 @@ export default function PdfCatalogueGenerator() {
       if (res.data) {
         setCompanies((prev) => [...prev, res.data]);
         setSelectedCompanyId(res.data._id);
+        handleSelectCompany(res.data);
         setIsCompanyModalOpen(false);
       }
     } catch (err) {
@@ -1523,6 +1657,9 @@ export default function PdfCatalogueGenerator() {
           <DynamicCatalogueStudio
             company={currentCompany}
             products={visibleProducts}
+            allProducts={allProducts}
+            companies={companies}
+            onSelectCompany={handleSelectCompany}
             activeQrList={activeQrList}
             includeQr={includeQrInCatalogue}
           />
@@ -1534,7 +1671,7 @@ export default function PdfCatalogueGenerator() {
             <Eye size={20} color="var(--primary)" /> Live Catalogue Preview
           </div>
           <span style={{ fontSize: "0.84rem", color: "var(--text-secondary)", fontWeight: 600 }}>
-            Format: <strong style={{ color: "var(--primary)", fontWeight: 800 }}>{CANVA_TEMPLATES.find((t) => t.id === templateId)?.name}</strong> • Company: <strong style={{ color: "var(--text-primary)", fontWeight: 800 }}>{currentCompany.name}</strong>
+            Format: <strong style={{ color: "var(--primary)", fontWeight: 800 }}>{CANVA_TEMPLATES.find((t) => t.id === templateId)?.name}</strong> • Company: <strong style={{ color: "var(--text-primary)", fontWeight: 800 }}>{currentCompany.name}</strong> • <span style={{ color: "#166534", fontWeight: 750 }}>📍 District: {currentCompany.district} (ODOP {currentCompany.odopProduct})</span>
           </span>
         </div>
 
@@ -1585,6 +1722,11 @@ export default function PdfCatalogueGenerator() {
                     <h1 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: "2.5rem", fontWeight: 700, letterSpacing: "-0.01em", color: "#111111", margin: 0 }}>
                       {currentCompany.name}
                     </h1>
+                    <div style={{ display: "inline-flex", alignItems: "center", gap: "6px", background: "#4E5C43", color: "#FFFFFF", padding: "4px 14px", borderRadius: "20px", fontSize: "0.78rem", fontWeight: 700, marginTop: "8px" }}>
+                      <span>📍 District: {currentCompany.district}</span>
+                      <span>•</span>
+                      <span>ODOP: {currentCompany.odopProduct}</span>
+                    </div>
                   </div>
 
                   {/* Hero Architecture Photo with Angled Polygon Cut */}
@@ -2212,6 +2354,153 @@ export default function PdfCatalogueGenerator() {
             </div>
 
             <form onSubmit={handleCreateCompanySubmit} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+              {/* UNDER WHICH ODOP CATEGORY IS COMPANY REGISTERING? */}
+              <div
+                style={{
+                  background: "var(--bg-surface-elevated)",
+                  padding: "0.85rem",
+                  borderRadius: "var(--radius-md)",
+                  border: "1.5px solid var(--primary-light, #818cf8)",
+                }}
+              >
+                <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "4px" }}>
+                  <MapPin size={16} style={{ color: "var(--primary)" }} />
+                  <label style={{ fontSize: "0.85rem", fontWeight: 800, color: "var(--text-primary)" }}>
+                    Under Which ODOP Category is Company Registering? *
+                  </label>
+                </div>
+                <p style={{ fontSize: "0.75rem", color: "var(--text-muted)", margin: "0 0 8px 0" }}>
+                  Select the official Rajasthan ODOP corridor to bind the correct district and product category:
+                </p>
+
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "0.5rem", marginBottom: "0.6rem" }}>
+                  {[
+                    {
+                      product: "Kota Doria",
+                      district: "Kota, Rajasthan",
+                      label: "🥻 Kota Doria",
+                      loc: "District: Kota",
+                      ind: "Kota Doria Handlooms & Sarees",
+                      tag: "GI Certified Gossamer Handloom Drapes",
+                      addr: "Bunkar Seva Kendra Road, Kaithun, Kota District, Rajasthan – 325001",
+                    },
+                    {
+                      product: "Garlic",
+                      district: "Baran, Rajasthan",
+                      label: "🧄 Garlic",
+                      loc: "District: Baran",
+                      ind: "Garlic Agro-Commodity & Exports",
+                      tag: "Farm-Fresh High-Allicin Cured Garlic Bulbs",
+                      addr: "Baran Mandi Yard, Industrial Area, Baran, Rajasthan – 325205",
+                    },
+                    {
+                      product: "Kota Stone",
+                      district: "Jhalawar, Rajasthan",
+                      label: "🏛️ Kota Stone",
+                      loc: "District: Jhalawar",
+                      ind: "Kota Stone Architectural Mining",
+                      tag: "Indurated Natural Limestone Slabs & Tiles",
+                      addr: "Quarry RIICO Industrial Area, Suket, Jhalawar, Rajasthan – 326514",
+                    },
+                    {
+                      product: "Sandstone",
+                      district: "Bundi, Rajasthan",
+                      label: "🧱 Sandstone",
+                      loc: "District: Bundi",
+                      ind: "Heritage Sandstone & Architectural Mining",
+                      tag: "Sedimentary Quartz Sandstone Blocks & Tiles",
+                      addr: "Bundi Sandstone Cluster, RIICO Phase II, Bundi, Rajasthan – 323001",
+                    },
+                  ].map((od) => {
+                    const isSelected = newCompany.odopProduct === od.product || newCompany.district === od.district;
+                    return (
+                      <button
+                        key={od.product}
+                        type="button"
+                        onClick={() => {
+                          setNewCompany((prev) => ({
+                            ...prev,
+                            odopProduct: od.product,
+                            district: od.district,
+                            state: "Rajasthan",
+                            industry: od.ind,
+                            tagline: od.tag,
+                            contact: {
+                              ...prev.contact,
+                              address: od.addr,
+                            },
+                          }));
+                        }}
+                        style={{
+                          padding: "8px 10px",
+                          borderRadius: "8px",
+                          border: isSelected ? "2px solid var(--primary)" : "1px solid var(--border-subtle)",
+                          background: isSelected ? "var(--primary-light, rgba(99, 102, 241, 0.12))" : "var(--bg-surface)",
+                          cursor: "pointer",
+                          textAlign: "left",
+                        }}
+                      >
+                        <div style={{ fontWeight: 800, fontSize: "0.82rem", color: isSelected ? "var(--primary)" : "var(--text-primary)" }}>
+                          {od.label}
+                        </div>
+                        <div style={{ fontSize: "0.70rem", color: isSelected ? "var(--primary)" : "var(--text-muted)", marginTop: "1px" }}>
+                          📍 {od.loc}
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.5rem", marginBottom: "0.6rem" }}>
+                  <div>
+                    <label style={{ fontSize: "0.72rem", color: "var(--text-secondary)", fontWeight: 700, display: "block", marginBottom: "2px" }}>
+                      ODOP Product Category
+                    </label>
+                    <input
+                      type="text"
+                      className="input-field"
+                      style={{ paddingLeft: "0.65rem", fontSize: "0.8rem", padding: "4px 8px" }}
+                      value={newCompany.odopProduct || ""}
+                      placeholder="e.g. Garlic, Kota Stone, Sandstone"
+                      onChange={(e) => setNewCompany((prev) => ({ ...prev, odopProduct: e.target.value }))}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: "0.72rem", color: "var(--text-secondary)", fontWeight: 700, display: "block", marginBottom: "2px" }}>
+                      Prescribed District Location
+                    </label>
+                    <input
+                      type="text"
+                      className="input-field"
+                      style={{ paddingLeft: "0.65rem", fontSize: "0.8rem", padding: "4px 8px" }}
+                      value={newCompany.district || ""}
+                      placeholder="e.g. Baran, Rajasthan"
+                      onChange={(e) => setNewCompany((prev) => ({ ...prev, district: e.target.value }))}
+                    />
+                  </div>
+                </div>
+
+                <div
+                  style={{
+                    background: "rgba(16, 185, 129, 0.1)",
+                    border: "1px solid rgba(16, 185, 129, 0.3)",
+                    padding: "5px 10px",
+                    borderRadius: "6px",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    fontSize: "0.75rem",
+                  }}
+                >
+                  <span style={{ fontWeight: 750, color: "#15803d" }}>
+                    📍 District: <strong>{newCompany.district || "Pending Registration"}</strong>
+                  </span>
+                  <span style={{ fontWeight: 700, color: "var(--primary)" }}>
+                    🏷️ ODOP: {newCompany.odopProduct || "Pending Selection"}
+                  </span>
+                </div>
+              </div>
+
               <div>
                 <label style={{ fontSize: "0.8rem", color: "var(--text-secondary)", display: "block", marginBottom: "4px" }}>
                   Company / Brand Name *
@@ -2223,7 +2512,21 @@ export default function PdfCatalogueGenerator() {
                   style={{ paddingLeft: "0.85rem" }}
                   placeholder="e.g. Supreme Granite & Stones"
                   value={newCompany.name}
-                  onChange={(e) => setNewCompany({ ...newCompany, name: e.target.value })}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    const lower = val.toLowerCase();
+                    let extra = {};
+                    if (lower.includes("garlic") || lower.includes("lahsun") || lower.includes("agro")) {
+                      extra = { odopProduct: "Garlic", district: "Baran, Rajasthan", industry: "Garlic Agro-Commodity & Exports", tagline: "Farm-Fresh High-Allicin Cured Garlic Bulbs" };
+                    } else if (lower.includes("sand") || lower.includes("sandstone")) {
+                      extra = { odopProduct: "Sandstone", district: "Bundi, Rajasthan", industry: "Heritage Sandstone & Architectural Mining", tagline: "Sedimentary Quartz Sandstone Blocks & Tiles" };
+                    } else if (lower.includes("stone") || lower.includes("limestone") || lower.includes("granite")) {
+                      extra = { odopProduct: "Kota Stone", district: "Jhalawar, Rajasthan", industry: "Kota Stone Architectural Mining", tagline: "Indurated Natural Limestone Slabs & Tiles" };
+                    } else if (lower.includes("doria") || lower.includes("saree") || lower.includes("handloom")) {
+                      extra = { odopProduct: "Kota Doria", district: "Kota, Rajasthan", industry: "Kota Doria Handlooms & Sarees", tagline: "GI Certified Gossamer Handloom Drapes" };
+                    }
+                    setNewCompany((prev) => ({ ...prev, name: val, ...extra }));
+                  }}
                 />
               </div>
 

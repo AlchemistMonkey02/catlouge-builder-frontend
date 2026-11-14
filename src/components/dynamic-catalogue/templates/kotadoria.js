@@ -10,7 +10,20 @@ const pn = n => String(n).padStart(2, '0');
 const getImgUrl = u => {
   if (!u) return '';
   if (typeof u === 'string') return u;
-  return u.img || u.image || (u.images && u.images[0] && (u.images[0].url || u.images[0])) || u.angle1 || u.url || '';
+  if (typeof u === 'object') {
+    if (typeof u.url === 'string') return u.url;
+    if (typeof u.img === 'string') return u.img;
+    if (typeof u.image === 'string') return u.image;
+    if (u.image && typeof u.image === 'object' && typeof u.image.url === 'string') return u.image.url;
+    if (Array.isArray(u.images) && u.images.length > 0) {
+      const first = u.images[0];
+      if (typeof first === 'string') return first;
+      if (first && typeof first === 'object' && typeof first.url === 'string') return first.url;
+      if (first && typeof first === 'object' && typeof first.img === 'string') return first.img;
+    }
+    if (typeof u.angle1 === 'string') return u.angle1;
+  }
+  return '';
 };
 const bg = u => {
   const url = getImgUrl(u);
@@ -25,6 +38,12 @@ const fmtPrice = p => {
   const num = Number(s.replace(/[^0-9.]/g, ''));
   if (!isNaN(num) && num > 0) return `₹${num.toLocaleString('en-IN')}`;
   return `₹${s}`;
+};
+const fmtWa = w => {
+  if (!w) return '';
+  let s = String(w).trim();
+  s = s.replace(/^(\+?91\s*)+/gi, '').replace(/^\+/, '').trim();
+  return `+91 ${s}`;
 };
 
 const th = (name, bg, ink, muted, acc, dark, soft, line, onDark) => ({ name, bg, ink, muted, acc, dark, soft, line, onDark });
@@ -134,12 +153,13 @@ const TEMPLATES = [
   }
 ];
 
-// Header & Footer for Standard KD templates
+// Header & Footer for Standard KD templates with full ODOP compliance
 const head = (c, label, no) => `
   <div class="kd-head">
     <div class="kd-head-brand">
       <span class="kd-loom-icon">🥻</span>
       <strong>${E(c.info.ent || 'KOTA DORIA HANDLOOM')}</strong>
+      <span class="kd-head-district">&bull; District: ${E(c.info.district || 'Kota, Rajasthan')} [ODOP: ${E(c.info.odopProduct || 'Kota Doria')}]</span>
     </div>
     <span class="kd-head-tag">${E(label)}</span>
     <span class="kd-head-num">${pn(no)}</span>
@@ -148,8 +168,8 @@ const head = (c, label, no) => `
 
 const foot = c => `
   <div class="kd-foot">
-    <span>${E(c.info.ent || '')} &bull; Authentic Geographical Indication (GI) Kota Doria</span>
-    <span>☎ ${E(c.info.mobile || '')} ${c.info.email ? `&bull; ${E(c.info.email)}` : ''}</span>
+    <span><b>${E(c.info.ent || '')}</b> &bull; ${E(c.info.district || 'Kota, Rajasthan')} &bull; ODOP: ${E(c.info.odopProduct || 'Kota Doria')}</span>
+    <span>💬 WhatsApp: <b>${E(fmtWa(c.info.whatsapp || c.info.mobile))}</b> ${c.info.email ? `&bull; ${E(c.info.email)}` : ''}</span>
   </div>
 `;
 
@@ -192,6 +212,11 @@ function paramparaCover(c) {
 
           <h1 class="parampara-logo-title">${E(brand)}</h1>
           <div class="parampara-edition-badge">WHOLESALE TRADE LOOKBOOK &bull; 2026</div>
+          <div class="parampara-odop-badge" style="display:inline-flex; align-items:center; justify-content:center; gap:8px; background:rgba(197,160,89,0.18); border:1px solid #c5a059; padding:4px 14px; border-radius:20px; font-size:9.5px; font-weight:700; color:#fdfbf7; margin:6px auto 10px; letter-spacing:0.06em;">
+            <span>📍 District: <b>${E(c.info.district || 'Kota, Rajasthan')}</b></span>
+            <span style="opacity:0.6">&bull;</span>
+            <span>🏷️ ODOP Product: <b>${E(c.info.odopProduct || 'Kota Doria')}</b></span>
+          </div>
 
           <div class="parampara-quote-card">
             <p>“Direct manufacturer access to high-count silk-cotton powerloom sarees. Consistent quality, master craftsmanship, and volume profit margins for business partners.”</p>
@@ -557,6 +582,11 @@ function silkenCover(c) {
 
         <h1 class="silken-title">${E(brand)}</h1>
         <div class="silken-edition-sub">The Fabric of Celebration &bull; Wedding Lookbook</div>
+        <div class="silken-odop-pill" style="display:inline-flex; align-items:center; justify-content:center; gap:8px; background:rgba(255,255,255,0.18); border:1px solid rgba(255,255,255,0.45); padding:4px 14px; border-radius:20px; font-size:10px; font-weight:700; color:#ffffff; margin:6px auto 10px; letter-spacing:0.06em;">
+          <span>📍 District: <b>${E(c.info.district || 'Kota, Rajasthan')}</b></span>
+          <span style="opacity:0.6">&bull;</span>
+          <span>🏷️ ODOP: <b>${E(c.info.odopProduct || 'Kota Doria')}</b></span>
+        </div>
 
         <div class="silken-card-divider"></div>
 
@@ -732,37 +762,17 @@ function silkenServices(c, pageNum) {
 }
 
 function silkenTornProducts(c, pageNum) {
-  const it = c.items;
-
+  const items = c.items.slice(0, 4);
   return `
-    <div class="silken-page-body silken-mosaic-page">
-      <div class="silken-mosaic-header">
-        <span class="mosaic-tag">EDITORIAL MOODBOARD</span>
-        <h2>Most Loved Celebration Classics</h2>
-        <p>A curated retrospective of our most coveted bridal and festive creations</p>
-      </div>
-
-      <div class="silken-mosaic-grid">
-        ${[0, 1, 2, 3, 4, 5].map(idx => {
-          const item = it[idx] || it[0] || {};
-          return `
-            <div class="mosaic-card">
-              <div class="mosaic-photo" style="${bg(item.img)}">
-                <span class="mosaic-badge">CLASSIC #${pn(idx + 1)}</span>
-              </div>
-              <div class="mosaic-meta">
-                <h4>${E(item.name || 'Kota Doria Saree')}</h4>
-                <div class="mosaic-price">${item.price ? `₹${item.price}` : 'Inquire Boutique'}</div>
-              </div>
-            </div>
-          `;
-        }).join('')}
-      </div>
-
-      <div class="silken-mosaic-footer-quote">
-        “Every saree is woven to make an ordinary day feel extraordinary, and a festive day feel eternal.”
-      </div>
+    ${head(c, `CURATED ENSEMBLE SUITE &bull; PAGE ${pn(pageNum)}`, pageNum)}
+    <div class="kd1-head" style="margin-top:16px">
+      <h2>Artisanal Ensemble Showcase</h2>
+      <p>Registered Geographical Indication Handcrafted Masterpieces</p>
     </div>
+    <div class="kd1-grid">
+      ${items.map((it, idx) => renderKdProductCard(it, idx, c, 'slk')).join('')}
+    </div>
+    ${foot(c)}
   `;
 }
 
@@ -996,12 +1006,23 @@ function kd1_cover(c, t) {
   const i = c.info;
   const defaultHero = '/assets/kota-doria/0X2A0389_db4c4b42-1d9b-405b-9ea0-664b5017af38.jpg';
   const hero = c.hero || (c.items[0] && (c.items[0].img || c.items[0].image)) || c.info?.logo || defaultHero;
+  const qrImg = c.info?.qr || c.qr || '';
+  const waNum = c.info?.whatsapp || c.info?.mobile || '9414123456';
+
   return `
     <div class="kd1-cover-container">
       <div class="kd1-court-border">
+        <div class="kd1-odop-gov-banner">
+          <span class="kd1-gov-emblem">🏛️</span>
+          <div class="kd1-gov-text">
+            <strong>GOVERNMENT OF INDIA &bull; ONE DISTRICT ONE PRODUCT (ODOP) INITIATIVE</strong>
+            <span>DISTRICT: <b>${E(i.district || 'Kota, Rajasthan')}</b> &bull; ODOP PRODUCT: <b>${E(i.odopProduct || 'Kota Doria')}</b></span>
+          </div>
+        </div>
+
         <div class="kd1-cov-header">
-          <div class="kd1-regal-insignia">👑 ROYAL RAJPUTANA HANDLOOM HERITAGE</div>
-          <div class="kd1-gi-stamp">GI APPLICATION NO. 84 &bull; KAITHUN CLUSTER</div>
+          <div class="kd1-regal-insignia">👑 ${E((i.odopProduct || 'Royal Handloom').toUpperCase())} HERITAGE</div>
+          <div class="kd1-gi-stamp">${E(i.giTag || (i.odopProduct ? `ODOP ${i.odopProduct.toUpperCase()}` : 'GI TAG NO. 37'))} &bull; ${E(i.district ? i.district.toUpperCase() : 'KAITHUN CLUSTER')}</div>
         </div>
         <div class="kd1-arch-medallion">
           <div class="kd1-arch-window" style="${bg(hero)}">
@@ -1010,16 +1031,33 @@ function kd1_cover(c, t) {
           </div>
         </div>
         <div class="kd1-cov-details">
-          <h1 class="kd1-royal-title">${E(i.ent || 'RAJPUTANA KOTA DORIA')}</h1>
+          <h1 class="kd1-royal-title">${E(i.ent || 'PARAMPARA THREADS')}</h1>
           <div class="kd1-royal-tagline">${E(c.textOverrides?.tagline || i.tagline || 'Gossamer Mulberry Silk-Cotton Handwoven Masterpieces')}</div>
           <div class="kd1-court-decree">
             ${E(i.desc || 'Woven under royal court patronage since the 17th century by master pit-loom artisans of Kaithun. Featuring intricate real gold electroplated electro-tested zari borders and signatures square khat aeration.')}
           </div>
+          
+          <div class="kd1-cover-odop-connect">
+            ${qrImg ? `
+            <div class="kd1-cover-qr-card">
+              <img src="${qrImg}" alt="Part A Direct Profile QR" class="kd1-cov-qr" />
+              <div class="kd1-cov-qr-meta">
+                <b>SCAN FOR PRESCRIBED PART A PROFILE</b>
+                <small>Direct access to artisan credentials, verified price book &amp; orders</small>
+              </div>
+            </div>
+            ` : ''}
+            <div class="kd1-cover-wa-pill">
+              <span>💬 WhatsApp Business: <b>${E(fmtWa(waNum))}</b></span>
+              <small>Instant catalog order &amp; bulk wholesale booking</small>
+            </div>
+          </div>
+
           <div class="kd1-heraldic-pillars">
             <div class="kd1-pillar"><span>300+</span><small>Square Khats</small></div>
             <div class="kd1-pillar"><span>Real Gold</span><small>Tested Zari</small></div>
             <div class="kd1-pillar"><span>Mulberry</span><small>Pure Silk Warp</small></div>
-            <div class="kd1-pillar"><span>320g</span><small>Featherlight</small></div>
+            <div class="kd1-pillar"><span>${E(i.giTag || 'GI Tag No. 37')}</span><small>Registered</small></div>
           </div>
         </div>
       </div>
@@ -1058,34 +1096,156 @@ function kd1_story(c, no) {
   `;
 }
 
-function kd1_products(c, no, slice, pageIdx, totalPages) {
+
+function renderKdProductCard(it, idx, c, prefix = 'kd') {
+  const cardImg = getImgUrl(it) || '/assets/kota-doria/bagru-hand-block-print-kota-doria-cotton-natural-dyed-3pc-unstitched-602.jpg';
+  const cardPrice = fmtPrice(it.price || it.formattedPrice || 3200);
+  const cardSku = it.sku || it.code || `#${prefix.toUpperCase()}-${pn(idx + 1)}`;
+  const cardName = it.name || it.title || 'Royal Handloom Ensemble';
+  const cardDesc = it.shortDescription || it.description || 'Intricate zari pallu with micro square khat weave on pit-loom.';
+  const cardTag = it.subcategory || it.productType || it.color || (it.category && !it.category.includes('Specialty') ? it.category : '') || 'ROYAL COLLECTION';
+  const cardCraft = (c.info && c.info.ent) || it.brand || 'Royal Kaithun Atelier';
+
+  const specSize = it.size || '6.5m (Includes 80cm Running Blouse Piece)';
+  const specMaterial = it.material || it.materialComposition || 'Pure Mulberry Silk-Cotton';
+  const specFinish = it.finish || 'Tested Lurex Gold Zari';
+  const specApp = it.application || it.useApplication || 'Bridal & Festive Drapes';
+  const specPriceRange = it.priceRange || `${cardPrice} – ₹6,500`;
+  const specMoq = it.moq || '10 Pieces (Wholesale)';
+
+  const safeImg = cardImg.replace(/'/g, '%27');
+
   return `
-    ${head(c, `ROYAL ZARI COLLECTION &bull; (${pn(pageIdx)}/${pn(totalPages)})`, no)}
+    <div class="kd1-card">
+      <div class="kd1-img" style="${bg(cardImg)}">
+        <img src="${safeImg}" alt="${E(cardName)}" class="kd1-card-img-el" onerror="this.onerror=null; this.src='/assets/kota-doria/bagru-hand-block-print-kota-doria-cotton-natural-dyed-3pc-unstitched-602.jpg'; if (this.parentElement) this.parentElement.style.backgroundImage='url(\\'/assets/kota-doria/bagru-hand-block-print-kota-doria-cotton-natural-dyed-3pc-unstitched-602.jpg\\')';" />
+        <span class="kd1-tag">${E(cap(cardTag))}</span>
+        <span class="kd1-district-chip">ODOP ${E(c.info.district ? c.info.district.split(',')[0].trim() : 'Kota')}</span>
+      </div>
+      <div class="kd1-details">
+        <div class="kd1-card-meta-row">
+          <span class="kd1-sku-chip">SKU: ${E(cardSku)}</span>
+          <span class="kd1-moq-chip">MOQ: ${E(specMoq)}</span>
+        </div>
+        <h3>${E(cardName)}</h3>
+        <div class="kd1-desc-row">
+          <p class="kd1-desc">${E(cardDesc)}</p>
+        </div>
+        
+        <div class="kd1-spec-matrix">
+          <div class="kd1-spec-item" title="${E(specSize)}">
+            <span class="kd1-spec-lbl">📏 Size:</span>
+            <span class="kd1-spec-val">${E(specSize)}</span>
+          </div>
+          <div class="kd1-spec-item" title="${E(specMaterial)}">
+            <span class="kd1-spec-lbl">🧵 Material:</span>
+            <span class="kd1-spec-val">${E(specMaterial)}</span>
+          </div>
+          <div class="kd1-spec-item" title="${E(specFinish)}">
+            <span class="kd1-spec-lbl">✨ Finish:</span>
+            <span class="kd1-spec-val">${E(specFinish)}</span>
+          </div>
+          <div class="kd1-spec-item" title="${E(specApp)}">
+            <span class="kd1-spec-lbl">🎯 Use:</span>
+            <span class="kd1-spec-val">${E(specApp)}</span>
+          </div>
+        </div>
+
+        <div class="kd1-foot">
+          <div class="kd1-price-block">
+            <span class="kd1-price">${E(cardPrice)}</span>
+            <span class="kd1-range">Range: ${E(specPriceRange)}</span>
+          </div>
+          <div class="kd1-contact-block">
+            <span class="kd1-craft">${E(cardCraft)}</span>
+            <span class="kd1-wa">💬 WA: ${E(fmtWa(c.info.whatsapp || c.info.mobile))}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function kd1_products(c, no, slice, pageIdx, totalPages) {
+  const pageCategory = (slice[0] && slice[0].category && !slice[0].category.includes('Specialty'))
+    ? slice[0].category
+    : ((c.info && c.info.name) || 'Imperial Handloom');
+  const pageTitle = pageCategory.toLowerCase().includes('saree')
+    ? 'Imperial Tested Zari Saree Ensembles'
+    : `${pageCategory} Signature Collection`;
+  const pageDesc = (c.info && c.info.tagline) || 'Interwoven real gold electroplated zari borders on sheer gossamer mulberry silk-cotton';
+
+  return `
+    ${head(c, `ROYAL WEAVE COLLECTION &bull; (${pn(pageIdx)}/${pn(totalPages)})`, no)}
     <div class="kd1-head">
-      <h2>Imperial Tested Zari Saree Ensembles</h2>
-      <p>Interwoven real gold electroplated zari borders on sheer gossamer mulberry silk-cotton</p>
+      <h2>${E(pageTitle)}</h2>
+      <p>${E(pageDesc)}</p>
     </div>
     <div class="kd1-grid">
       ${slice.map((it, idx) => {
         const cardImg = getImgUrl(it) || '/assets/kota-doria/0X2A0389_db4c4b42-1d9b-405b-9ea0-664b5017af38.jpg';
-        const cardPrice = fmtPrice(it.price || 4200);
+        const cardPrice = fmtPrice(it.price || it.formattedPrice || 4200);
+        const cardSku = it.sku || it.code || `#KD1-${pn(idx + 1)}`;
+        const cardName = it.name || it.title || 'Royal Handloom Ensemble';
+        const cardDesc = it.shortDescription || it.description || 'Intricate zari pallu with micro square khat weave on pit-loom.';
+        const cardTag = it.subcategory || it.productType || it.color || (it.category && !it.category.includes('Specialty') ? it.category : '') || 'ROYAL COLLECTION';
+        const cardCraft = (c.info && c.info.ent) || it.brand || 'Royal Kaithun Atelier';
+
+        // 14 ODOP Criteria:
+        const specSize = it.size || '6.5m (Includes 80cm Running Blouse Piece)';
+        const specMaterial = it.material || it.materialComposition || 'Pure Mulberry Silk-Cotton';
+        const specFinish = it.finish || 'Tested Lurex Gold Zari';
+        const specApp = it.application || it.useApplication || 'Bridal & Festive Drapes';
+        const specPriceRange = it.priceRange || `${cardPrice} – ₹6,500`;
+        const specMoq = it.moq || '10 Pieces (Wholesale)';
+
+        const safeImg = cardImg.replace(/'/g, '%27');
+
         return `
         <div class="kd1-card">
           <div class="kd1-img" style="${bg(cardImg)}">
-            <span class="kd1-tag">ROYAL ZARI PALLU</span>
+            <img src="${safeImg}" alt="${E(cardName)}" class="kd1-card-img-el" onerror="this.onerror=null; this.src='/assets/kota-doria/bagru-hand-block-print-kota-doria-cotton-natural-dyed-3pc-unstitched-602.jpg'; if (this.parentElement) this.parentElement.style.backgroundImage='url(\\'/assets/kota-doria/bagru-hand-block-print-kota-doria-cotton-natural-dyed-3pc-unstitched-602.jpg\\')';" />
+            <span class="kd1-tag">${E(cap(cardTag))}</span>
+            <span class="kd1-district-chip">ODOP ${E(c.info.district ? c.info.district.split(',')[0].trim() : 'Kota')}</span>
           </div>
           <div class="kd1-details">
-            <div class="kd1-sku-chip">${E(it.sku || it.code || `#KD1-${pn(idx + 1)}`)}</div>
-            <h3>${E(it.name || it.title || 'Royal Zari Saree')}</h3>
-            <p class="kd1-desc">${E(it.shortDescription || it.description || 'Intricate zari pallu with micro square khat weave on pit-loom.')}</p>
-            <div class="kd1-pills">
-              <span>✦ 320g Weight &bull; Featherlight</span>
-              <span>✦ Real Tested Electro-Zari</span>
-              <span>✦ 6.3m Complete with Blouse Piece</span>
+            <div class="kd1-card-meta-row">
+              <span class="kd1-sku-chip">SKU: ${E(cardSku)}</span>
+              <span class="kd1-moq-chip">MOQ: ${E(specMoq)}</span>
             </div>
+            <h3>${E(cardName)}</h3>
+            <div class="kd1-desc-row">
+              <p class="kd1-desc">${E(cardDesc)}</p>
+            </div>
+            
+            <div class="kd1-spec-matrix">
+              <div class="kd1-spec-item" title="${E(specSize)}">
+                <span class="kd1-spec-lbl">📏 Size:</span>
+                <span class="kd1-spec-val">${E(specSize)}</span>
+              </div>
+              <div class="kd1-spec-item" title="${E(specMaterial)}">
+                <span class="kd1-spec-lbl">🧵 Material:</span>
+                <span class="kd1-spec-val">${E(specMaterial)}</span>
+              </div>
+              <div class="kd1-spec-item" title="${E(specFinish)}">
+                <span class="kd1-spec-lbl">✨ Finish:</span>
+                <span class="kd1-spec-val">${E(specFinish)}</span>
+              </div>
+              <div class="kd1-spec-item" title="${E(specApp)}">
+                <span class="kd1-spec-lbl">🎯 Use:</span>
+                <span class="kd1-spec-val">${E(specApp)}</span>
+              </div>
+            </div>
+
             <div class="kd1-foot">
-              <span class="kd1-price">${E(cardPrice)}</span>
-              <span class="kd1-craft">Royal Kaithun Atelier</span>
+              <div class="kd1-price-block">
+                <span class="kd1-price">${E(cardPrice)}</span>
+                <span class="kd1-range">Range: ${E(specPriceRange)}</span>
+              </div>
+              <div class="kd1-contact-block">
+                <span class="kd1-craft">${E(cardCraft)}</span>
+                <span class="kd1-wa">💬 WA: ${E(fmtWa(c.info.whatsapp || c.info.mobile))}</span>
+              </div>
             </div>
           </div>
         </div>
@@ -1144,33 +1304,56 @@ function kd1_tech(c, no) {
 
 function kd1_closing(c, no) {
   const i = c.info;
+  const qrImg = i.qr || c.qr || '';
+  const waNum = i.whatsapp || i.mobile || '9414123456';
+
   return `
     <div class="kd1-closing-wrap">
       <div class="kd1-closing-frame">
-        <div class="kd1-closing-crown">👑</div>
-        <h2 class="kd1-closing-title">Imperial Atelier &amp; Direct Loom Orders</h2>
-        <div class="kd1-closing-divider"></div>
-        <p class="kd1-closing-sub">Supplying royalty, luxury bridal houses, and high-end boutique showrooms across India and globally.</p>
-        <div class="kd1-closing-details">
-          <div class="kd1-contact-entry">
-            <span class="kd1-entry-lbl">Atelier Address</span>
-            <b>${E(i.addr || 'Kaithun Loom Hub, Kota District, Rajasthan 325001')}</b>
-          </div>
-          <div class="kd1-contact-entry">
-            <span class="kd1-entry-lbl">Direct Loom Representative</span>
-            <b>${E(i.contact || i.ent || 'Master Weaver Council')}</b>
-          </div>
-          <div class="kd1-contact-entry">
-            <span class="kd1-entry-lbl">Telephone &amp; WhatsApp Concierge</span>
-            <b>${E(i.mobile || '+91 98290 XXXXX')}</b>
-          </div>
-          <div class="kd1-contact-entry">
-            <span class="kd1-entry-lbl">Institutional Trade Email</span>
-            <b>${E(i.email || 'concierge@kotadoria-royal.in')}</b>
-          </div>
+        <div class="kd1-odop-closing-badge">
+          🏛️ ODOP CERTIFIED ENTERPRISE &bull; DISTRICT: ${E(i.district || 'Kota, Rajasthan')} &bull; PRODUCT: ${E(i.odopProduct || 'Kota Doria')}
         </div>
+        <div class="kd1-closing-crown">👑</div>
+        <h2 class="kd1-closing-title">${E(i.ent || 'Parampara Threads')} &bull; Direct Loom Orders</h2>
+        <div class="kd1-closing-divider"></div>
+        <p class="kd1-closing-sub">Supplying royalty, luxury bridal houses, export partners and premier boutique showrooms nationwide.</p>
+        
+        <div class="kd1-closing-grid-layout">
+          <div class="kd1-closing-details">
+            <div class="kd1-contact-entry">
+              <span class="kd1-entry-lbl">Atelier &amp; Loom Cluster Address</span>
+              <b>${E(i.addr || 'Kaithun Loom Hub, Kota District, Rajasthan 325001')}</b>
+            </div>
+            <div class="kd1-contact-entry">
+              <span class="kd1-entry-lbl">Direct Loom Representative</span>
+              <b>${E(i.person || i.contact || i.ent || 'Master Weaver Council')}</b>
+            </div>
+            <div class="kd1-contact-entry">
+              <span class="kd1-entry-lbl">WhatsApp Business / Mobile Number</span>
+              <b>💬 ${E(fmtWa(waNum))}</b>
+            </div>
+            <div class="kd1-contact-entry">
+              <span class="kd1-entry-lbl">Institutional Trade Email &amp; Web</span>
+              <b>${E(i.email || 'orders@paramparathreads.com')} &bull; ${E(i.website || 'www.paramparathreads.com')}</b>
+            </div>
+            <div class="kd1-contact-entry">
+              <span class="kd1-entry-lbl">Statutory &amp; Craft Registrations</span>
+              <b>GSTIN: ${E(i.gst || '08AAGCP9876K1Z2')} &bull; Udyam: ${E(i.udyam || 'UDYAM-RJ-20-0012345')} &bull; ${E(i.giTag || 'GI Tag No. 37')}</b>
+            </div>
+          </div>
+
+          ${qrImg ? `
+          <div class="kd1-closing-qr-card">
+            <img src="${qrImg}" alt="Part A Direct Profile QR" class="kd1-big-qr" />
+            <div class="kd1-qr-title">SCAN TO CONNECT DIRECTLY</div>
+            <div class="kd1-qr-desc">Prescribed Part A Profile &bull; Digital Storefront</div>
+            <div class="kd1-qr-chip">✓ Verified Authentic Link</div>
+          </div>
+          ` : ''}
+        </div>
+
         <div class="kd1-closing-guarantee">
-          <span>✦ 100% Hand-Woven Authenticity</span>
+          <span>✦ 100% Handloom Authenticity Guarantee</span>
           <span>✦ Insured Wooden Gift Packaging</span>
           <span>✦ Worldwide Express Courier</span>
         </div>
@@ -1274,31 +1457,12 @@ function kd2_story(c, no) {
 function kd2_products(c, no, slice, pageIdx, totalPages) {
   return `
     ${head(c, `HAND-BLOCK PRINT COLLECTION &bull; (${pn(pageIdx)}/${pn(totalPages)})`, no)}
-    <div class="kd2-head">
+    <div class="kd1-head">
       <h2>Artisanal Woodblock Botanical Prints</h2>
       <p>Hand-stamped natural vegetable dye motifs on featherweight Kota Doria</p>
     </div>
-    <div class="kd2-grid">
-      ${slice.map((it, idx) => {
-        const cardImg = it.img || it.image || (it.images && it.images[0] && (it.images[0].url || it.images[0])) || it.angle1 || '/assets/kota-doria/bagru-hand-block-print-kota-doria-cotton-natural-dyed-3pc-unstitched-602.jpg';
-        const cardPrice = fmtPrice(it.price || 2850);
-        return `
-        <div class="kd2-card">
-          <div class="kd2-img" style="${bg(cardImg)}">
-            <span class="kd2-stamp-badge">WOODBLOCK PRINT</span>
-          </div>
-          <div class="kd2-body">
-            <div class="kd2-code">${E(it.sku || it.code || `#KD2-${pn(idx + 1)}`)}</div>
-            <h3>${E(it.name || it.title || 'Block Printed Saree')}</h3>
-            <div class="kd2-color-chip">Natural Indigo &amp; Madder Dye</div>
-            <div class="kd2-foot">
-              <span class="kd2-price">${E(cardPrice)}</span>
-              <span class="kd2-tag">Deckle Craft</span>
-            </div>
-          </div>
-        </div>
-      `;
-      }).join('')}
+    <div class="kd1-grid">
+      ${slice.map((it, idx) => renderKdProductCard(it, idx, c, 'kd2')).join('')}
     </div>
     ${foot(c)}
   `;
@@ -1360,7 +1524,7 @@ function renderKd2Suite(t, c) {
   const P = [wrapKd(kd2_cover(c, t), t)];
   let no = 2;
   P.push(wrapKd(kd2_story(c, no++), t));
-  const perPage = 6;
+  const perPage = 4;
   const totalPages = Math.ceil(c.items.length / perPage) || 1;
   for (let k = 0; k < c.items.length; k += perPage) {
     P.push(wrapKd(kd2_products(c, no++, c.items.slice(k, k + perPage), Math.floor(k / perPage) + 1, totalPages), t));
@@ -1430,31 +1594,12 @@ function kd3_story(c, no) {
 function kd3_products(c, no, slice, pageIdx, totalPages) {
   return `
     ${head(c, `BOUTIQUE RUNWAY LOOKBOOK &bull; (${pn(pageIdx)}/${pn(totalPages)})`, no)}
-    <div class="kd3-head">
+    <div class="kd1-head">
       <h2>Contemporary Runway Gossamer Looks</h2>
       <p>High-fashion editorial silhouettes with sheer micro-khat transparency</p>
     </div>
-    <div class="kd3-grid">
-      ${slice.map((it, idx) => {
-        const cardImg = it.img || it.image || (it.images && it.images[0] && (it.images[0].url || it.images[0])) || it.angle1 || '/assets/kota-doria/lucknowi-chikankari-hand-embroidered-kota-doria-cotton-2pc-unstitched-127.jpg';
-        const cardPrice = fmtPrice(it.price || 4800);
-        return `
-        <div class="kd3-card">
-          <div class="kd3-img" style="${bg(cardImg)}">
-            <span class="kd3-look-num">LOOK #${pn(idx + 1)}</span>
-          </div>
-          <div class="kd3-info">
-            <div class="kd3-code">${E(it.sku || it.code || `#KD3-${pn(idx + 1)}`)}</div>
-            <h3>${E(it.name || it.title || 'Runway Gossamer Saree')}</h3>
-            <p class="kd3-notes">${E(it.shortDescription || it.description || 'Editorial sheer drape with silver border and modern minimalist fall.')}</p>
-            <div class="kd3-foot">
-              <span class="kd3-price">${E(cardPrice)}</span>
-              <span class="kd3-label">Editorial Sample Available</span>
-            </div>
-          </div>
-        </div>
-      `;
-      }).join('')}
+    <div class="kd1-grid">
+      ${slice.map((it, idx) => renderKdProductCard(it, idx, c, 'kd3')).join('')}
     </div>
     ${foot(c)}
   `;
@@ -1587,31 +1732,12 @@ function kd4_story(c, no) {
 function kd4_products(c, no, slice, pageIdx, totalPages) {
   return `
     ${head(c, `PASTEL TROUSSEAU CURATION &bull; (${pn(pageIdx)}/${pn(totalPages)})`, no)}
-    <div class="kd4-head">
+    <div class="kd1-head">
       <h2>Festive Summer Wedding Ensembles</h2>
       <p>Soft pastel hues with silver and gold tested zari work on sheer khat cotton-silk</p>
     </div>
-    <div class="kd4-products-mosaic">
-      ${slice.map((it, idx) => {
-        const cardImg = getImgUrl(it) || '/assets/kota-doria/0X2A0389_db4c4b42-1d9b-405b-9ea0-664b5017af38.jpg';
-        const cardPrice = fmtPrice(it.price || 3400);
-        return `
-        <div class="kd4-product-card">
-          <div class="kd4-product-img" style="${bg(cardImg)}">
-            <span class="kd4-festive-tag">TROUSSEAU PICK</span>
-          </div>
-          <div class="kd4-product-body">
-            <span class="kd4-code">${E(it.sku || it.code || `#KD4-${pn(idx + 1)}`)}</span>
-            <h3>${E(it.name || it.title || 'Festive Pastel Saree')}</h3>
-            <p>${E(it.shortDescription || it.description || 'Gentle pastel drape with delicate woven border and pure cotton weft.')}</p>
-            <div class="kd4-product-foot">
-              <span class="kd4-price">${E(cardPrice)}</span>
-              <span class="kd4-gift-badge">Gift Box Included</span>
-            </div>
-          </div>
-        </div>
-      `;
-      }).join('')}
+    <div class="kd1-grid">
+      ${slice.map((it, idx) => renderKdProductCard(it, idx, c, 'kd4')).join('')}
     </div>
     ${foot(c)}
   `;
@@ -1772,35 +1898,12 @@ function kd5_story(c, no) {
 function kd5_products(c, no, slice, pageIdx, totalPages) {
   return `
     ${head(c, `DUPATTA ATELIER COLLECTION &bull; (${pn(pageIdx)}/${pn(totalPages)})`, no)}
-    <div class="kd5-head">
+    <div class="kd1-head">
       <h2>Handloom Dupatta &amp; Stole Edits</h2>
       <p>Finely finished with pure silk fringe tassels, contrast piping, and antique gold zari borders</p>
     </div>
-    <div class="kd5-grid">
-      ${slice.map((it, idx) => {
-        const cardImg = it.img || it.image || (it.images && it.images[0] && (it.images[0].url || it.images[0])) || it.angle1 || '/assets/kota-doria/bagru-hand-block-print-kota-doria-cotton-natural-dyed-3pc-unstitched-602.jpg';
-        const cardPrice = fmtPrice(it.price || 1650);
-        return `
-        <div class="kd5-card">
-          <div class="kd5-img" style="${bg(cardImg)}">
-            <span class="kd5-tassel-badge">HAND-KNOTTED TASSELS</span>
-          </div>
-          <div class="kd5-body">
-            <div class="kd5-code">${E(it.sku || it.code || `#KD5-${pn(idx + 1)}`)}</div>
-            <h3>${E(it.name || it.title || 'Artisan Dupatta')}</h3>
-            <p>${E(it.shortDescription || it.description || 'Featherlight 2.5m stole with woven borders and decorative fringes.')}</p>
-            <div class="kd5-specs">
-              <span>Dim: 2.5m x 0.9m</span>
-              <span>Weight: 140g</span>
-            </div>
-            <div class="kd5-foot">
-              <span class="kd5-price">${E(cardPrice)}</span>
-              <span class="kd5-moq">Min Order: 5 Pcs</span>
-            </div>
-          </div>
-        </div>
-      `;
-      }).join('')}
+    <div class="kd1-grid">
+      ${slice.map((it, idx) => renderKdProductCard(it, idx, c, 'kd5')).join('')}
     </div>
     ${foot(c)}
   `;
@@ -1925,36 +2028,13 @@ function kd6_story(c, no) {
 
 function kd6_products(c, no, slice, pageIdx, totalPages) {
   return `
-    ${head(c, `BOTANICAL DYE DOSSIER &bull; (${pn(pageIdx)}/${pn(totalPages)})`, no)}
-    <div class="kd6-head">
-      <h2>Naturally Pigmented Handloom Doria Slices</h2>
-      <p>Horizontal ribbon presentation highlighting specific botanical dye recipes</p>
+    ${head(c, `CHIKANKARI NEEDLECRAFT EMBROIDERY &bull; (${pn(pageIdx)}/${pn(totalPages)})`, no)}
+    <div class="kd1-head">
+      <h2>Hand-Embroidered Shadow Needlework</h2>
+      <p>Intricate Bakhiya and Phanda needlecraft lovingly stitched on transparent pitloom khat</p>
     </div>
-    <div class="kd6-ribbon-list">
-      ${slice.map((it, idx) => {
-        const cardImg = it.img || it.image || (it.images && it.images[0] && (it.images[0].url || it.images[0])) || it.angle1 || '/assets/kota-doria/green-kota-doria-cotton-hand-block-sanganeri-print-3pc-unstitched-858.jpg';
-        const cardPrice = fmtPrice(it.price || 3100);
-        return `
-        <div class="kd6-ribbon-row">
-          <div class="kd6-ribbon-thumb" style="${bg(cardImg)}">
-            <span class="kd6-eco-tag">ORGANIC</span>
-          </div>
-          <div class="kd6-ribbon-details">
-            <div class="kd6-code">${E(it.sku || it.code || `#KD6-${pn(idx + 1)}`)}</div>
-            <h3>${E(it.name || it.title || 'Botanical Dye Saree')}</h3>
-            <p>${E(it.shortDescription || it.description || 'Naturally pigmented silk-cotton with organic harda mordant.')}</p>
-            <div class="kd6-pills">
-              <span>Extract: Indigo &amp; Madder</span>
-              <span>Mordant: Natural Alum</span>
-            </div>
-          </div>
-          <div class="kd6-ribbon-action">
-            <span class="kd6-price">${E(cardPrice)}</span>
-            <small>Direct Loom Rate</small>
-          </div>
-        </div>
-      `;
-      }).join('')}
+    <div class="kd1-grid">
+      ${slice.map((it, idx) => renderKdProductCard(it, idx, c, 'kd6')).join('')}
     </div>
     ${foot(c)}
   `;
@@ -2074,41 +2154,13 @@ function kd7_story(c, no) {
 
 function kd7_products(c, no, slice, pageIdx, totalPages) {
   return `
-    ${head(c, `HAUTE COUTURE CATALOGUE &bull; (${pn(pageIdx)}/${pn(totalPages)})`, no)}
-    <div class="kd7-noir-head">
-      <h2>Master Artisan Couture Showcases</h2>
-      <p>Oversized dual-spread master pieces featuring pure gold bullion zari pallus</p>
+    ${head(c, `ROYAL WEAVE TECHNICAL CATALOGUE &bull; (${pn(pageIdx)}/${pn(totalPages)})`, no)}
+    <div class="kd1-head">
+      <h2>Pitloom Khat Construction Range</h2>
+      <p>Stringent handloom benchmark specifications conforming to Geographical Indication Act</p>
     </div>
-    <div class="kd7-couture-grid">
-      ${slice.map((it, idx) => {
-        const cardImg = getImgUrl(it) || '/assets/kota-doria/0X2A0389_db4c4b42-1d9b-405b-9ea0-664b5017af38.jpg';
-        const cardPrice = fmtPrice(it.price || 9500);
-        return `
-        <div class="kd7-couture-card">
-          <div class="kd7-couture-img" style="${bg(cardImg)}">
-            <span class="kd7-edition-chip">EDITION SERIAL #${pn(idx + 1)}/25</span>
-          </div>
-          <div class="kd7-couture-body">
-            <div class="kd7-meta-row">
-              <span class="kd7-code">${E(it.sku || it.code || `#KD7-NOIR-${pn(idx + 1)}`)}</span>
-              <span class="kd7-khat-tag">420 KHAT DENSITY</span>
-            </div>
-            <h3>${E(it.name || it.title || 'Haute Couture Saree')}</h3>
-            <p>${E(it.shortDescription || it.description || 'Commissioned master pit-loom weave with gold bullion zari and unweighted mulberry silk warp.')}</p>
-            <div class="kd7-specs-grid">
-              <div><span>Weave Duration:</span> 45 Days on Pit-Loom</div>
-              <div><span>Zari Purity:</span> 24K Gold Electroplate</div>
-              <div><span>Total Weight:</span> 330 Grams</div>
-              <div><span>Blouse Piece:</span> Included (80cm)</div>
-            </div>
-            <div class="kd7-couture-foot">
-              <span class="kd7-price">${E(cardPrice)}</span>
-              <span class="kd7-bespoke-tag">Bespoke Commission</span>
-            </div>
-          </div>
-        </div>
-      `;
-      }).join('')}
+    <div class="kd1-grid">
+      ${slice.map((it, idx) => renderKdProductCard(it, idx, c, 'kd7')).join('')}
     </div>
     ${foot(c)}
   `;
@@ -2238,55 +2290,13 @@ function kd8_story(c, no) {
 
 function kd8_products(c, no, slice, pageIdx, totalPages) {
   return `
-    ${head(c, `EXPORT SPECIFICATION TABLE &bull; (${pn(pageIdx)}/${pn(totalPages)})`, no)}
-    <div class="kd8-head">
-      <h2>Export Fabric &amp; Saree Batch Inventory</h2>
-      <p>Official technical matrix for container load shipments and wholesale boutique stockists</p>
+    ${head(c, `FESTIVE GOLDEN SHINE &bull; (${pn(pageIdx)}/${pn(totalPages)})`, no)}
+    <div class="kd1-head">
+      <h2>Gilded Zari &amp; Silk Grandeur</h2>
+      <p>Heirloom pieces woven with authentic tested electro-zari for ceremonial royalty</p>
     </div>
-    <div class="kd8-table-wrap">
-      <table class="kd8-export-tbl">
-        <thead>
-          <tr>
-            <th>Product Preview</th>
-            <th>Item Code &amp; Title</th>
-            <th>Warp / Weft Specs</th>
-            <th>Khat Density</th>
-            <th>HS Code</th>
-            <th>FOB Rate</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${slice.map((it, idx) => {
-            const cardImg = getImgUrl(it) || '/assets/kota-doria/0X2A0389_db4c4b42-1d9b-405b-9ea0-664b5017af38.jpg';
-            const cardPrice = fmtPrice(it.price || 3200);
-            return `
-            <tr>
-              <td>
-                <div class="kd8-tbl-thumb" style="${bg(cardImg)}"></div>
-              </td>
-              <td>
-                <b>${E(it.name || it.title || 'Export Saree Batch')}</b>
-                <small>${E(it.sku || it.code || `#KD8-EXP-${pn(idx + 1)}`)}</small>
-              </td>
-              <td>
-                <span>Warp: 20/22D Silk</span>
-                <small>Weft: 100s Egyptian Cotton</small>
-              </td>
-              <td>
-                <b>300 Khats / dm²</b>
-                <small>Tested Throw-Shuttle</small>
-              </td>
-              <td>
-                <code>5007.20.10</code>
-              </td>
-              <td>
-                <span class="kd8-price-pill">${E(cardPrice)}</span>
-              </td>
-            </tr>
-          `;
-          }).join('')}
-        </tbody>
-      </table>
+    <div class="kd1-grid">
+      ${slice.map((it, idx) => renderKdProductCard(it, idx, c, 'kd8')).join('')}
     </div>
     ${foot(c)}
   `;
@@ -2332,7 +2342,7 @@ function renderKd8Suite(t, c) {
   const P = [wrapKd(kd8_cover(c, t), t)];
   let no = 2;
   P.push(wrapKd(kd8_story(c, no++), t));
-  const perPage = 6;
+  const perPage = 4;
   const totalPages = Math.ceil(c.items.length / perPage) || 1;
   for (let k = 0; k < c.items.length; k += perPage) {
     P.push(wrapKd(kd8_products(c, no++, c.items.slice(k, k + perPage), Math.floor(k / perPage) + 1, totalPages), t));
@@ -2347,7 +2357,7 @@ function renderKd8Suite(t, c) {
 // ============================================================================
 function pageCount(t, n) {
   if (t.id === 'kd-parampara' || t.id === 'kd-silken') return 8;
-  const perPage = (t.id === 'kd-1' || t.id === 'kd-3' || t.id === 'kd-4' || t.id === 'kd-5' || t.id === 'kd-6') ? 4 : (t.id === 'kd-7' ? 2 : 6);
+  const perPage = (t.id === 'kd-7' ? 2 : 4);
   return 1 + 1 + Math.ceil(Math.max(1, n) / perPage) + 1 + 1; // cover + story + products + tech + closing
 }
 
@@ -2413,16 +2423,16 @@ const CSS = `
 /* Common Header & Footer for Standard KD */
 .kd-head {
   display: flex; justify-content: space-between; align-items: center;
-  border-bottom: 1.5px solid var(--line); padding-bottom: 12px; margin-bottom: 20px;
+  border-bottom: 1.5px solid var(--line); padding-bottom: 8px; margin-bottom: 12px;
 }
 .kd-head-brand { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--ink); }
 .kd-loom-icon { font-size: 16px; }
 .kd-head-tag { font-size: 9.5px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--acc); }
 .kd-head-num { font-size: 11px; font-weight: 800; background: var(--soft); color: var(--acc); padding: 3px 8px; border-radius: 4px; }
 .kd-foot {
-  position: absolute; bottom: 20px; left: 44px; right: 44px;
+  position: absolute; bottom: 16px; left: 44px; right: 44px;
   display: flex; justify-content: space-between; align-items: center;
-  border-top: 1px solid var(--line); padding-top: 8px; font-size: 9.5px; color: var(--muted);
+  border-top: 1px solid var(--line); padding-top: 6px; font-size: 9px; color: var(--muted);
   z-index: 5;
 }
 
@@ -2479,80 +2489,233 @@ const CSS = `
   background: rgba(0,0,0,0.75); color: #fff; padding: 8px 12px; border-radius: 8px; font-size: 9.5px; text-align: center;
 }
 
-.kd1-head { margin-bottom: 8px; }
-.kd1-head h2 { font-family: var(--hf); font-size: 20px; margin: 0 0 2px; color: var(--ink); line-height: 1.2; }
-.kd1-head p { font-size: 10.5px; color: var(--muted); margin: 0; }
-.kd1-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+.kd1-head { margin-bottom: 6px; }
+.kd1-head h2 { font-family: var(--hf); font-size: 18px; margin: 0 0 2px; color: var(--ink); line-height: 1.2; }
+.kd1-head p { font-size: 9.5px; color: var(--muted); margin: 0; }
+.kd1-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px; padding: 0; width: 100%; box-sizing: border-box; }
 .kd1-card {
   background: #ffffff;
-  border-radius: 12px;
+  border-radius: 10px;
   overflow: hidden;
   border: 1.5px solid var(--acc);
   box-shadow: 0 4px 14px rgba(0,0,0,0.05);
   display: flex;
   flex-direction: column;
-  height: 365px;
-  max-height: 365px;
+  height: 360px;
+  max-height: 360px;
+  min-height: 0;
   box-sizing: border-box;
 }
 .kd1-img {
-  height: 155px;
-  min-height: 155px;
-  max-height: 155px;
+  height: 140px;
+  min-height: 140px;
+  max-height: 140px;
   background-size: cover;
   background-position: center;
   position: relative;
   background-color: var(--soft);
+  overflow: hidden;
 }
-.kd1-tag { position: absolute; top: 8px; left: 8px; background: var(--acc); color: #fff; font-size: 8px; font-weight: 800; padding: 2px 7px; border-radius: 5px; letter-spacing: 0.08em; }
+.kd1-card-img-el {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.kd1-tag { position: absolute; top: 8px; left: 8px; background: var(--acc); color: #fff; font-size: 8px; font-weight: 800; padding: 2px 7px; border-radius: 5px; letter-spacing: 0.08em; z-index: 2; }
+.kd1-district-chip {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: rgba(30, 20, 15, 0.85);
+  color: #fff;
+  font-size: 7.5px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 5px;
+  letter-spacing: 0.05em;
+  z-index: 2;
+  border: 1px solid rgba(255,255,255,0.25);
+}
 .kd1-details {
-  padding: 10px 12px;
+  padding: 6px 10px 8px;
   display: flex;
   flex-direction: column;
   flex: 1;
+  min-height: 0;
   justify-content: space-between;
   box-sizing: border-box;
   overflow: hidden;
 }
-.kd1-sku-chip { font-size: 8px; font-weight: 800; color: var(--acc); margin-bottom: 2px; }
+.kd1-card-meta-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2px;
+}
+.kd1-sku-chip { font-size: 8px; font-weight: 800; color: var(--acc); }
+.kd1-moq-chip {
+  font-size: 7.5px;
+  font-weight: 700;
+  color: var(--ink);
+  background: var(--soft);
+  border: 1px solid var(--line);
+  padding: 1px 6px;
+  border-radius: 4px;
+}
 .kd1-details h3 {
   font-family: var(--hf);
-  font-size: 13.5px;
-  margin: 0 0 3px;
+  font-size: 12px;
+  margin: 1px 0;
   line-height: 1.2;
   color: var(--ink);
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+  height: 29px;
+}
+.kd1-desc-row {
+  margin-bottom: 2px;
 }
 .kd1-desc {
-  font-size: 9.5px;
+  font-size: 8.5px;
   color: var(--muted);
-  margin: 0 0 4px;
-  line-height: 1.3;
+  margin: 0 0 1px;
+  line-height: 1.2;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+  height: 20px;
 }
-.kd1-pills {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  font-size: 8.5px;
-  color: var(--ink);
-  margin-bottom: 4px;
-  line-height: 1.25;
+.kd1-spec-matrix {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2px 4px;
+  background: var(--soft);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 3px 5px;
+  margin: 1px 0 3px;
+  box-sizing: border-box;
 }
-.kd1-pills span {
+.kd1-spec-item {
+  font-size: 7.5px;
+  line-height: 1.2;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  display: flex;
+  gap: 2px;
 }
-.kd1-foot { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--line); padding-top: 5px; margin-top: auto; }
-.kd1-price { font-size: 14px; font-weight: 800; color: var(--acc); line-height: 1; }
-.kd1-craft { font-size: 8.5px; color: var(--muted); font-weight: 700; text-transform: uppercase; }
+.kd1-spec-lbl {
+  font-weight: 700;
+  color: var(--muted);
+  flex-shrink: 0;
+  font-size: 7.5px;
+}
+.kd1-spec-val {
+  color: var(--ink);
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 7.5px;
+}
+.kd1-foot {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top: 1px solid var(--line);
+  padding-top: 3px;
+  margin-top: auto;
+}
+.kd1-price-block {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.kd1-price {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--acc);
+  line-height: 1;
+}
+.kd1-range {
+  font-size: 7px;
+  color: var(--muted);
+  font-weight: 500;
+}
+.kd1-contact-block {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 1px;
+}
+.kd1-craft {
+  font-size: 8px;
+  font-weight: 700;
+  color: var(--ink);
+  line-height: 1.1;
+}
+.kd1-wa {
+  font-size: 7px;
+  font-weight: 700;
+  color: #15803d;
+  line-height: 1.1;
+}
+
+.kd1-odop-gov-banner {
+  background: linear-gradient(90deg, #1e3a8a, #1e40af);
+  color: #ffffff;
+  padding: 6px 12px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+  border: 1px solid #3b82f6;
+}
+.kd1-gov-emblem { font-size: 18px; }
+.kd1-gov-text strong { display: block; font-size: 9px; letter-spacing: 0.05em; }
+.kd1-gov-text span { font-size: 8px; opacity: 0.9; }
+
+.kd1-cover-odop-connect {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  background: var(--soft);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 8px 12px;
+  margin: 10px 0;
+}
+.kd1-cover-qr-card {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.kd1-cov-qr {
+  width: 50px;
+  height: 50px;
+  border-radius: 4px;
+  background: #fff;
+  padding: 2px;
+  border: 1px solid var(--line);
+}
+.kd1-cov-qr-meta b { display: block; font-size: 8px; color: var(--ink); text-align: left; }
+.kd1-cov-qr-meta small { font-size: 7px; color: var(--muted); text-align: left; display: block; }
+.kd1-cover-wa-pill {
+  border-left: 1px solid var(--line);
+  padding-left: 10px;
+  text-align: left;
+}
+.kd1-cover-wa-pill span { display: block; font-size: 8.5px; color: #15803d; font-weight: 700; }
+.kd1-cover-wa-pill small { font-size: 7px; color: var(--muted); display: block; }
 
 .kd1-tech-wrap { height: 860px; display: flex; flex-direction: column; justify-content: space-between; }
 .kd1-tech-hero h3 { font-family: var(--hf); font-size: 24px; margin: 0 0 6px; }
@@ -2570,18 +2733,83 @@ const CSS = `
 
 .kd1-closing-wrap { height: 100%; display: flex; align-items: center; justify-content: center; }
 .kd1-closing-frame {
-  border: 3px double var(--acc); padding: 44px; border-radius: 18px; background: #fff;
-  text-align: center; max-width: 620px; width: 100%; box-shadow: 0 12px 36px rgba(0,0,0,0.08);
+  border: 3px double var(--acc); padding: 32px 36px; border-radius: 18px; background: #fff;
+  text-align: center; max-width: 650px; width: 100%; box-shadow: 0 12px 36px rgba(0,0,0,0.08);
 }
-.kd1-closing-crown { font-size: 32px; margin-bottom: 10px; }
-.kd1-closing-title { font-family: var(--hf); font-size: 26px; margin: 0 0 10px; }
-.kd1-closing-divider { width: 60px; height: 2px; background: var(--acc); margin: 0 auto 14px; }
-.kd1-closing-sub { font-size: 12px; color: var(--muted); margin-bottom: 24px; }
-.kd1-closing-details { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; text-align: left; margin-bottom: 24px; }
-.kd1-contact-entry { background: var(--soft); padding: 12px 14px; border-radius: 8px; }
-.kd1-entry-lbl { display: block; font-size: 9.5px; color: var(--muted); font-weight: 700; text-transform: uppercase; margin-bottom: 4px; }
-.kd1-contact-entry b { font-size: 11.5px; color: var(--ink); }
-.kd1-closing-guarantee { display: flex; justify-content: space-around; font-size: 10.5px; font-weight: 700; color: var(--acc); border-top: 1px solid var(--line); padding-top: 14px; }
+.kd1-odop-closing-badge {
+  background: #1e3a8a;
+  color: #fff;
+  padding: 5px 14px;
+  border-radius: 20px;
+  font-size: 8.5px;
+  font-weight: 700;
+  display: inline-block;
+  margin-bottom: 10px;
+  letter-spacing: 0.05em;
+}
+.kd1-closing-crown { font-size: 28px; margin-bottom: 6px; }
+.kd1-closing-title { font-family: var(--hf); font-size: 24px; margin: 0 0 8px; }
+.kd1-closing-divider { width: 60px; height: 2px; background: var(--acc); margin: 0 auto 12px; }
+.kd1-closing-sub { font-size: 11px; color: var(--muted); margin-bottom: 18px; }
+.kd1-closing-grid-layout {
+  display: flex;
+  gap: 16px;
+  align-items: stretch;
+  margin-bottom: 18px;
+  text-align: left;
+}
+.kd1-closing-details {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  text-align: left;
+}
+.kd1-contact-entry { background: var(--soft); padding: 8px 12px; border-radius: 8px; border: 1px solid var(--line); }
+.kd1-entry-lbl { display: block; font-size: 8.5px; color: var(--muted); font-weight: 700; text-transform: uppercase; margin-bottom: 2px; }
+.kd1-contact-entry b { font-size: 10.5px; color: var(--ink); }
+.kd1-closing-qr-card {
+  width: 140px;
+  background: var(--soft);
+  border: 1.5px solid var(--acc);
+  border-radius: 10px;
+  padding: 10px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+.kd1-big-qr {
+  width: 90px;
+  height: 90px;
+  display: block;
+  margin: 0 auto 6px;
+  border-radius: 6px;
+  background: #fff;
+  padding: 4px;
+}
+.kd1-qr-title {
+  font-size: 7.5px;
+  font-weight: 800;
+  color: var(--ink);
+  letter-spacing: 0.04em;
+}
+.kd1-qr-desc {
+  font-size: 6.5px;
+  color: var(--muted);
+  margin-top: 1px;
+}
+.kd1-qr-chip {
+  font-size: 7px;
+  font-weight: 700;
+  color: #166534;
+  background: #dcfce7;
+  padding: 2px 6px;
+  border-radius: 4px;
+  margin-top: 4px;
+}
+.kd1-closing-guarantee { display: flex; justify-content: space-around; font-size: 10px; font-weight: 700; color: var(--acc); border-top: 1px solid var(--line); padding-top: 12px; }
 
 /* -------------------------------------------------------------------------- */
 /* kd-2: ARTISANAL WOODBLOCK STAMP & DECKLE-EDGE CARDS                        */
@@ -3123,12 +3351,13 @@ const CSS = `
 /* ========================================================================== */
 /* PARAMPARA THREADS WHOLESALE SUITE CSS (Elevated B2B Powerloom Lookbook)    */
 /* ========================================================================== */
-.parampara-pg {
+.pg.kotadoria-pg.parampara-pg {
+  padding: 0 !important;
   background-color: #fdfbf7 !important;
   color: #221610;
   font-family: 'Inter', sans-serif;
 }
-.parampara-pg.parampara-dark-theme {
+.pg.kotadoria-pg.parampara-pg.parampara-dark-theme {
   background-color: #240c14 !important;
   color: #ffffff;
 }
@@ -3492,7 +3721,8 @@ const CSS = `
 /* ========================================================================== */
 /* SILKEN SAGA CELEBRATION & WEDDING LOOKBOOK (Editorial Monograph Suite)      */
 /* ========================================================================== */
-.silken-pg {
+.pg.kotadoria-pg.silken-pg {
+  padding: 0 !important;
   background-color: #fcf7f5 !important;
   color: #2a0e1b;
   font-family: 'Inter', sans-serif;

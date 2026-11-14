@@ -17,7 +17,12 @@ import {
   Tag,
   Sliders,
   Search,
+  MapPin,
+  Zap,
+  Palette,
+  Maximize2,
 } from "lucide-react";
+import ImageUpscaleModal from "../components/ImageUpscaleModal";
 import {
   fetchCompanies,
   fetchCatalogueProducts,
@@ -26,6 +31,82 @@ import {
   deleteCatalogueProduct,
   // generateAiContent, // AI features commented out
 } from "../services/api";
+
+
+const ODOP_PRESETS = {
+  "Kota Doria": {
+    category: "Kota Doria Specialty",
+    odopProduct: "Kota Doria",
+    district: "Kota, Rajasthan",
+    size: "6.5m (Includes 80cm Running Blouse Piece)",
+    material: "Pure Mulberry Silk Warp, Fine Cotton Weft",
+    materialComposition: "Pure Mulberry Silk Warp, Fine Cotton Weft",
+    finish: "Tested Electro-Gold Zari on Square Khat",
+    application: "Bridal Ensembles, Wedding Drapes & High-End Boutique Luxury",
+    useApplication: "Bridal Ensembles, Wedding Drapes & High-End Boutique Luxury",
+    moq: "10 Pieces (Wholesale)",
+    priceRange: "₹2,450 – ₹6,500",
+    image: "/assets/kota-doria/0X2A0389_db4c4b42-1d9b-405b-9ea0-664b5017af38.jpg"
+  },
+  "Garlic": {
+    category: "Garlic Specialty",
+    odopProduct: "Garlic",
+    district: "Baran, Rajasthan",
+    size: "50 - 65 mm (Grade A+ Large)",
+    material: "100% Organically Grown Malwa Garlic",
+    materialComposition: "100% Organically Grown Malwa Garlic",
+    finish: "Sun-Cured Export Clean White Skin",
+    application: "Commercial Culinary, Food Processing & Export",
+    useApplication: "Commercial Culinary, Food Processing & Export",
+    moq: "500 kg (Wholesale Lot)",
+    priceRange: "₹180 – ₹240 / kg",
+    image: "/assets/garlic/garlic-01.jpeg"
+  },
+  "Kota Stone": {
+    category: "Kota Stone Specialty",
+    odopProduct: "Kota Stone",
+    district: "Jhalawar, Rajasthan",
+    size: "600x600 mm (20mm Calibrated)",
+    material: "Natural Indurated Limestone (Kota Stone)",
+    materialComposition: "Natural Indurated Limestone (Kota Stone)",
+    finish: "Mirror High Polish / Honed",
+    application: "Heavy Commercial Flooring & Corridors",
+    useApplication: "Heavy Commercial Flooring & Corridors",
+    moq: "500 sq.ft (Quarry Lot)",
+    priceRange: "₹85 – ₹120 / sq.ft",
+    image: "/assets/kota-stone/Blue-Kota-Stone-Tiles-1.jpg"
+  },
+  "Sandstone": {
+    category: "Sand Stone Specialty",
+    odopProduct: "Sandstone",
+    district: "Bundi, Rajasthan",
+    size: "600x900 mm (25-30mm Calibrated Sawn)",
+    material: "Natural Quartzite Sandstone",
+    materialComposition: "Natural Quartzite Sandstone",
+    finish: "Sandblasted / Hand-Chiseled / Honed",
+    application: "Exterior Facades, Cladding & Paving",
+    useApplication: "Exterior Facades, Cladding & Paving",
+    moq: "400 sq.ft (Project Lot)",
+    priceRange: "₹135 – ₹190 / sq.ft",
+    image: "/assets/sand-stone/Agra-Red-Sandstone-Sandblasted.jpg"
+  }
+};
+
+function getCompanyDefaultOdop(comp) {
+  const ind = (comp?.industry || "").toLowerCase();
+  const prod = (comp?.odopProduct || "").toLowerCase();
+  const dist = (comp?.district || "").toLowerCase();
+
+  if (prod.includes("garlic") || ind.includes("garlic") || dist.includes("baran")) {
+    return ODOP_PRESETS["Garlic"];
+  } else if (prod.includes("kota stone") || ind.includes("kota stone") || dist.includes("jhalawar") || (ind.includes("limestone") && !ind.includes("sand"))) {
+    return ODOP_PRESETS["Kota Stone"];
+  } else if (prod.includes("sand") || ind.includes("sand") || dist.includes("bundi")) {
+    return ODOP_PRESETS["Sandstone"];
+  } else {
+    return ODOP_PRESETS["Kota Doria"];
+  }
+}
 
 export default function CompanyCatalogueManager() {
   const { companyId } = useParams();
@@ -42,12 +123,26 @@ export default function CompanyCatalogueManager() {
   const [failedThumbnails, setFailedThumbnails] = useState({});
   const [isLogoFailed, setIsLogoFailed] = useState(false);
 
+  // Image Upscaler & AI Studio Integration
+  const [isUpscaleModalOpen, setIsUpscaleModalOpen] = useState(false);
+  const [pendingUploadImage, setPendingUploadImage] = useState("");
+  const [upscaleStats, setUpscaleStats] = useState(null);
+
   // New Product Form State
   const [productForm, setProductForm] = useState({
     name: "",
     sku: "",
     brand: "",
-    category: "Electronics",
+    category: "Kota Doria Specialty",
+    district: "Kota, Rajasthan",
+    odopProduct: "Kota Doria",
+    size: "6.5m (Includes 80cm Running Blouse Piece)",
+    material: "Pure Mulberry Silk Warp, Fine Cotton Weft",
+    finish: "Tested Electro-Gold Zari on Square Khat",
+    application: "Bridal Ensembles, Wedding Drapes & High-End Boutique Luxury",
+    useApplication: "Bridal Ensembles, Wedding Drapes & High-End Boutique Luxury",
+    moq: "10 Pieces (Wholesale)",
+    priceRange: "₹2,450 – ₹6,500",
     subcategory: "",
     price: 1999,
     mrp: 2999,
@@ -89,6 +184,22 @@ export default function CompanyCatalogueManager() {
       if (compRes.data) {
         targetCompany = compRes.data.find((c) => c._id === companyId) || compRes.data[0];
         setCompany(targetCompany);
+        const defOdop = getCompanyDefaultOdop(targetCompany);
+        setProductForm((prev) => ({
+          ...prev,
+          category: defOdop.category,
+          district: defOdop.district,
+          odopProduct: defOdop.odopProduct,
+          size: defOdop.size,
+          material: defOdop.material,
+          materialComposition: defOdop.materialComposition,
+          finish: defOdop.finish,
+          application: defOdop.application,
+          useApplication: defOdop.useApplication,
+          moq: defOdop.moq,
+          priceRange: defOdop.priceRange,
+          image: prev.image.includes('unsplash') ? defOdop.image : prev.image
+        }));
       }
 
       if (prodRes.data?.products && targetCompany) {
@@ -105,20 +216,27 @@ export default function CompanyCatalogueManager() {
     }
   };
 
-  // Upload Product Image from Computer
+  // Upload Product Image from Computer & Trigger AI Upscale Dialog
   const handleImageFileUpload = (e) => {
     const file = e.target.files[0];
     if (!file) return;
     const reader = new FileReader();
     reader.onloadend = () => {
-      setProductForm((prev) => ({
-        ...prev,
-        image: reader.result,
-        images: [{ url: reader.result, isPrimary: true, backgroundType: "white" }],
-      }));
-      setImagePreview(reader.result);
+      setPendingUploadImage(reader.result);
+      setIsUpscaleModalOpen(true);
     };
     reader.readAsDataURL(file);
+    e.target.value = "";
+  };
+
+  const handleApplyUpscaledImage = (finalImage, stats) => {
+    setProductForm((prev) => ({
+      ...prev,
+      image: finalImage,
+      images: [{ url: finalImage, isPrimary: true, backgroundType: "white" }],
+    }));
+    setImagePreview(finalImage);
+    setUpscaleStats(stats);
   };
 
   // AI Content Generator helper (Commented out - AI features removed)
@@ -221,7 +339,16 @@ export default function CompanyCatalogueManager() {
       name: p.name || "",
       sku: p.sku || "",
       brand: p.brand || "",
-      category: p.category || "Electronics",
+      category: p.category || "Kota Doria Specialty",
+      district: p.district || company?.district || "Kota, Rajasthan",
+      odopProduct: p.odopProduct || company?.odopProduct || "Kota Doria",
+      size: p.size || "",
+      material: p.material || p.materialComposition || "",
+      finish: p.finish || p.color || "",
+      application: p.application || p.useApplication || "",
+      useApplication: p.useApplication || p.application || "",
+      moq: p.moq || "",
+      priceRange: p.priceRange || "",
       subcategory: p.subcategory || "",
       price: p.price || 0,
       mrp: p.mrp || 0,
@@ -252,24 +379,34 @@ export default function CompanyCatalogueManager() {
   };
 
   const resetForm = () => {
+    const defOdop = getCompanyDefaultOdop(company);
     setProductForm({
       name: "",
       sku: "",
       brand: "",
-      category: "Electronics",
+      category: defOdop.category,
+      district: defOdop.district,
+      odopProduct: defOdop.odopProduct,
+      size: defOdop.size,
+      material: defOdop.material,
+      materialComposition: defOdop.materialComposition,
+      finish: defOdop.finish,
+      application: defOdop.application,
+      useApplication: defOdop.useApplication,
+      moq: defOdop.moq,
+      priceRange: defOdop.priceRange,
+      image: defOdop.image,
       subcategory: "",
       price: 1999,
       mrp: 2999,
       stock: 50,
-      image: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=800",
       description: "",
       shortDescription: "",
       keyFeatures: [
-        "Engineered with high-grade components for long-lasting durability.",
-        "Ergonomic, modern profile designed for effortless daily usability.",
-        "Includes complete manufacturer warranty and full accessories pack.",
+        "Certified authentic One District One Product (ODOP) artisan craftsmanship.",
+        "Rigorous quality benchmark testing conforming to statutory GI tag standards.",
+        "Direct producer procurement with full batch provenance and wholesale packing.",
       ],
-      materialComposition: "High-Grade Composite",
       color: "Matte Black",
       hsnCode: "85183000",
       dimensions: { length: 20, width: 15, height: 5, unit: "cm" },
@@ -386,6 +523,9 @@ export default function CompanyCatalogueManager() {
                 <h2 style={{ fontSize: "1.5rem", fontWeight: 800, color: "var(--text-primary)", margin: 0, letterSpacing: "-0.01em" }}>
                   {company.name}
                 </h2>
+                <span style={{ fontSize: "0.75rem", background: "rgba(99, 102, 241, 0.12)", color: "var(--primary)", padding: "2px 8px", borderRadius: "4px", verticalAlign: "middle", fontWeight: 700 }}>
+                  📍 District: {company.district || (company.odopProduct === "Garlic" ? "Baran, Rajasthan" : company.odopProduct === "Kota Stone" ? "Jhalawar, Rajasthan" : company.odopProduct === "Sandstone" ? "Bundi, Rajasthan" : "Kota, Rajasthan")}
+                </span>
                 <span className="status-pill approved">Active Catalogue</span>
                 <button
                   className="btn btn-outline btn-sm"
@@ -596,8 +736,13 @@ export default function CompanyCatalogueManager() {
                           {p.name}
                         </div>
                         <div style={{ fontSize: "0.78rem", color: "var(--text-muted)", marginTop: "2px" }}>
-                          {p.color ? `${p.color} • ` : ""}{p.materialComposition || ""}
+                          {p.size ? `📏 ${p.size} • ` : ""}{p.material || p.materialComposition || ""}
                         </div>
+                        {p.finish && (
+                          <div style={{ fontSize: "0.72rem", color: "var(--text-secondary)", marginTop: "1px" }}>
+                            ✨ {p.finish}
+                          </div>
+                        )}
                       </td>
                       <td>
                         <span
@@ -609,10 +754,19 @@ export default function CompanyCatalogueManager() {
                             fontSize: "0.78rem",
                             fontWeight: 600,
                             color: "var(--text-secondary)",
+                            display: "inline-block",
                           }}
                         >
                           {p.category}
                         </span>
+                        <div style={{ fontSize: "0.72rem", color: "#166534", fontWeight: 700, marginTop: "3px" }}>
+                          📍 {p.district || (
+                            (p.category || "").toLowerCase().includes("garlic") ? "Baran, Rajasthan" :
+                            (p.category || "").toLowerCase().includes("kota stone") ? "Jhalawar, Rajasthan" :
+                            (p.category || "").toLowerCase().includes("sand") ? "Bundi, Rajasthan" :
+                            "Kota, Rajasthan"
+                          )}
+                        </div>
                       </td>
                       <td>
                         <span style={{ fontWeight: 800, color: "var(--text-primary)", fontSize: "0.95rem" }}>
@@ -707,6 +861,130 @@ export default function CompanyCatalogueManager() {
             </div>
 
             <form onSubmit={handleSaveProduct} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+              {/* UNDER WHICH ODOP CATEGORY ARE YOU ADDING THIS PRODUCT? */}
+              <div
+                style={{
+                  background: "var(--bg-surface-elevated)",
+                  padding: "1rem",
+                  borderRadius: "var(--radius-md)",
+                  border: "1.5px solid var(--primary-light, #818cf8)",
+                }}
+              >
+                <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "4px" }}>
+                  <MapPin size={17} style={{ color: "var(--primary)" }} />
+                  <label style={{ fontSize: "0.88rem", fontWeight: 800, color: "var(--text-primary)" }}>
+                    Under Which ODOP Category Are You Adding This Product? *
+                  </label>
+                </div>
+                <p style={{ fontSize: "0.76rem", color: "var(--text-muted)", margin: "0 0 10px 0" }}>
+                  Select the official Rajasthan ODOP corridor to automatically link the verified district and 4-point specifications:
+                </p>
+
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "0.6rem", marginBottom: "0.75rem" }}>
+                  {[
+                    {
+                      product: "Kota Doria",
+                      district: "Kota, Rajasthan",
+                      label: "🥻 Kota Doria",
+                      loc: "District: Kota",
+                      cat: "Kota Doria Specialty",
+                    },
+                    {
+                      product: "Garlic",
+                      district: "Baran, Rajasthan",
+                      label: "🧄 Garlic",
+                      loc: "District: Baran",
+                      cat: "Garlic Specialty",
+                    },
+                    {
+                      product: "Kota Stone",
+                      district: "Jhalawar, Rajasthan",
+                      label: "🏛️ Kota Stone",
+                      loc: "District: Jhalawar",
+                      cat: "Kota Stone Specialty",
+                    },
+                    {
+                      product: "Sandstone",
+                      district: "Bundi, Rajasthan",
+                      label: "🧱 Sandstone",
+                      loc: "District: Bundi",
+                      cat: "Sand Stone Specialty",
+                    },
+                  ].map((od) => {
+                    const isSelected =
+                      productForm.odopProduct === od.product ||
+                      productForm.category === od.cat ||
+                      (od.product === "Garlic" && (productForm.category || "").toLowerCase().includes("garlic")) ||
+                      (od.product === "Kota Stone" && (productForm.category || "").toLowerCase().includes("stone") && !(productForm.category || "").toLowerCase().includes("sand")) ||
+                      (od.product === "Sandstone" && (productForm.category || "").toLowerCase().includes("sand")) ||
+                      (od.product === "Kota Doria" && (productForm.category || "").toLowerCase().includes("doria"));
+
+                    return (
+                      <button
+                        key={od.product}
+                        type="button"
+                        onClick={() => {
+                          const preset = ODOP_PRESETS[od.product];
+                          setProductForm((prev) => ({
+                            ...prev,
+                            category: preset.category,
+                            odopProduct: preset.odopProduct,
+                            district: preset.district,
+                            size: preset.size,
+                            material: preset.material,
+                            materialComposition: preset.material,
+                            finish: preset.finish,
+                            application: preset.application,
+                            useApplication: preset.useApplication,
+                            moq: preset.moq,
+                            priceRange: preset.priceRange,
+                            image: (!prev.image || prev.image.includes("unsplash")) ? preset.image : prev.image,
+                          }));
+                        }}
+                        style={{
+                          padding: "8px 12px",
+                          borderRadius: "8px",
+                          border: isSelected ? "2px solid var(--primary)" : "1px solid var(--border-subtle)",
+                          background: isSelected ? "var(--primary-light, rgba(99, 102, 241, 0.12))" : "var(--bg-surface)",
+                          cursor: "pointer",
+                          textAlign: "left",
+                          transition: "all 0.15s ease",
+                        }}
+                      >
+                        <div style={{ fontWeight: 800, fontSize: "0.85rem", color: isSelected ? "var(--primary)" : "var(--text-primary)" }}>
+                          {od.label}
+                        </div>
+                        <div style={{ fontSize: "0.72rem", color: isSelected ? "var(--primary)" : "var(--text-muted)", marginTop: "2px", fontWeight: isSelected ? 700 : 500 }}>
+                          📍 {od.loc}
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Confirmed District & Category Chip */}
+                <div
+                  style={{
+                    background: "rgba(16, 185, 129, 0.1)",
+                    border: "1px solid rgba(16, 185, 129, 0.3)",
+                    padding: "6px 12px",
+                    borderRadius: "6px",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    flexWrap: "wrap",
+                    gap: "6px",
+                  }}
+                >
+                  <span style={{ fontSize: "0.78rem", fontWeight: 750, color: "#15803d" }}>
+                    📍 Catalogue District: <strong>{productForm.district || "Baran / Kota / Jhalawar / Bundi, Rajasthan"}</strong>
+                  </span>
+                  <span style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--primary)" }}>
+                    🏷️ ODOP: {productForm.odopProduct || "Verified"}
+                  </span>
+                </div>
+              </div>
+
               {/* Product Title & AI Helper */}
               <div>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "4px" }}>
@@ -809,34 +1087,52 @@ export default function CompanyCatalogueManager() {
               </div>
 
               {/* Product Image: Upload from Computer or URL */}
+              {/* Product Image Section with AI Upscale Dialog & AI Studio Integration */}
               <div className="card" style={{ background: "var(--bg-input)", padding: "1rem" }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
-                  <label style={{ fontSize: "0.8rem", fontWeight: 600, color: "var(--text-secondary)" }}>
-                    Product Image (Upload from Computer, Phone or URL)
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px", flexWrap: "wrap", gap: "6px" }}>
+                  <label style={{ fontSize: "0.82rem", fontWeight: 700, color: "var(--text-secondary)" }}>
+                    Product Image (Auto-Upscaler 2x/4x &amp; AI Studio Enabled)
                   </label>
-                  {/* Shoot in AI Studio commented out */}
-                  {/*
-                  <button
-                    type="button"
-                    className="btn btn-primary btn-sm"
-                    style={{ display: "inline-flex", gap: "6px", alignItems: "center", padding: "3px 10px", fontSize: "0.78rem" }}
-                    onClick={() => {
-                      navigate("/ai-studio", {
-                        state: {
-                          image: productForm.image,
-                          productId: editingProductId || null,
-                        },
-                      });
-                    }}
-                    title="Open AI Studio to turn normal phone shot into studio-level commercial shoot"
-                  >
-                    <Sparkles size={13} /> Shoot in AI Studio
-                  </button>
-                  */}
+                  <div style={{ display: "flex", gap: "6px" }}>
+                    {productForm.image && (
+                      <button
+                        type="button"
+                        className="btn btn-outline btn-sm"
+                        style={{ display: "inline-flex", gap: "5px", alignItems: "center", padding: "3px 8px", fontSize: "0.75rem", color: "#10b981", borderColor: "#10b981" }}
+                        onClick={() => {
+                          setPendingUploadImage(productForm.image);
+                          setIsUpscaleModalOpen(true);
+                        }}
+                        title="Upscale to 2x or 4x high-resolution"
+                      >
+                        <Zap size={12} /> Upscale 2x/4x
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      className="btn btn-outline btn-sm"
+                      style={{ display: "inline-flex", gap: "5px", alignItems: "center", padding: "3px 10px", fontSize: "0.75rem", color: "#8b5cf6", borderColor: "#8b5cf6" }}
+                      onClick={() => {
+                        navigate("/ai-studio", {
+                          state: {
+                            image: productForm.image,
+                            productId: editingProductId || null,
+                            productName: productForm.name || "Product",
+                            companyId: companyId || null,
+                            returnTo: window.location.pathname,
+                          },
+                        });
+                      }}
+                      title="Open AI Studio to edit lighting, remove background, or add luxury stages"
+                    >
+                      <Palette size={13} /> Edit in AI Studio ➔
+                    </button>
+                  </div>
                 </div>
+
                 <div style={{ display: "flex", gap: "0.75rem", alignItems: "center" }}>
-                  <label className="btn btn-secondary btn-sm" style={{ cursor: "pointer", display: "inline-flex", gap: "6px" }}>
-                    <Upload size={14} /> Upload File
+                  <label className="btn btn-secondary btn-sm" style={{ cursor: "pointer", display: "inline-flex", gap: "6px", fontWeight: 700 }}>
+                    <Upload size={14} /> Upload &amp; Upscale
                     <input type="file" accept="image/*" style={{ display: "none" }} onChange={handleImageFileUpload} />
                   </label>
                   <input
@@ -848,12 +1144,145 @@ export default function CompanyCatalogueManager() {
                     onChange={(e) => setProductForm({ ...productForm, image: e.target.value })}
                   />
                   {productForm.image && (
-                    <img
-                      src={productForm.image}
-                      alt="Product Preview"
-                      style={{ width: "50px", height: "50px", objectFit: "cover", borderRadius: "6px", border: "1px solid var(--border-medium)" }}
-                    />
+                    <div style={{ position: "relative", flexShrink: 0 }}>
+                      <img
+                        src={productForm.image}
+                        alt="Product Preview"
+                        style={{ width: "52px", height: "52px", objectFit: "cover", borderRadius: "8px", border: "1.5px solid var(--border-medium)" }}
+                      />
+                      {upscaleStats && (
+                        <span
+                          style={{
+                            position: "absolute",
+                            top: "-6px",
+                            right: "-6px",
+                            background: "#10b981",
+                            color: "#fff",
+                            fontSize: "0.62rem",
+                            fontWeight: 800,
+                            padding: "1px 4px",
+                            borderRadius: "4px",
+                            boxShadow: "0 2px 4px rgba(0,0,0,0.2)",
+                          }}
+                        >
+                          {upscaleStats.scale || "HD"}
+                        </span>
+                      )}
+                    </div>
                   )}
+                </div>
+
+                {upscaleStats && (
+                  <div style={{ marginTop: "6px", fontSize: "0.74rem", color: "#166534", fontWeight: 600, display: "flex", alignItems: "center", gap: "4px" }}>
+                    ✓ Image optimized: {upscaleStats.from} ➔ {upscaleStats.to} ({upscaleStats.scale} Super-Resolution applied)
+                  </div>
+                )}
+              </div>
+
+              
+              {/* 4 MANDATORY ODOP SPECIFICATION POINTS */}
+              <div
+                style={{
+                  background: "var(--bg-surface-elevated)",
+                  padding: "1rem",
+                  borderRadius: "var(--radius-md)",
+                  border: "1px solid var(--border-subtle)",
+                }}
+              >
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+                  <label style={{ fontSize: "0.85rem", fontWeight: 750, color: "var(--text-primary)" }}>
+                    Four Mandatory ODOP Product Specification Points
+                  </label>
+                  <span style={{ fontSize: "0.75rem", color: "#166534", background: "#dcfce7", padding: "2px 8px", borderRadius: "4px", fontWeight: 700 }}>
+                    ✓ Auto-Formatted for Catalogue
+                  </span>
+                </div>
+
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.75rem", marginBottom: "0.75rem" }}>
+                  <div>
+                    <label style={{ fontSize: "0.8rem", fontWeight: 650, color: "var(--text-secondary)", display: "block", marginBottom: "4px" }}>
+                      📏 1. Size / Specification *
+                    </label>
+                    <input
+                      type="text"
+                      className="input-field"
+                      style={{ paddingLeft: "0.85rem" }}
+                      placeholder="e.g. 6.5m with blouse / 50-65 mm / 600x600 mm"
+                      value={productForm.size || ""}
+                      onChange={(e) => setProductForm({ ...productForm, size: e.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: "0.8rem", fontWeight: 650, color: "var(--text-secondary)", display: "block", marginBottom: "4px" }}>
+                      🧵 2. Material Composition *
+                    </label>
+                    <input
+                      type="text"
+                      className="input-field"
+                      style={{ paddingLeft: "0.85rem" }}
+                      placeholder="e.g. Pure Mulberry Silk & Cotton / Indurated Limestone"
+                      value={productForm.material || productForm.materialComposition || ""}
+                      onChange={(e) => setProductForm({ ...productForm, material: e.target.value, materialComposition: e.target.value })}
+                    />
+                  </div>
+                </div>
+
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.75rem", marginBottom: "0.75rem" }}>
+                  <div>
+                    <label style={{ fontSize: "0.8rem", fontWeight: 650, color: "var(--text-secondary)", display: "block", marginBottom: "4px" }}>
+                      ✨ 3. Surface Finish *
+                    </label>
+                    <input
+                      type="text"
+                      className="input-field"
+                      style={{ paddingLeft: "0.85rem" }}
+                      placeholder="e.g. Tested Gold Zari / Sun-Cured White Skin / Mirror Polish"
+                      value={productForm.finish || productForm.color || ""}
+                      onChange={(e) => setProductForm({ ...productForm, finish: e.target.value, color: e.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: "0.8rem", fontWeight: 650, color: "var(--text-secondary)", display: "block", marginBottom: "4px" }}>
+                      🎯 4. Use / Application *
+                    </label>
+                    <input
+                      type="text"
+                      className="input-field"
+                      style={{ paddingLeft: "0.85rem" }}
+                      placeholder="e.g. Bridal Ensembles / Commercial Culinary / High Footfall Flooring"
+                      value={productForm.application || productForm.useApplication || ""}
+                      onChange={(e) => setProductForm({ ...productForm, application: e.target.value, useApplication: e.target.value })}
+                    />
+                  </div>
+                </div>
+
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.75rem" }}>
+                  <div>
+                    <label style={{ fontSize: "0.8rem", fontWeight: 650, color: "var(--text-secondary)", display: "block", marginBottom: "4px" }}>
+                      📦 Minimum Order Quantity (MOQ)
+                    </label>
+                    <input
+                      type="text"
+                      className="input-field"
+                      style={{ paddingLeft: "0.85rem" }}
+                      placeholder="e.g. 10 Pieces / 500 kg / 500 sq.ft"
+                      value={productForm.moq || ""}
+                      onChange={(e) => setProductForm({ ...productForm, moq: e.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: "0.8rem", fontWeight: 650, color: "var(--text-secondary)", display: "block", marginBottom: "4px" }}>
+                      💰 Price Range
+                    </label>
+                    <input
+                      type="text"
+                      className="input-field"
+                      style={{ paddingLeft: "0.85rem" }}
+                      placeholder="e.g. ₹2,450 – ₹6,500 / ₹180 – ₹240 / kg"
+                      value={productForm.priceRange || ""}
+                      onChange={(e) => setProductForm({ ...productForm, priceRange: e.target.value })}
+                    />
+                  </div>
                 </div>
               </div>
 
@@ -1067,6 +1496,18 @@ export default function CompanyCatalogueManager() {
           </div>
         </div>
       )}
+      {/* AI Smart Image Upscale & Enhancement Dialog */}
+      <ImageUpscaleModal
+        isOpen={isUpscaleModalOpen}
+        onClose={() => setIsUpscaleModalOpen(false)}
+        imageSrc={pendingUploadImage}
+        productData={{
+          productId: editingProductId || null,
+          name: productForm.name || "Product",
+          companyId: companyId,
+        }}
+        onApply={handleApplyUpscaledImage}
+      />
     </div>
   );
 }

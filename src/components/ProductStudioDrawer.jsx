@@ -17,7 +17,60 @@ import {
   Trash2,
   Layers,
   Copy,
+  MapPin,
+  Upload,
+  Zap,
+  Palette,
+  ExternalLink,
 } from "lucide-react";
+import ImageUpscaleModal from "./ImageUpscaleModal";
+
+const ODOP_PRESETS = {
+  "Kota Doria": {
+    category: "Kota Doria Specialty",
+    odopProduct: "Kota Doria",
+    district: "Kota, Rajasthan",
+    size: "6.5m (Includes 80cm Running Blouse Piece)",
+    material: "Pure Mulberry Silk Warp, Fine Cotton Weft",
+    finish: "Tested Electro-Gold Zari on Square Khat",
+    application: "Bridal Ensembles, Wedding Drapes & High-End Boutique Luxury",
+    moq: "10 Pieces (Wholesale)",
+    priceRange: "₹2,450 – ₹6,500",
+  },
+  "Garlic": {
+    category: "Garlic Specialty",
+    odopProduct: "Garlic",
+    district: "Baran, Rajasthan",
+    size: "50 - 65 mm (Grade A+ Large)",
+    material: "100% Organically Grown Malwa Garlic",
+    finish: "Sun-Cured Export Clean White Skin",
+    application: "Commercial Culinary, Food Processing & Export",
+    moq: "500 kg (Wholesale Lot)",
+    priceRange: "₹180 – ₹240 / kg",
+  },
+  "Kota Stone": {
+    category: "Kota Stone Specialty",
+    odopProduct: "Kota Stone",
+    district: "Jhalawar, Rajasthan",
+    size: "600x600 mm (20mm Calibrated)",
+    material: "Natural Indurated Limestone (Kota Stone)",
+    finish: "Mirror High Polish / Honed",
+    application: "Heavy Commercial Flooring & Corridors",
+    moq: "500 sq.ft (Quarry Lot)",
+    priceRange: "₹85 – ₹120 / sq.ft",
+  },
+  "Sandstone": {
+    category: "Sand Stone Specialty",
+    odopProduct: "Sandstone",
+    district: "Bundi, Rajasthan",
+    size: "600x900 mm (25-30mm Calibrated Sawn)",
+    material: "Natural Quartzite Sandstone",
+    finish: "Sandblasted / Hand-Chiseled / Honed",
+    application: "Exterior Facades, Cladding & Paving",
+    moq: "400 sq.ft (Project Lot)",
+    priceRange: "₹135 – ₹190 / sq.ft",
+  },
+};
 // AI features commented out:
 // import {
 //   generateAiContent,
@@ -52,6 +105,8 @@ export default function ProductStudioDrawer({ product, onClose, onSave }) {
   const [badgeText, setBadgeText] = useState("");
   const [brightness, setBrightness] = useState(100);
   const [contrast, setContrast] = useState(100);
+  const [isUpscaleModalOpen, setIsUpscaleModalOpen] = useState(false);
+  const [pendingUploadImage, setPendingUploadImage] = useState("");
   const canvasRef = useRef(null);
 
   useEffect(() => {
@@ -267,6 +322,214 @@ export default function ProductStudioDrawer({ product, onClose, onSave }) {
           {/* TAB 1: CORE PIM ATTRIBUTES */}
           {activeTab === "pim" && (
             <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
+              {/* UNDER WHICH ODOP CATEGORY DOES THIS PRODUCT BELONG? */}
+              <div
+                style={{
+                  background: "var(--bg-surface-elevated)",
+                  padding: "1rem",
+                  borderRadius: "var(--radius-md)",
+                  border: "1.5px solid var(--primary-light, #818cf8)",
+                }}
+              >
+                <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "4px" }}>
+                  <MapPin size={17} style={{ color: "var(--primary)" }} />
+                  <label style={{ fontSize: "0.88rem", fontWeight: 800, color: "var(--text-primary)" }}>
+                    Under Which ODOP Category Does This Product Belong? *
+                  </label>
+                </div>
+                <p style={{ fontSize: "0.76rem", color: "var(--text-muted)", margin: "0 0 10px 0" }}>
+                  Select the official Rajasthan ODOP corridor to bind the correct district and 4-point specifications:
+                </p>
+
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "0.6rem", marginBottom: "0.75rem" }}>
+                  {[
+                    { product: "Kota Doria", district: "Kota, Rajasthan", label: "🥻 Kota Doria", loc: "District: Kota", cat: "Kota Doria Specialty" },
+                    { product: "Garlic", district: "Baran, Rajasthan", label: "🧄 Garlic", loc: "District: Baran", cat: "Garlic Specialty" },
+                    { product: "Kota Stone", district: "Jhalawar, Rajasthan", label: "🏛️ Kota Stone", loc: "District: Jhalawar", cat: "Kota Stone Specialty" },
+                    { product: "Sandstone", district: "Bundi, Rajasthan", label: "🧱 Sandstone", loc: "District: Bundi", cat: "Sand Stone Specialty" },
+                  ].map((od) => {
+                    const isSelected =
+                      formData.odopProduct === od.product ||
+                      formData.category === od.cat ||
+                      (od.product === "Garlic" && (formData.category || "").toLowerCase().includes("garlic")) ||
+                      (od.product === "Kota Stone" && (formData.category || "").toLowerCase().includes("stone") && !(formData.category || "").toLowerCase().includes("sand")) ||
+                      (od.product === "Sandstone" && (formData.category || "").toLowerCase().includes("sand")) ||
+                      (od.product === "Kota Doria" && (formData.category || "").toLowerCase().includes("doria"));
+
+                    return (
+                      <button
+                        key={od.product}
+                        type="button"
+                        onClick={() => {
+                          const preset = ODOP_PRESETS[od.product];
+                          setFormData((prev) => ({
+                            ...prev,
+                            category: preset.category,
+                            odopProduct: preset.odopProduct,
+                            district: preset.district,
+                            size: preset.size,
+                            material: preset.material,
+                            materialComposition: preset.material,
+                            finish: preset.finish,
+                            application: preset.application,
+                            useApplication: preset.application,
+                            moq: preset.moq,
+                            priceRange: preset.priceRange,
+                          }));
+                        }}
+                        style={{
+                          padding: "8px 12px",
+                          borderRadius: "8px",
+                          border: isSelected ? "2px solid var(--primary)" : "1px solid var(--border-subtle)",
+                          background: isSelected ? "var(--primary-light, rgba(99, 102, 241, 0.12))" : "var(--bg-surface)",
+                          cursor: "pointer",
+                          textAlign: "left",
+                        }}
+                      >
+                        <div style={{ fontWeight: 800, fontSize: "0.85rem", color: isSelected ? "var(--primary)" : "var(--text-primary)" }}>
+                          {od.label}
+                        </div>
+                        <div style={{ fontSize: "0.72rem", color: isSelected ? "var(--primary)" : "var(--text-muted)", marginTop: "2px", fontWeight: isSelected ? 700 : 500 }}>
+                          📍 {od.loc}
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                <div
+                  style={{
+                    background: "rgba(16, 185, 129, 0.1)",
+                    border: "1px solid rgba(16, 185, 129, 0.3)",
+                    padding: "6px 12px",
+                    borderRadius: "6px",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    fontSize: "0.78rem",
+                  }}
+                >
+                  <span style={{ fontWeight: 750, color: "#15803d" }}>
+                    📍 Catalogue District: <strong>{formData.district || "Baran / Kota / Jhalawar / Bundi, Rajasthan"}</strong>
+                  </span>
+                  <span style={{ fontWeight: 700, color: "var(--primary)" }}>
+                    🏷️ ODOP: {formData.odopProduct || "Verified Product"}
+                  </span>
+                </div>
+              </div>
+
+              {/* FOUR MANDATORY ODOP SPECIFICATION POINTS */}
+              <div
+                style={{
+                  background: "var(--bg-surface)",
+                  padding: "1rem",
+                  borderRadius: "var(--radius-md)",
+                  border: "1px solid var(--border-subtle)",
+                }}
+              >
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+                  <label style={{ fontSize: "0.85rem", fontWeight: 750, color: "var(--text-primary)" }}>
+                    Four Mandatory ODOP Product Specification Points
+                  </label>
+                  <span style={{ fontSize: "0.75rem", color: "#166534", background: "#dcfce7", padding: "2px 8px", borderRadius: "4px", fontWeight: 700 }}>
+                    ✓ Auto-Formatted for Catalogue
+                  </span>
+                </div>
+
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.75rem", marginBottom: "0.75rem" }}>
+                  <div>
+                    <label style={{ fontSize: "0.8rem", fontWeight: 650, color: "var(--text-secondary)", display: "block", marginBottom: "4px" }}>
+                      📏 1. Size / Specification *
+                    </label>
+                    <input
+                      type="text"
+                      className="input-field"
+                      style={{ paddingLeft: "0.85rem" }}
+                      placeholder="e.g. 6.5m with blouse / 50-65 mm / 600x600 mm"
+                      value={formData.size || ""}
+                      onChange={(e) => handleChange("size", e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: "0.8rem", fontWeight: 650, color: "var(--text-secondary)", display: "block", marginBottom: "4px" }}>
+                      🧵 2. Material Composition *
+                    </label>
+                    <input
+                      type="text"
+                      className="input-field"
+                      style={{ paddingLeft: "0.85rem" }}
+                      placeholder="e.g. Pure Mulberry Silk & Cotton / Indurated Limestone"
+                      value={formData.material || formData.materialComposition || ""}
+                      onChange={(e) => {
+                        handleChange("material", e.target.value);
+                        handleChange("materialComposition", e.target.value);
+                      }}
+                    />
+                  </div>
+                </div>
+
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.75rem", marginBottom: "0.75rem" }}>
+                  <div>
+                    <label style={{ fontSize: "0.8rem", fontWeight: 650, color: "var(--text-secondary)", display: "block", marginBottom: "4px" }}>
+                      ✨ 3. Surface Finish *
+                    </label>
+                    <input
+                      type="text"
+                      className="input-field"
+                      style={{ paddingLeft: "0.85rem" }}
+                      placeholder="e.g. Tested Gold Zari / Sun-Cured White Skin / Mirror Polish"
+                      value={formData.finish || ""}
+                      onChange={(e) => handleChange("finish", e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: "0.8rem", fontWeight: 650, color: "var(--text-secondary)", display: "block", marginBottom: "4px" }}>
+                      🎯 4. Use / Application *
+                    </label>
+                    <input
+                      type="text"
+                      className="input-field"
+                      style={{ paddingLeft: "0.85rem" }}
+                      placeholder="e.g. Bridal Ensembles / Commercial Culinary / High Footfall Flooring"
+                      value={formData.application || formData.useApplication || ""}
+                      onChange={(e) => {
+                        handleChange("application", e.target.value);
+                        handleChange("useApplication", e.target.value);
+                      }}
+                    />
+                  </div>
+                </div>
+
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.75rem" }}>
+                  <div>
+                    <label style={{ fontSize: "0.8rem", fontWeight: 650, color: "var(--text-secondary)", display: "block", marginBottom: "4px" }}>
+                      📦 Minimum Order Quantity (MOQ)
+                    </label>
+                    <input
+                      type="text"
+                      className="input-field"
+                      style={{ paddingLeft: "0.85rem" }}
+                      placeholder="e.g. 10 Pieces / 500 kg / 500 sq.ft"
+                      value={formData.moq || ""}
+                      onChange={(e) => handleChange("moq", e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: "0.8rem", fontWeight: 650, color: "var(--text-secondary)", display: "block", marginBottom: "4px" }}>
+                      💰 Price Range
+                    </label>
+                    <input
+                      type="text"
+                      className="input-field"
+                      style={{ paddingLeft: "0.85rem" }}
+                      placeholder="e.g. ₹2,450 – ₹6,500 / ₹180 – ₹240 / kg"
+                      value={formData.priceRange || ""}
+                      onChange={(e) => handleChange("priceRange", e.target.value)}
+                    />
+                  </div>
+                </div>
+              </div>
+
               <div className="card">
                 <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.75rem" }}>
                   <label style={{ fontSize: "0.85rem", fontWeight: 600, color: "var(--text-secondary)" }}>
@@ -488,8 +751,7 @@ export default function ProductStudioDrawer({ product, onClose, onSave }) {
           {/* TAB 3: AI IMAGE STUDIO */}
           {activeTab === "image" && (
             <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
-              {/* Full Studio Shoot Launch Banner commented out */}
-              {/*
+              {/* Full Studio Shoot Launch Banner */}
               <div
                 className="card"
                 style={{
@@ -498,50 +760,92 @@ export default function ProductStudioDrawer({ product, onClose, onSave }) {
                   display: "flex",
                   justifyContent: "space-between",
                   alignItems: "center",
-                  padding: "1rem 1.25rem",
+                  padding: "0.85rem 1.15rem",
                   borderRadius: "var(--radius-md)",
+                  flexWrap: "wrap",
+                  gap: "0.5rem",
                 }}
               >
                 <div>
-                  <div style={{ display: "flex", alignItems: "center", gap: "6px", fontWeight: 700, color: "var(--text-primary)", fontSize: "0.95rem" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "6px", fontWeight: 700, color: "var(--text-primary)", fontSize: "0.92rem" }}>
                     <Sparkles size={16} color="var(--primary)" />
                     <span>AI Studio Product Shoot Engine</span>
                   </div>
-                  <div style={{ fontSize: "0.8rem", color: "var(--text-secondary)", marginTop: "2px" }}>
-                    Transform raw phone camera shots with AI cutout, marble/pedestal stages, contact shadows &amp; reflections.
+                  <div style={{ fontSize: "0.78rem", color: "var(--text-secondary)", marginTop: "2px" }}>
+                    Cut out products, add luxury marble stages, realistic shadows &amp; export directly to catalogue.
                   </div>
                 </div>
                 <button
                   type="button"
                   className="btn btn-primary btn-sm"
-                  style={{ display: "inline-flex", gap: "6px", alignItems: "center", whiteSpace: "nowrap" }}
+                  style={{ display: "inline-flex", gap: "6px", alignItems: "center", whiteSpace: "nowrap", fontWeight: 700 }}
                   onClick={() => {
                     navigate("/ai-studio", {
                       state: {
                         image: formData.image,
                         productId: formData._id,
+                        productName: formData.name,
+                        companyId: formData.companyId,
+                        returnTo: window.location.pathname,
                       },
                     });
                     if (onClose) onClose();
                   }}
                 >
-                  <Sparkles size={14} /> Open AI Photo Studio <ExternalLink size={13} />
+                  <Sparkles size={14} /> Open in AI Studio <ExternalLink size={13} />
                 </button>
               </div>
-              */}
 
               <div className="card">
-                <label style={{ fontSize: "0.85rem", fontWeight: 600, color: "var(--text-secondary)", display: "block", marginBottom: "6px" }}>
-                  Primary Image URL
-                </label>
-                <input
-                  type="text"
-                  className="input-field"
-                  style={{ paddingLeft: "0.85rem" }}
-                  value={formData.image || ""}
-                  onChange={(e) => handleChange("image", e.target.value)}
-                  placeholder="Paste URL or upload image"
-                />
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px", flexWrap: "wrap", gap: "6px" }}>
+                  <label style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--text-secondary)" }}>
+                    Primary Image (Upload &amp; Upscale 2x/4x)
+                  </label>
+                  {formData.image && (
+                    <button
+                      type="button"
+                      className="btn btn-outline btn-sm"
+                      style={{ display: "inline-flex", gap: "5px", alignItems: "center", padding: "2px 8px", fontSize: "0.74rem", color: "#10b981", borderColor: "#10b981" }}
+                      onClick={() => {
+                        setPendingUploadImage(formData.image);
+                        setIsUpscaleModalOpen(true);
+                      }}
+                      title="Upscale this image to 2x or 4x HD"
+                    >
+                      <Zap size={12} /> Upscale 2x/4x
+                    </button>
+                  )}
+                </div>
+
+                <div style={{ display: "flex", gap: "0.6rem", alignItems: "center" }}>
+                  <label className="btn btn-secondary btn-sm" style={{ cursor: "pointer", display: "inline-flex", gap: "5px", fontWeight: 700 }}>
+                    <Upload size={14} /> Upload &amp; Upscale
+                    <input
+                      type="file"
+                      accept="image/*"
+                      style={{ display: "none" }}
+                      onChange={(e) => {
+                        const file = e.target.files[0];
+                        if (!file) return;
+                        const reader = new FileReader();
+                        reader.onloadend = () => {
+                          setPendingUploadImage(reader.result);
+                          setIsUpscaleModalOpen(true);
+                        };
+                        reader.readAsDataURL(file);
+                        e.target.value = "";
+                      }}
+                    />
+                  </label>
+                  <input
+                    type="text"
+                    className="input-field"
+                    style={{ paddingLeft: "0.85rem", flex: 1 }}
+                    value={formData.image || ""}
+                    onChange={(e) => handleChange("image", e.target.value)}
+                    placeholder="Paste URL or upload image"
+                  />
+                </div>
               </div>
 
               {/* Studio Canvas & Controls */}
@@ -711,6 +1015,21 @@ export default function ProductStudioDrawer({ product, onClose, onSave }) {
           </button>
         </div>
       </div>
+
+      {/* Image Upscale & Enhancement Modal */}
+      <ImageUpscaleModal
+        isOpen={isUpscaleModalOpen}
+        onClose={() => setIsUpscaleModalOpen(false)}
+        imageSrc={pendingUploadImage}
+        productData={{
+          productId: formData._id,
+          name: formData.name || "Product",
+          companyId: formData.companyId,
+        }}
+        onApply={(finalImg) => {
+          handleChange("image", finalImg);
+        }}
+      />
     </div>
   );
 }

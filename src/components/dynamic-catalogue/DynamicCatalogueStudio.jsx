@@ -32,7 +32,11 @@ import {
   Link,
   Plus,
   PlusCircle,
-  Copy
+  Copy,
+  Maximize2,
+  Minimize2,
+  PanelLeftOpen,
+  PanelLeftClose
 } from "lucide-react";
 import confetti from "canvas-confetti";
 import {
@@ -41,6 +45,7 @@ import {
   buildCatalogue,
   exportDynamicPdf
 } from "./engine";
+import ImageUpscaleModal from "../ImageUpscaleModal";
 import {
   setMode,
   isEditing,
@@ -505,18 +510,226 @@ const SPECIALTY_DEMO_PRODUCTS = {
 
 const DEFAULT_DEMO_PRODUCTS = SPECIALTY_DEMO_PRODUCTS.garlic;
 
+const SPECIALTY_COMPANIES = {
+  garlic: {
+    name: "Malwa Agro Fresh & Garlic Exports",
+    tagline: "Sun-Cured Grade-A White Garlic • Direct Malwa Farm Collective",
+    industry: "Garlic Specialty & Agri Commodity",
+    district: "Baran, Rajasthan",
+    state: "Rajasthan",
+    odopProduct: "Garlic",
+    whatsappNumber: "+91 97521 09876",
+    giTagNumber: "Baran Garlic ODOP Cluster",
+    udyamNumber: "UDYAM-RJ-23-0044551",
+    logoUrl: "/assets/garlic/garlic-01.jpeg",
+    brandColors: { primary: "#2d6a4f", secondary: "#1b4332", accent: "#d97706" },
+    contact: {
+      email: "procurement@malwagarlic.in",
+      phone: "+91 9752109876",
+      website: "https://www.malwagarlic.in",
+      address: "Krishi Upaj Mandi Yard, Mandsaur-Baran Agro Belt, Rajasthan – 325205"
+    },
+    qrLinks: {
+      businessProfile: "https://www.malwagarlic.in/catalogue",
+      whatsapp: "https://wa.me/919752109876",
+      website: "https://www.malwagarlic.in"
+    }
+  },
+  kotastone: {
+    name: "Supreme Granite & Stones",
+    tagline: "Natural • Durable • Timeless Architectural Stone",
+    industry: "Granite & Kota Stone",
+    district: "Jhalawar, Rajasthan",
+    state: "Rajasthan",
+    odopProduct: "Kota Stone",
+    whatsappNumber: "+91 90668 04666",
+    giTagNumber: "Kota Stone Mining & Processing Hub",
+    udyamNumber: "UDYAM-RJ-29-0012345",
+    logoUrl: "/assets/kota-stone/Blue-Kota-Stone-Tiles-1.jpg",
+    brandColors: { primary: "#4E5C43", secondary: "#1C1917", accent: "#C5A059" },
+    contact: {
+      email: "sales@supremestones.in",
+      phone: "+91 9066804666",
+      website: "https://www.supremestones.in",
+      address: "Industrial Quarry Zone, Suket / Ramganj Mandi, Jhalawar-Kota Belt, Rajasthan – 326529"
+    },
+    qrLinks: {
+      businessProfile: "https://www.supremestones.in/catalogue",
+      whatsapp: "https://wa.me/919066804666",
+      website: "https://www.supremestones.in"
+    }
+  },
+  sandstone: {
+    name: "Royal Heritage Sandstones",
+    tagline: "Palatial Jodhpur & Agra Red Sandstones",
+    industry: "Sandstone Facades & Landscaping",
+    district: "Bundi, Rajasthan",
+    state: "Rajasthan",
+    odopProduct: "Sandstone",
+    whatsappNumber: "+91 98290 54321",
+    giTagNumber: "Bundi Royal Sandstone Consortium",
+    udyamNumber: "UDYAM-RJ-08-0054321",
+    logoUrl: "/assets/sand-stone/Agra-Red-Sandstone-Sandblasted.jpg",
+    brandColors: { primary: "#b45309", secondary: "#451a03", accent: "#f59e0b" },
+    contact: {
+      email: "export@royalsandstone.in",
+      phone: "+91 9829054321",
+      website: "https://www.royalsandstone.in",
+      address: "Stone Heritage Industrial Estate, Bundi-Jodhpur Highway, Rajasthan – 323001"
+    },
+    qrLinks: {
+      businessProfile: "https://www.royalsandstone.in/catalogue",
+      whatsapp: "https://wa.me/919829054321",
+      website: "https://www.royalsandstone.in"
+    }
+  },
+  kotadoria: {
+    name: "Parampara Threads",
+    tagline: "Royal Gossamer Handlooms • GI Tagged Atelier",
+    industry: "Kota Doria Handlooms & Sarees",
+    district: "Kota, Rajasthan",
+    state: "Rajasthan",
+    odopProduct: "Kota Doria Handlooms",
+    whatsappNumber: "+91 94141 23456",
+    giTagNumber: "GI Tag Reg. No. 37",
+    udyamNumber: "UDYAM-RJ-20-0012345",
+    logoUrl: "/assets/kota-doria/0X2A0389_db4c4b42-1d9b-405b-9ea0-664b5017af38.jpg",
+    brandColors: { primary: "#7c2d12", secondary: "#431407", accent: "#d97706" },
+    contact: {
+      email: "orders@paramparathreads.com",
+      phone: "+91 9414123456",
+      website: "https://www.paramparathreads.com",
+      address: "Weavers Colony, Kaithun, Kota, Rajasthan – 325001"
+    },
+    qrLinks: {
+      businessProfile: "https://www.paramparathreads.com/catalogue",
+      whatsapp: "https://wa.me/919414123456",
+      website: "https://www.paramparathreads.com"
+    }
+  }
+};
+
+const SPECIALTY_GALLERY_PHOTOS = {
+  garlic: [
+    "/assets/garlic/garlic-01.jpeg",
+    "/assets/garlic/garlic-02.jpeg",
+    "/assets/garlic/garlic-03.jpeg",
+    "/assets/garlic/garlic-04.jpeg",
+    "/assets/garlic/garlic-05.jpeg",
+    "/assets/garlic/garlic-06.jpeg",
+    "/assets/garlic/garlic-07.jpeg",
+    "/assets/garlic/garlic-08.jpeg",
+    "/assets/garlic/garlic-09.jpeg",
+    "/assets/garlic/garlic-10.jpeg",
+    "/assets/garlic/garlic-11.jpeg",
+    "/assets/garlic/garlic-12.jpeg"
+  ],
+  kotastone: [
+    "/assets/kota-stone/Blue-Kota-Stone-Tiles-1.jpg",
+    "/assets/kota-stone/Blue-Kota-Stone-Tiles-3.jpg",
+    "/assets/kota-stone/Blue-Kota-Stone-Tiles-4.jpg",
+    "/assets/kota-stone/Blue-Kota-Stone-Tiles-5.jpg",
+    "/assets/kota-stone/KOTASTONEHIGH-POLISH8442.jpg",
+    "/assets/kota-stone/blue-kota-stone-1.jpg",
+    "/assets/kota-stone/blue-kota-stone-2.jpg",
+    "/assets/kota-stone/blue-kota-stone-3.jpg",
+    "/assets/kota-stone/Designer-Kota-Stone-Tiles.jpg",
+    "/assets/kota-stone/Yellow-Kota-Stone-Tiles.jpg",
+    "/assets/kota-stone/Kota-Stone-Flooring-Tiles.jpg",
+    "/assets/kota-stone/Parking-Tiles-2.jpg"
+  ],
+  sandstone: [
+    "/assets/sand-stone/Agra-Red-Sandstone-Sandblasted.jpg",
+    "/assets/sand-stone/Autumn-Brown-Sandstone-1024x1024.jpg",
+    "/assets/sand-stone/MODAK-Sandstone-Thumbnail-1-1024x1024.jpg",
+    "/assets/sand-stone/Teakwood-Yellow-Vein-Sandstone.jpg",
+    "/assets/sand-stone/White-Mint-Sandstone-Shotblasted-Tumbled-1024x768.jpg",
+    "/assets/sand-stone/Rainbow-Sandstone-Sawn-Tiles-1024x1024.jpg",
+    "/assets/sand-stone/slab1-600x500.jpg",
+    "/assets/sand-stone/IMG-20151210-WA0004-600x600.jpg"
+  ],
+  kotadoria: [
+    "/assets/kota-doria/0X2A0389_db4c4b42-1d9b-405b-9ea0-664b5017af38.jpg",
+    "/assets/kota-doria/bagru-hand-block-print-kota-doria-cotton-natural-dyed-3pc-unstitched-602.jpg",
+    "/assets/kota-doria/bagru-hand-block-print-kota-doria-cotton-natural-dyed-3pc-unstitched-754-.jpg",
+    "/assets/kota-doria/bagru-hand-block-print-kota-doria-cotton-natural-dyed-3pc-unstitched-918.jpg",
+    "/assets/kota-doria/black-bagh-hand-block-print-natural-dyed-kota-doria-cotton-3pc-572.jpg",
+    "/assets/kota-doria/lucknowi-chikankari-hand-embroidered-kota-doria-cotton-2pc-unstitched-127.jpg",
+    "/assets/kota-doria/green-kota-doria-cotton-hand-block-sanganeri-print-3pc-unstitched-858.jpg",
+    "/assets/kota-doria/brown-kota-doria-cotton-hand-block-sanganeri-print-3pc-unstitched-834.jpg"
+  ]
+};
+
+export function detectCompanyFamily(comp) {
+  if (!comp) return "garlic";
+  const text = `${comp.name || ""} ${comp.industry || ""} ${comp.category || ""}`.toLowerCase();
+  const odop = (comp.odopProduct || "").toLowerCase();
+  const dist = (comp.district || "").toLowerCase();
+
+  // 1. Direct name / industry specialty check
+  if (text.includes("garlic") || text.includes("lahsun")) return "garlic";
+  if (text.includes("sandstone") || text.includes("sand stone")) return "sandstone";
+  if (text.includes("kota stone") || text.includes("limestone") || (text.includes("stone") && !text.includes("sand"))) return "kotastone";
+  if (text.includes("doria") || text.includes("saree") || text.includes("handloom") || text.includes("kaithun") || text.includes("parampara")) return "kotadoria";
+
+  // 2. ODOP product
+  if (odop.includes("garlic") || odop.includes("lahsun") || odop.includes("agro")) return "garlic";
+  if (odop.includes("sand") || odop.includes("sandstone")) return "sandstone";
+  if (odop.includes("kota stone") || odop.includes("limestone") || (odop.includes("stone") && !odop.includes("sand"))) return "kotastone";
+  if (odop.includes("doria") || odop.includes("handloom") || odop.includes("saree")) return "kotadoria";
+
+  // 3. District
+  if (dist.includes("baran")) return "garlic";
+  if (dist.includes("bundi")) return "sandstone";
+  if (dist.includes("jhalawar")) return "kotastone";
+  if (dist.includes("kota")) return "kotadoria";
+
+  return "editorial";
+}
+
+const FAMILY_DEFAULT_TEMPLATES = {
+  garlic: "garlic:garlic-1",
+  kotastone: "kotastone:ks-b1",
+  sandstone: "sandstone:ss-b1",
+  kotadoria: "kotadoria:kd-1",
+  editorial: "editorial:ed-1",
+  simple: "simple:kd1",
+  stonecat: "stonecat:x1a"
+};
+
 export default function DynamicCatalogueStudio({
   company,
   products = [],
   activeQrList = [],
   includeQr = true,
-  onBack
+  onBack,
+  allProducts = [],
+  companies = [],
+  onSelectCompany
 }) {
   // Template & Category Selection
-  const [selectedUid, setSelectedUid] = useState("garlic:garlic-1");
-  const [activeCategory, setActiveCategory] = useState(null);
+  const [selectedUid, setSelectedUid] = useState(() => {
+    const fam = detectCompanyFamily(company);
+    return FAMILY_DEFAULT_TEMPLATES[fam] || "garlic:garlic-1";
+  });
+  const [activeCategory, setActiveCategory] = useState(() => {
+    return detectCompanyFamily(company);
+  });
   const [colorOverride, setColorOverride] = useState(null);
   const [customColor, setCustomColor] = useState("#2c3e91");
+
+  // Whenever the target company changes from Step 1, auto-switch the template and category to match
+  const lastCompanyIdRef = useRef(`${company?._id || ""}_${company?.name || ""}_${company?.odopProduct || ""}_${company?.district || ""}`);
+  useEffect(() => {
+    const compKey = `${company?._id || ""}_${company?.name || ""}_${company?.odopProduct || ""}_${company?.district || ""}`;
+    if (compKey && compKey !== lastCompanyIdRef.current) {
+      lastCompanyIdRef.current = compKey;
+      const targetFam = detectCompanyFamily(company);
+      const targetUid = FAMILY_DEFAULT_TEMPLATES[targetFam] || "garlic:garlic-1";
+      setSelectedUid(targetUid);
+      setActiveCategory(targetFam);
+    }
+  }, [company?._id, company?.name, company?.odopProduct, company?.district]);
 
   // Sidebar Tool Tabs: "edit-text", "edit-photos", "templates", "copywriting"
   const [sidebarTab, setSidebarTab] = useState("edit-text");
@@ -537,6 +750,8 @@ export default function DynamicCatalogueStudio({
   const [isRendering, setIsRendering] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [exportProgress, setExportProgress] = useState({ current: 0, total: 0 });
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const exportModalHostRef = useRef(null);
   const [previewScale, setPreviewScale] = useState(0.8);
   const [showHelpGuide, setShowHelpGuide] = useState(true);
 
@@ -582,11 +797,111 @@ export default function DynamicCatalogueStudio({
     }
   });
 
-  const currentFam = selectedUid?.split(":")[0];
+  // Photo Upscale Dialog in Studio
+  const [isStudioUpscaleOpen, setIsStudioUpscaleOpen] = useState(false);
+  const [pendingStudioUploadImg, setPendingStudioUploadImg] = useState("");
+
+  const currentFam = selectedUid?.split(":")[0] || "garlic";
+
+  // Dynamic Resolution of Active Category Products based on selected template / category
   const activeProducts = useMemo(() => {
-    if (products && products.length > 0) return products;
-    return SPECIALTY_DEMO_PRODUCTS[currentFam] || DEFAULT_DEMO_PRODUCTS;
-  }, [products, currentFam]);
+    const fam = currentFam;
+    const famKeywords = {
+      garlic: ["garlic", "clove", "lahsun"],
+      kotastone: ["kota stone", "limestone", "blue stone", "suket", "paving"],
+      sandstone: ["sand stone", "sandstone", "agra red", "jodhpur", "bundi", "teakwood", "mint"],
+      kotadoria: ["doria", "saree", "handloom", "zari", "khat", "bagru", "sanganeri", "dupatta", "parampara"],
+      stonecat: ["stone", "granite", "marble", "paving", "slate"]
+    }[fam] || [fam];
+
+    const isMatch = (p) => {
+      const text = `${p.name || ''} ${p.title || ''} ${p.category || ''} ${p.subcategory || ''} ${p.brand || ''} ${p.industry || ''}`.toLowerCase();
+      return famKeywords.some(kw => text.includes(kw));
+    };
+
+    // If passed products contains products, check match or companyId
+    if (products && products.length > 0) {
+      if (fam === "editorial" || fam === "simple") {
+        return products;
+      }
+      const matchingPassed = products.filter(isMatch);
+      if (matchingPassed.length > 0) {
+        return matchingPassed;
+      }
+      const compId = company?._id;
+      const compDirect = products.filter(p => compId && p.companyId === compId);
+      if (compDirect.length > 0) {
+        return compDirect;
+      }
+    }
+
+    // If allProducts contains products matching this category, use them
+    const matchingAll = (allProducts || []).filter(isMatch);
+    if (matchingAll.length > 0) {
+      return matchingAll;
+    }
+
+    // Otherwise use authentic rich specialty demo products with all high-res photos & specs
+    return SPECIALTY_DEMO_PRODUCTS[fam] || DEFAULT_DEMO_PRODUCTS;
+  }, [currentFam, products, allProducts, company?._id]);
+
+  // Dynamic Resolution of Active Company:
+  // If a company profile is selected or provided by the user, faithfully keep and use that registered company!
+  const activeCompany = useMemo(() => {
+    const fam = currentFam;
+    if (company && (company.name || company._id)) {
+      const defaults = SPECIALTY_COMPANIES[fam] || SPECIALTY_COMPANIES.garlic;
+
+      const cName = (company.name || "").toLowerCase();
+      const cInd = (company.industry || "").toLowerCase();
+
+      // Resolve authentic ODOP product & district for company
+      let resolvedOdop = company.odopProduct;
+      let resolvedDist = company.district;
+
+      if (!resolvedOdop || (resolvedOdop === "Kota Doria" && (cName.includes("garlic") || cInd.includes("garlic") || (cName.includes("stone") && !cName.includes("sand")) || (cInd.includes("stone") && !cInd.includes("sand")) || cName.includes("sand")))) {
+        if (cName.includes("garlic") || cInd.includes("garlic") || cName.includes("agro")) {
+          resolvedOdop = "Garlic";
+          resolvedDist = "Baran, Rajasthan";
+        } else if (cName.includes("sand") || cInd.includes("sand")) {
+          resolvedOdop = "Sandstone";
+          resolvedDist = "Bundi, Rajasthan";
+        } else if (cName.includes("stone") || cInd.includes("stone") || cName.includes("granite")) {
+          resolvedOdop = "Kota Stone";
+          resolvedDist = "Jhalawar, Rajasthan";
+        } else if (cName.includes("doria") || cInd.includes("saree") || cInd.includes("handloom")) {
+          resolvedOdop = "Kota Doria";
+          resolvedDist = "Kota, Rajasthan";
+        }
+      }
+
+      if (!resolvedDist || resolvedDist === "India") {
+        if (resolvedOdop === "Garlic") resolvedDist = "Baran, Rajasthan";
+        else if (resolvedOdop === "Kota Stone") resolvedDist = "Jhalawar, Rajasthan";
+        else if (resolvedOdop === "Sandstone") resolvedDist = "Bundi, Rajasthan";
+        else if (resolvedOdop === "Kota Doria") resolvedDist = "Kota, Rajasthan";
+        else resolvedDist = defaults.district || "Rajasthan";
+      }
+
+      return {
+        ...defaults,
+        ...company,
+        name: company.name || defaults.name,
+        district: resolvedDist || defaults.district || "Rajasthan",
+        odopProduct: resolvedOdop || defaults.odopProduct || "ODOP Product",
+        tagline: company.tagline || defaults.tagline,
+        industry: company.industry || defaults.industry,
+        contact: {
+          ...defaults.contact,
+          ...(company.contact || {})
+        },
+        brandColors: company.brandColors || defaults.brandColors,
+        logoUrl: company.logoUrl || defaults.logoUrl
+      };
+    }
+
+    return SPECIALTY_COMPANIES[fam] || SPECIALTY_COMPANIES.garlic;
+  }, [currentFam, company]);
 
   // Real Photo Bank (Garlic, Kota Stone, Kota Doria, Sandstone) state & filtering
   const [assetTab, setAssetTab] = useState("all");
@@ -847,7 +1162,7 @@ export default function DynamicCatalogueStudio({
       pageCard.className = "pvpage";
       pageCard.dataset.i = newPages.length - 1;
       pageCard.dataset.s = s;
-      pageCard.style.cssText = `position:relative;width:${W}px;height:${H}px;overflow:hidden;background:#ffffff;margin:0 0 20px;box-shadow:0 12px 36px rgba(0,0,0,0.45);border-radius:6px;`;
+      pageCard.style.cssText = `position:relative;width:${W}px;height:${H}px;overflow:hidden;background:#ffffff;margin:0 auto 24px;box-shadow:0 12px 36px rgba(0,0,0,0.45);border-radius:6px;`;
       pageCard.innerHTML = newPageHtml;
 
       const pg = pageCard.firstElementChild;
@@ -873,7 +1188,7 @@ export default function DynamicCatalogueStudio({
       setSelectedInspectPage(newPages.length - 1);
       refreshInspectedElements(newPages.length - 1);
       setTimeout(() => {
-        pageCard.scrollIntoView({ behavior: "smooth", block: "center" });
+        scrollToCard(pageCard);
       }, 50);
     }
 
@@ -905,7 +1220,7 @@ export default function DynamicCatalogueStudio({
       const pageCard = document.createElement("div");
       pageCard.className = "pvpage";
       pageCard.dataset.s = s;
-      pageCard.style.cssText = `position:relative;width:${W}px;height:${H}px;overflow:hidden;background:#ffffff;margin:0 0 20px;box-shadow:0 12px 36px rgba(0,0,0,0.45);border-radius:6px;`;
+      pageCard.style.cssText = `position:relative;width:${W}px;height:${H}px;overflow:hidden;background:#ffffff;margin:0 auto 24px;box-shadow:0 12px 36px rgba(0,0,0,0.45);border-radius:6px;`;
       pageCard.innerHTML = pageHtmlToCopy;
 
       const pg = pageCard.firstElementChild;
@@ -935,7 +1250,7 @@ export default function DynamicCatalogueStudio({
       setSelectedInspectPage(pageIdx + 1);
       refreshInspectedElements(pageIdx + 1);
       setTimeout(() => {
-        pageCard.scrollIntoView({ behavior: "smooth", block: "center" });
+        scrollToCard(pageCard);
       }, 50);
     }
 
@@ -1052,6 +1367,16 @@ export default function DynamicCatalogueStudio({
   const previewHostRef = useRef(null);
   const containerRef = useRef(null);
 
+  const scrollToCard = (target) => {
+    if (!target) return;
+    const card = target.closest ? (target.closest(".pvpage") || target) : target;
+    const container = card.closest ? card.closest(".dyn-preview-container") : null;
+    if (container && card.offsetTop !== undefined) {
+      const topOffset = card.offsetTop - container.offsetTop - 16;
+      container.scrollTo({ top: Math.max(0, topOffset), behavior: "smooth" });
+    }
+  };
+
   // Group templates by family with 4 primary product categories
   const categoryGroups = useMemo(() => {
     const groups = [
@@ -1070,43 +1395,46 @@ export default function DynamicCatalogueStudio({
     });
   }, []);
 
-  // Initialize text defaults and auto-align template family based on company
+  // Initialize text defaults and auto-align copywriting based on activeCompany & selected template
   useEffect(() => {
-    if (company) {
-      const cName = (company.name || "").toLowerCase();
-      const cInd = (company.industry || "").toLowerCase();
-      if ((cName.includes("garlic") || cInd.includes("garlic")) && !selectedUid.startsWith("garlic:")) {
-        setSelectedUid("garlic:garlic-1");
-      } else if ((cName.includes("sand") || cInd.includes("sand")) && !selectedUid.startsWith("sandstone:")) {
-        setSelectedUid("sandstone:ss-1");
-      } else if ((cName.includes("doria") || cInd.includes("doria")) && !selectedUid.startsWith("kotadoria:")) {
-        setSelectedUid("kotadoria:kd-1");
-      } else if ((cName.includes("kota stone") || cInd.includes("kota")) && !selectedUid.startsWith("kotastone:")) {
-        setSelectedUid("kotastone:ks-b1");
-      }
-
+    const comp = activeCompany || company;
+    if (comp) {
+      const cProd = comp.odopProduct || (
+        currentFam === "garlic" ? "Garlic" :
+        currentFam === "kotastone" ? "Kota Stone" :
+        currentFam === "sandstone" ? "Sandstone" :
+        "Kota Doria"
+      );
+      const resolvedDist = comp.district || (
+        currentFam === "garlic" ? "Baran, Rajasthan" :
+        currentFam === "kotastone" ? "Jhalawar, Rajasthan" :
+        currentFam === "sandstone" ? "Bundi, Rajasthan" :
+        "Kota, Rajasthan"
+      );
       const copy = getCopy({
-        ent: company.name,
-        district: (company.contact && (company.contact.city || company.contact.state)) || "India",
-        product: company.industry || (products && products[0] && products[0].name) || "Catalogue"
+        ent: comp.name,
+        district: resolvedDist,
+        product: cProd
       });
       setTextOverrides({
-        tagline: company.tagline || copy.tagline || "",
+        tagline: comp.tagline || copy.tagline || "",
         why: (copy.why || []).join("\n"),
         apps: (copy.apps || []).join("\n"),
         values: (copy.values || []).map(v => `${v[0]}: ${v[1]}`).join("\n")
       });
     }
-  }, [company]);
+  }, [activeCompany?.name, activeCompany?.odopProduct, currentFam]);
 
-  // Adjust preview scaler width dynamically
+  // Adjust preview scaler width dynamically based on available container width
   useEffect(() => {
     const updateScale = () => {
       if (containerRef.current && currentSel) {
-        const availableW = containerRef.current.clientWidth - 40;
+        const availableW = containerRef.current.clientWidth - 56;
         const pageW = (currentSel.size && currentSel.size[0]) || 794;
-        const s = Math.min(1.0, Math.max(0.4, availableW / pageW));
-        setPreviewScale(Number(s.toFixed(2)));
+        if (availableW > 0) {
+          const s = Math.min(1.0, Math.max(0.4, availableW / pageW));
+          setPreviewScale(Number(s.toFixed(2)));
+        }
       }
     };
     updateScale();
@@ -1177,13 +1505,47 @@ export default function DynamicCatalogueStudio({
     setInspectedPhotos(photos);
   };
 
+  // Render compiled pages to preview DOM host
+  const renderPagesToHost = (pages, sel) => {
+    if (!previewHostRef.current || !pages || !pages.length) return;
+    const host = previewHostRef.current;
+    host.innerHTML = "";
+    const [pw, ph] = (sel && sel.size) || [794, 1123];
+    const s = previewScale;
+    const W = Math.round(pw * s);
+    const H = Math.round(ph * s);
+
+    pages.forEach((html, idx) => {
+      const pageCard = document.createElement("div");
+      pageCard.className = "pvpage";
+      pageCard.dataset.i = idx;
+      pageCard.dataset.s = s;
+      pageCard.style.cssText = `position:relative;width:${W}px;height:${H}px;overflow:hidden;background:#ffffff;margin:0 auto 24px;box-shadow:0 12px 36px rgba(0,0,0,0.45);border-radius:6px;`;
+      pageCard.innerHTML = html;
+
+      const pg = pageCard.firstElementChild;
+      if (pg) {
+        pg.style.cssText += `;position:absolute;left:0;top:0;margin:0;transform-origin:0 0;transform:scale(${s})`;
+      }
+
+      const tag = document.createElement("div");
+      tag.className = "pvtag";
+      tag.textContent = `Page ${idx + 1} of ${pages.length}`;
+      pageCard.appendChild(tag);
+      host.appendChild(pageCard);
+    });
+
+    onRendered(sel || currentSel);
+    setMode(isEditMode);
+    refreshInspectedElements(selectedInspectPage);
+
+    window.onCatalogueTextEdited = () => {
+      refreshInspectedElements(selectedInspectPage);
+    };
+  };
+
   // Compile catalogue pages
   const compileCatalogue = async (live = false) => {
-    let activeProducts = (products && products.length > 0) ? products : null;
-    const fam = selectedUid?.split(":")[0];
-    if (!activeProducts || activeProducts.length === 0) {
-      activeProducts = SPECIALTY_DEMO_PRODUCTS[fam] || DEFAULT_DEMO_PRODUCTS;
-    }
     setIsRendering(true);
     try {
       const preparedText = {
@@ -1197,7 +1559,7 @@ export default function DynamicCatalogueStudio({
       };
 
       const result = await buildCatalogue({
-        company,
+        company: activeCompany,
         products: activeProducts,
         templateUid: selectedUid,
         colorOverride,
@@ -1210,49 +1572,33 @@ export default function DynamicCatalogueStudio({
       setPagesHtml(result.pages);
       setCatalogInfo(result.info);
 
-      // Render to DOM host with scaled page cards
       setTimeout(() => {
-        if (previewHostRef.current) {
-          const host = previewHostRef.current;
-          host.innerHTML = "";
-          const [pw, ph] = result.sel.size || [794, 1123];
-          const s = previewScale;
-          const W = Math.round(pw * s);
-          const H = Math.round(ph * s);
-
-          result.pages.forEach((html, idx) => {
-            const pageCard = document.createElement("div");
-            pageCard.className = "pvpage";
-            pageCard.dataset.i = idx;
-            pageCard.dataset.s = s;
-            pageCard.style.cssText = `position:relative;width:${W}px;height:${H}px;overflow:hidden;background:#ffffff;margin:0 0 20px;box-shadow:0 12px 36px rgba(0,0,0,0.45);border-radius:6px;`;
-            pageCard.innerHTML = html;
-
-            const pg = pageCard.firstElementChild;
-            if (pg) {
-              pg.style.cssText += `;position:absolute;left:0;top:0;margin:0;transform-origin:0 0;transform:scale(${s})`;
-            }
-
-            const tag = document.createElement("div");
-            tag.className = "pvtag";
-            tag.textContent = `Page ${idx + 1} of ${result.pages.length}`;
-            pageCard.appendChild(tag);
-            host.appendChild(pageCard);
-          });
-
-          onRendered(result.sel);
-          setMode(isEditMode);
-          refreshInspectedElements(selectedInspectPage);
-
-          window.onCatalogueTextEdited = () => {
-            refreshInspectedElements(selectedInspectPage);
-          };
-        }
+        renderPagesToHost(result.pages, result.sel);
       }, 50);
 
       window.renderDynamicCatalogue = () => compileCatalogue(true);
     } catch (err) {
       console.error("Catalogue compilation failed:", err);
+      // Defensive Fallback: If for any reason compilation fails, render with category demo products
+      try {
+        const fallback = await buildCatalogue({
+          company: activeCompany,
+          products: SPECIALTY_DEMO_PRODUCTS[currentFam] || SPECIALTY_DEMO_PRODUCTS.garlic,
+          templateUid: selectedUid,
+          colorOverride: null,
+          includeQr
+        });
+        if (fallback && fallback.pages && fallback.pages.length > 0) {
+          setCurrentSel(fallback.sel);
+          setPagesHtml(fallback.pages);
+          setCatalogInfo(fallback.info);
+          setTimeout(() => {
+            renderPagesToHost(fallback.pages, fallback.sel);
+          }, 50);
+        }
+      } catch (fbErr) {
+        console.error("Fallback compilation also failed:", fbErr);
+      }
     } finally {
       setIsRendering(false);
     }
@@ -1305,10 +1651,17 @@ export default function DynamicCatalogueStudio({
     };
   }, [currentFam, selectedInspectPage]);
 
-  // Compile on template, color, products, company, or scale change
+  // Compile on template, color, products, company, or QR toggle change
   useEffect(() => {
     compileCatalogue();
-  }, [selectedUid, colorOverride, products, company, includeQr, previewScale]);
+  }, [selectedUid, colorOverride, activeProducts, activeCompany, includeQr]);
+
+  // Instantly re-scale DOM page cards on zoom changes
+  useEffect(() => {
+    if (pagesHtml.length > 0 && currentSel) {
+      renderPagesToHost(pagesHtml, currentSel);
+    }
+  }, [previewScale]);
 
   // Update text from sidebar inspector
   const handleUpdateTextValue = (item, newVal) => {
@@ -1326,6 +1679,59 @@ export default function DynamicCatalogueStudio({
       );
     }
     setInspectedTexts([...inspectedTexts]);
+  };
+
+  // Handle Template Selection: update template, reset color override, update activeCategory, update gallery & notify
+  const handleSelectTemplate = (tmpl) => {
+    if (!tmpl) return;
+    setSelectedUid(tmpl.uid);
+
+    // Clear color override so the selected template's authentic designer colors & theme apply!
+    setColorOverride(null);
+
+    // Update activeCategory
+    if (tmpl.fam && activeCategory !== tmpl.fam) {
+      setActiveCategory(tmpl.fam);
+    }
+
+    // Auto-align asset tab in photos drawer
+    if (["garlic", "kotastone", "sandstone", "kotadoria"].includes(tmpl.fam)) {
+      setAssetTab(tmpl.fam);
+    }
+
+    // Update custom gallery to bring category photos to front
+    const catPhotos = SPECIALTY_GALLERY_PHOTOS[tmpl.fam] || [];
+    if (catPhotos.length > 0) {
+      setCustomGallery((prev) => {
+        const customUploads = prev.filter((u) => u.startsWith("data:") || u.startsWith("blob:"));
+        const merged = [...new Set([...catPhotos.slice(0, 10), ...customUploads, ...prev])].slice(0, 24);
+        try { localStorage.setItem("catalogue_custom_gallery", JSON.stringify(merged)); } catch (_) {}
+        return merged;
+      });
+    }
+
+    // If parent provided onSelectCompany, check if DB has a matching company
+    if (onSelectCompany && companies && companies.length > 0) {
+      const matchComp = companies.find((c) => {
+        const text = `${c.name || ""} ${c.industry || ""} ${c.odopProduct || ""}`.toLowerCase();
+        if (tmpl.fam === "garlic") return text.includes("garlic");
+        if (tmpl.fam === "kotastone") return text.includes("kota stone") || (text.includes("stone") && !text.includes("sand"));
+        if (tmpl.fam === "sandstone") return text.includes("sand");
+        if (tmpl.fam === "kotadoria") return text.includes("doria") || text.includes("saree") || text.includes("handloom");
+        return false;
+      });
+      if (matchComp && matchComp._id !== company?._id) {
+        onSelectCompany(matchComp);
+      }
+    }
+  };
+
+  // Handle Category Group Selection: set activeCategory and switch to first template in that category
+  const handleSelectCategoryGroup = (group) => {
+    setActiveCategory(group.key);
+    if (group.fam && currentFam !== group.fam && group.items && group.items.length > 0) {
+      handleSelectTemplate(group.items[0]);
+    }
   };
 
   // Typography styling from sidebar inspector (Bold, Italic, Casing, Font)
@@ -1351,6 +1757,12 @@ export default function DynamicCatalogueStudio({
     } else if (prop === 'fontFamily') {
       patch.fontFamily = val;
       item.el.style.fontFamily = val;
+    } else if (prop === 'color') {
+      patch.color = val;
+      item.el.style.color = val;
+    } else if (prop === 'bg') {
+      patch.bg = val;
+      item.el.style.backgroundColor = val;
     }
     window.DesignEdits[selectedUid][key] = Object.assign({}, curEd, patch);
     setInspectedTexts([...inspectedTexts]);
@@ -1358,7 +1770,6 @@ export default function DynamicCatalogueStudio({
 
   // Update photo from sidebar inspector
   const handleSwapPhoto = (photoItem, photoIdx) => {
-    const activeProducts = (products && products.length > 0) ? products : DEFAULT_DEMO_PRODUCTS;
     const prod = activeProducts[photoIdx];
     const newUrl = prod ? (prod.image || (prod.images && prod.images[0]?.url) || "") : "";
     if (!newUrl) return;
@@ -1448,16 +1859,33 @@ export default function DynamicCatalogueStudio({
       if (host) {
         const cards = Array.from(host.querySelectorAll(".pvpage"));
         if (cards.length) {
-          livePages = cards.map(c => c.firstElementChild ? c.firstElementChild.outerHTML : c.innerHTML);
+          livePages = cards.map(c => {
+            if (c.firstElementChild) {
+              const clone = c.firstElementChild.cloneNode(true);
+              // Reset preview-only transforms and positioning for high-definition full-view capture
+              clone.style.transform = "none";
+              clone.style.transformOrigin = "initial";
+              clone.style.position = "relative";
+              clone.style.left = "0";
+              clone.style.top = "0";
+              return clone.outerHTML;
+            }
+            return c.innerHTML;
+          });
         }
       }
 
       setExportProgress({ current: 0, total: livePages.length });
+
+      // Give React a tick to mount exportModalHostRef before starting capture
+      await new Promise(r => setTimeout(r, 80));
+
       await exportDynamicPdf({
         pages: livePages,
         sel: currentSel,
         info: catalogInfo,
         items: activeProducts,
+        targetContainer: exportModalHostRef.current,
         onProgress: (cur, tot) => setExportProgress({ current: cur, total: tot })
       });
       confetti({
@@ -1477,14 +1905,31 @@ export default function DynamicCatalogueStudio({
   const handleSaveToMongo = async () => {
     try {
       setIsSavingRecord(true);
-      const activeProducts = (products && products.length > 0) ? products : DEFAULT_DEMO_PRODUCTS;
       const edits = (window.DesignEdits && window.DesignEdits[selectedUid]) || {};
 
+      const cName = (company?.name || "").toLowerCase();
+      const cInd = (company?.industry || "").toLowerCase();
+      const cProd = (company?.odopProduct || "").toLowerCase();
+      const cDist = (company?.district || "").toLowerCase();
+
+      const resolvedDist = (company?.district && company?.district !== "India") ? company.district : (
+        (cProd.includes("garlic") || cInd.includes("garlic") || cName.includes("garlic") || cDist.includes("baran")) ? "Baran, Rajasthan" :
+        (cProd.includes("kota stone") || cInd.includes("kota stone") || cName.includes("kota stone") || cDist.includes("jhalawar")) ? "Jhalawar, Rajasthan" :
+        (cProd.includes("sand") || cInd.includes("sand") || cName.includes("sand") || cDist.includes("bundi")) ? "Bundi, Rajasthan" :
+        "Kota, Rajasthan"
+      );
+      const resolvedProd = company?.odopProduct || (
+        (cProd.includes("garlic") || cInd.includes("garlic") || cName.includes("garlic") || cDist.includes("baran")) ? "Garlic" :
+        (cProd.includes("kota stone") || cInd.includes("kota stone") || cName.includes("kota stone") || cDist.includes("jhalawar")) ? "Kota Stone" :
+        (cProd.includes("sand") || cInd.includes("sand") || cName.includes("sand") || cDist.includes("bundi")) ? "Sandstone" :
+        "Kota Doria"
+      );
+
       const payload = {
-        ent_name: company?.name || "Supreme Granite & Stones",
-        companyId: company?._id || null,
-        district: (company?.contact && (company?.contact.city || company?.contact.state)) || "India",
-        product: company?.industry || "Catalogue",
+        ent_name: activeCompany?.name || company?.name || "Supreme Granite & Stones",
+        companyId: activeCompany?._id || company?._id || null,
+        district: activeCompany?.district || resolvedDist,
+        product: activeCompany?.odopProduct || resolvedProd,
         template_uid: selectedUid,
         color: colorOverride || "",
         status: "draft",
@@ -1619,6 +2064,38 @@ export default function DynamicCatalogueStudio({
               >
                 <Database size={11} /> Connected
               </span>
+              <span
+                style={{
+                  fontSize: "0.72rem",
+                  padding: "3px 10px",
+                  borderRadius: "99px",
+                  background: "rgba(59, 130, 246, 0.2)",
+                  color: "#60a5fa",
+                  border: "1px solid rgba(96, 165, 250, 0.4)",
+                  fontWeight: 700,
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "4px"
+                }}
+              >
+                📍 District: {catalogInfo?.district || company?.district || "Baran / Kota / Jhalawar / Bundi, Rajasthan"}
+              </span>
+              <span
+                style={{
+                  fontSize: "0.72rem",
+                  padding: "3px 10px",
+                  borderRadius: "99px",
+                  background: "rgba(245, 158, 11, 0.2)",
+                  color: "#fbbf24",
+                  border: "1px solid rgba(251, 191, 36, 0.4)",
+                  fontWeight: 700,
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "4px"
+                }}
+              >
+                🏛️ ODOP: {catalogInfo?.odopProduct || company?.odopProduct || "Verified Product"}
+              </span>
             </div>
             <div style={{ fontSize: "0.82rem", color: "#94a3b8", marginTop: "2px", display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
               <span>
@@ -1652,6 +2129,27 @@ export default function DynamicCatalogueStudio({
 
         {/* Action Buttons */}
         <div style={{ display: "flex", alignItems: "center", gap: "0.6rem", flexWrap: "wrap" }}>
+          {/* Full View / Hide Sidebar Toggle */}
+          <button
+            type="button"
+            className={`btn btn-sm ${isSidebarCollapsed ? "btn-primary" : "btn-outline"}`}
+            onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+            style={{
+              fontWeight: 800,
+              fontSize: "0.82rem",
+              background: isSidebarCollapsed ? "linear-gradient(135deg, #0284c7 0%, #0369a1 100%)" : "rgba(2, 132, 199, 0.12)",
+              borderColor: "#0284c7",
+              color: isSidebarCollapsed ? "#ffffff" : "#38bdf8",
+              display: "flex",
+              alignItems: "center",
+              gap: "6px"
+            }}
+            title={isSidebarCollapsed ? "Switch back to side-by-side editing tools" : "Expand canvas to centered Full View without sidebar tools"}
+          >
+            {isSidebarCollapsed ? <PanelLeftOpen size={14} /> : <Maximize2 size={14} />}
+            {isSidebarCollapsed ? "Show Tools" : "Full View"}
+          </button>
+
           <button
             type="button"
             className={`btn btn-sm ${sidebarTab === "templates" ? "btn-primary" : "btn-outline"}`}
@@ -1810,11 +2308,12 @@ export default function DynamicCatalogueStudio({
         </div>
       )}
 
-      {/* Main Two-Column Studio Layout */}
-      <div style={{ display: "grid", gridTemplateColumns: "380px 1fr", gap: "1.25rem", alignItems: "start" }}>
+      {/* Main Studio Layout: Toggleable between 2-Column Editor and Centered Full View */}
+      <div style={{ display: "grid", gridTemplateColumns: isSidebarCollapsed ? "1fr" : "380px minmax(0, 1fr)", gap: "1.25rem", alignItems: "start", width: "100%", maxWidth: "100%", transition: "grid-template-columns 0.25s ease" }}>
 
         {/* Left Sidebar: Comprehensive Multi-Tab Tools */}
-        <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+        {!isSidebarCollapsed && (
+          <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
 
           {/* Navigation Pill Tabs - 2x3 Spacious Grid (Zero Clipping) */}
           <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", background: "var(--bg-surface-elevated)", padding: "6px", borderRadius: "12px", border: "1px solid var(--border-medium)", gap: "5px" }}>
@@ -2097,7 +2596,11 @@ export default function DynamicCatalogueStudio({
                 </div>
               ) : (
                 <div style={{ maxHeight: "420px", overflowY: "auto", display: "flex", flexDirection: "column", gap: "0.75rem", paddingRight: "4px" }}>
-                  {inspectedTexts.map((item, tIdx) => (
+                  {inspectedTexts.map((item, tIdx) => {
+                    const pv = item.el ? item.el.closest(".pvpage") : null;
+                    const elKey = pv ? keyFor(item.el, pv) : null;
+                    const curEd = (window.DesignEdits && selectedUid && elKey && window.DesignEdits[selectedUid] && window.DesignEdits[selectedUid][elKey]) || {};
+                    return (
                     <div
                       key={item.key || tIdx}
                       style={{
@@ -2115,8 +2618,8 @@ export default function DynamicCatalogueStudio({
                           <button
                             type="button"
                             onClick={() => {
-                              item.el.scrollIntoView({ behavior: "smooth", block: "center" });
-                              item.el.focus();
+                              scrollToCard(item.el);
+                              try { item.el.focus({ preventScroll: true }); } catch (_) { item.el.focus(); }
                             }}
                             style={{ background: "none", border: "none", color: "#38bdf8", fontSize: "0.72rem", cursor: "pointer", fontWeight: 700 }}
                           >
@@ -2209,9 +2712,27 @@ export default function DynamicCatalogueStudio({
                           <option value="'Poppins', sans-serif">Poppins</option>
                           <option value="Georgia, serif">Georgia</option>
                         </select>
+                        <label style={{ display: "inline-flex", alignItems: "center", gap: "2px", fontSize: "0.68rem", fontWeight: 700, cursor: "pointer", color: "var(--text-secondary)" }} title="Text Font Color">
+                          <span>Color</span>
+                          <input
+                            type="color"
+                            value={curEd.color || "#0f172a"}
+                            onChange={(e) => handleToggleItemTypography(item, "color", e.target.value)}
+                            style={{ width: "20px", height: "18px", padding: 0, border: "none", borderRadius: "3px", cursor: "pointer" }}
+                          />
+                        </label>
+                        <label style={{ display: "inline-flex", alignItems: "center", gap: "2px", fontSize: "0.68rem", fontWeight: 700, cursor: "pointer", color: "var(--text-secondary)" }} title="Background Fill Color">
+                          <span>Bg</span>
+                          <input
+                            type="color"
+                            value={curEd.bg && curEd.bg !== "transparent" ? curEd.bg : "#ffffff"}
+                            onChange={(e) => handleToggleItemTypography(item, "bg", e.target.value)}
+                            style={{ width: "20px", height: "18px", padding: 0, border: "none", borderRadius: "3px", cursor: "pointer" }}
+                          />
+                        </label>
                       </div>
                     </div>
-                  ))}
+                  );})}
 
                   {/* Bottom Add Another Text Element Card */}
                   <div
@@ -3044,7 +3565,7 @@ export default function DynamicCatalogueStudio({
                 <div style={{ fontSize: "0.82rem", fontWeight: 800, color: "var(--text-primary)", marginBottom: "4px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                   <span>🎨 Non-Product Custom Photos:</span>
                   <label style={{ fontSize: "0.72rem", color: "#38bdf8", cursor: "pointer", display: "flex", alignItems: "center", gap: "3px", fontWeight: 700, background: "rgba(56, 189, 248, 0.12)", padding: "2px 8px", borderRadius: "4px" }}>
-                    <Upload size={11} /> + Upload New
+                    <Upload size={11} /> + Upload &amp; Upscale
                     <input
                       type="file"
                       accept="image/*"
@@ -3053,11 +3574,11 @@ export default function DynamicCatalogueStudio({
                         if (e.target.files && e.target.files[0]) {
                           const reader = new FileReader();
                           reader.onload = (rev) => {
-                            const nu = [rev.target.result, ...customGallery.slice(0, 19)];
-                            setCustomGallery(nu);
-                            try { localStorage.setItem("catalogue_custom_gallery", JSON.stringify(nu)); } catch (_) { }
+                            setPendingStudioUploadImg(rev.target.result);
+                            setIsStudioUpscaleOpen(true);
                           };
                           reader.readAsDataURL(e.target.files[0]);
+                          e.target.value = "";
                         }
                       }}
                     />
@@ -3199,7 +3720,7 @@ export default function DynamicCatalogueStudio({
                       return (
                         <div
                           key={group.key}
-                          onClick={() => setActiveCategory(group.key)}
+                          onClick={() => handleSelectCategoryGroup(group)}
                           style={{
                             padding: "0.85rem 1rem",
                             borderRadius: "10px",
@@ -3220,7 +3741,7 @@ export default function DynamicCatalogueStudio({
                               {group.desc}
                             </div>
                             <div style={{ fontSize: "0.72rem", color: "var(--primary)", fontWeight: 700, marginTop: "4px" }}>
-                              {group.items.length} Layouts Available
+                              {group.items.length} Layouts Available • Click to load category
                             </div>
                           </div>
                           <ChevronRight size={18} color="var(--text-secondary)" />
@@ -3230,13 +3751,13 @@ export default function DynamicCatalogueStudio({
                   </div>
                 ) : (
                   /* Subcategory Templates List */
-                  <div style={{ maxHeight: "320px", overflowY: "auto", display: "flex", flexDirection: "column", gap: "0.5rem", paddingRight: "4px" }}>
+                  <div style={{ maxHeight: "360px", overflowY: "auto", display: "flex", flexDirection: "column", gap: "0.5rem", paddingRight: "4px" }}>
                     {categoryGroups.find(g => g.key === activeCategory)?.items.map((tmpl) => {
                       const isSelected = selectedUid === tmpl.uid;
                       return (
                         <div
                           key={tmpl.uid}
-                          onClick={() => setSelectedUid(tmpl.uid)}
+                          onClick={() => handleSelectTemplate(tmpl)}
                           style={{
                             padding: "0.75rem 0.9rem",
                             borderRadius: "8px",
@@ -3263,6 +3784,17 @@ export default function DynamicCatalogueStudio({
                             <div style={{ fontSize: "0.74rem", color: "var(--text-secondary)", marginTop: "2px" }}>
                               {tmpl.desc || "A4 Full Spread Catalogue Layout"}
                             </div>
+                            {tmpl.theme && (
+                              <div style={{ display: "flex", gap: "4px", marginTop: "6px", alignItems: "center" }}>
+                                <span style={{ fontSize: "0.68rem", color: "var(--text-secondary)", fontWeight: 600 }}>Palette:</span>
+                                <span style={{ width: "13px", height: "13px", borderRadius: "3px", background: tmpl.theme.bg, border: "1px solid rgba(0,0,0,0.18)" }} title={`Background: ${tmpl.theme.bg}`} />
+                                <span style={{ width: "13px", height: "13px", borderRadius: "3px", background: tmpl.theme.acc }} title={`Accent: ${tmpl.theme.acc}`} />
+                                <span style={{ width: "13px", height: "13px", borderRadius: "3px", background: tmpl.theme.dark }} title={`Dark / Text: ${tmpl.theme.dark}`} />
+                                {tmpl.theme.gold && (
+                                  <span style={{ width: "13px", height: "13px", borderRadius: "3px", background: tmpl.theme.gold }} title={`Gold: ${tmpl.theme.gold}`} />
+                                )}
+                              </div>
+                            )}
                           </div>
                           {isSelected && <CheckCircle size={16} color="var(--primary)" />}
                         </div>
@@ -3337,9 +3869,21 @@ export default function DynamicCatalogueStudio({
             </>
           )}
         </div>
+        )}
 
         {/* Right Column: Live Scaled Preview & In-Place Editor Canvas */}
-        <div style={{ display: "flex", flexDirection: "column", gap: "0.85rem" }} ref={containerRef}>
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            gap: "0.85rem",
+            minWidth: 0,
+            maxWidth: isSidebarCollapsed ? "1100px" : "100%",
+            width: "100%",
+            margin: isSidebarCollapsed ? "0 auto" : undefined
+          }}
+          ref={containerRef}
+        >
 
           {/* Zoom and Preview Toolbar */}
           <div
@@ -3363,6 +3907,26 @@ export default function DynamicCatalogueStudio({
             </div>
 
             <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+              <button
+                type="button"
+                className={`btn btn-sm ${isSidebarCollapsed ? "btn-primary" : "btn-outline"}`}
+                onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+                style={{
+                  padding: "3px 10px",
+                  fontSize: "0.75rem",
+                  fontWeight: 700,
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "4px",
+                  marginRight: "6px",
+                  borderRadius: "6px"
+                }}
+                title={isSidebarCollapsed ? "Show Tools Sidebar (2-Column Editor)" : "Hide Tools Sidebar (Centered Full Canvas View)"}
+              >
+                {isSidebarCollapsed ? <PanelLeftOpen size={13} /> : <Maximize2 size={13} />}
+                {isSidebarCollapsed ? "Show Sidebar" : "Full View"}
+              </button>
+
               <span style={{ fontSize: "0.75rem", color: "var(--text-secondary)", fontWeight: 600 }}>Zoom:</span>
               <button
                 type="button"
@@ -3445,7 +4009,7 @@ export default function DynamicCatalogueStudio({
                     const host = previewHostRef.current;
                     if (host) {
                       const cards = host.querySelectorAll(".pvpage");
-                      if (cards[pIdx]) cards[pIdx].scrollIntoView({ behavior: "smooth", block: "center" });
+                      if (cards[pIdx]) scrollToCard(cards[pIdx]);
                     }
                   }}
                   className={`page-reorder-chip ${dragOverPageIdx === pIdx ? "drag-over" : ""}`}
@@ -3515,6 +4079,189 @@ export default function DynamicCatalogueStudio({
           </div>
         </div>
       </div>
+
+      {/* Floating Restore Pill if Sidebar is collapsed */}
+      {isSidebarCollapsed && (
+        <button
+          type="button"
+          onClick={() => setIsSidebarCollapsed(false)}
+          style={{
+            position: "fixed",
+            left: "20px",
+            top: "140px",
+            zIndex: 999,
+            background: "rgba(30, 41, 59, 0.95)",
+            backdropFilter: "blur(10px)",
+            color: "#38bdf8",
+            border: "1.5px solid #0284c7",
+            borderRadius: "999px",
+            padding: "8px 14px",
+            boxShadow: "0 10px 25px rgba(0,0,0,0.4), 0 0 15px rgba(2, 132, 199, 0.3)",
+            display: "flex",
+            alignItems: "center",
+            gap: "6px",
+            fontSize: "0.78rem",
+            fontWeight: 800,
+            cursor: "pointer",
+            transition: "all 0.2s ease"
+          }}
+          title="Open left editing tools sidebar"
+        >
+          <PanelLeftOpen size={15} /> 📋 Show Tools Sidebar
+        </button>
+      )}
+
+      {/* HIGH-DEFINITION PUBLICATION PDF DOWNLOAD MODAL (FULL VIEW - ZERO TOOLS OVERLAP) */}
+      {isExporting && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            zIndex: 999999,
+            background: "rgba(11, 15, 25, 0.94)",
+            backdropFilter: "blur(16px)",
+            WebkitBackdropFilter: "blur(16px)",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "flex-start",
+            overflowY: "auto",
+            padding: "24px 16px 60px 16px"
+          }}
+        >
+          {/* Top Sticky HUD / Progress Card */}
+          <div
+            style={{
+              position: "sticky",
+              top: "0px",
+              zIndex: 100,
+              width: "100%",
+              maxWidth: "820px",
+              background: "rgba(30, 41, 59, 0.96)",
+              border: "1px solid rgba(148, 163, 184, 0.25)",
+              borderRadius: "16px",
+              padding: "16px 24px",
+              boxShadow: "0 20px 45px -10px rgba(0,0,0,0.6), 0 0 30px rgba(59, 130, 246, 0.25)",
+              marginBottom: "20px",
+              backdropFilter: "blur(12px)"
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "12px", flexWrap: "wrap", gap: "10px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                <div
+                  style={{
+                    width: "40px",
+                    height: "40px",
+                    borderRadius: "12px",
+                    background: "linear-gradient(135deg, #3b82f6, #8b5cf6)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    color: "#ffffff",
+                    boxShadow: "0 4px 12px rgba(59, 130, 246, 0.4)"
+                  }}
+                >
+                  <Download size={20} />
+                </div>
+                <div>
+                  <div style={{ fontSize: "1.05rem", fontWeight: 800, color: "#ffffff", letterSpacing: "-0.01em" }}>
+                    Compiling High-Resolution Catalogue PDF
+                  </div>
+                  <div style={{ fontSize: "0.8rem", color: "#94a3b8", display: "flex", alignItems: "center", gap: "6px" }}>
+                    <span>Full-view render without toolbars or clipping</span>
+                    <span>•</span>
+                    <span style={{ color: "#38bdf8", fontWeight: 700 }}>A4 300 DPI Ready</span>
+                  </div>
+                </div>
+              </div>
+
+              <div style={{ textAlign: "right", display: "flex", flexDirection: "column", alignItems: "flex-end" }}>
+                <span
+                  style={{
+                    fontSize: "0.84rem",
+                    fontWeight: 800,
+                    padding: "4px 14px",
+                    borderRadius: "20px",
+                    background: "rgba(59, 130, 246, 0.2)",
+                    color: "#60a5fa",
+                    border: "1px solid rgba(59, 130, 246, 0.4)"
+                  }}
+                >
+                  Page {exportProgress.current || 1} of {exportProgress.total || 1}
+                </span>
+                <div style={{ fontSize: "0.78rem", color: "#cbd5e1", marginTop: "4px", fontWeight: 700 }}>
+                  {Math.round(((exportProgress.current || 1) / Math.max(1, exportProgress.total || 1)) * 100)}% Complete
+                </div>
+              </div>
+            </div>
+
+            {/* Animated Progress Bar */}
+            <div
+              style={{
+                width: "100%",
+                height: "8px",
+                background: "rgba(255, 255, 255, 0.12)",
+                borderRadius: "999px",
+                overflow: "hidden",
+                position: "relative"
+              }}
+            >
+              <div
+                style={{
+                  width: `${Math.round(((exportProgress.current || 1) / Math.max(1, exportProgress.total || 1)) * 100)}%`,
+                  height: "100%",
+                  background: "linear-gradient(90deg, #3b82f6 0%, #8b5cf6 50%, #ec4899 100%)",
+                  borderRadius: "999px",
+                  transition: "width 0.3s ease-out"
+                }}
+              />
+            </div>
+          </div>
+
+          {/* Centered Full-View Catalogue Area */}
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              width: "100%",
+              maxWidth: "820px"
+            }}
+          >
+            <div
+              style={{
+                fontSize: "0.78rem",
+                color: "#94a3b8",
+                marginBottom: "10px",
+                fontWeight: 600,
+                display: "flex",
+                alignItems: "center",
+                gap: "8px"
+              }}
+            >
+              <span>👁️ Live Export Feed:</span>
+              <span style={{ color: "#38bdf8", fontWeight: 700 }}>Full-view page being compiled in pristine center view</span>
+            </div>
+
+            {/* Target host container for engine.js */}
+            <div
+              ref={exportModalHostRef}
+              id="dynamic-pdf-export-modal-host"
+              style={{
+                width: "794px",
+                minHeight: "1123px",
+                background: "#ffffff",
+                borderRadius: "6px",
+                boxShadow: "0 25px 60px -15px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 255, 255, 0.1)",
+                overflow: "hidden",
+                position: "relative",
+                margin: "0 auto"
+              }}
+            />
+          </div>
+        </div>
+      )}
 
       {/* LOAD SAVED DESIGN FROM MONGODB MODAL */}
       {isLoadModalOpen && (
@@ -3843,6 +4590,21 @@ export default function DynamicCatalogueStudio({
           </div>
         </div>
       )}
+      {/* Smart Photo Upscaler & Enhancement Dialog */}
+      <ImageUpscaleModal
+        isOpen={isStudioUpscaleOpen}
+        onClose={() => setIsStudioUpscaleOpen(false)}
+        imageSrc={pendingStudioUploadImg}
+        productData={{
+          companyId: company?._id,
+        }}
+        onApply={(upscaledImg) => {
+          const nu = [upscaledImg, ...customGallery.slice(0, 19)];
+          setCustomGallery(nu);
+          try { localStorage.setItem("catalogue_custom_gallery", JSON.stringify(nu)); } catch (_) { }
+          confetti({ particleCount: 40, spread: 55 });
+        }}
+      />
     </div>
   );
 }
