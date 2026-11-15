@@ -36,7 +36,8 @@ import {
   Maximize2,
   Minimize2,
   PanelLeftOpen,
-  PanelLeftClose
+  PanelLeftClose,
+  Boxes
 } from "lucide-react";
 import confetti from "canvas-confetti";
 import {
@@ -53,6 +54,7 @@ import {
   isPhoto,
   isText,
   applyEdit,
+  applyAll,
   keyFor,
   select,
   startText
@@ -705,7 +707,12 @@ export default function DynamicCatalogueStudio({
   onBack,
   allProducts = [],
   companies = [],
-  onSelectCompany
+  onSelectCompany,
+  companyProducts = [],
+  selectedProductIds = [],
+  onToggleProduct,
+  onSelectAllProducts,
+  onDeselectAllProducts
 }) {
   // Template & Category Selection
   const [selectedUid, setSelectedUid] = useState(() => {
@@ -726,8 +733,50 @@ export default function DynamicCatalogueStudio({
       lastCompanyIdRef.current = compKey;
       const targetFam = detectCompanyFamily(company);
       const targetUid = FAMILY_DEFAULT_TEMPLATES[targetFam] || "garlic:garlic-1";
-      setSelectedUid(targetUid);
-      setActiveCategory(targetFam);
+
+      // Check if user has a saved draft or edits in localStorage for this company
+      let restoredFromDraft = false;
+      try {
+        const draftKey = `catalogue_draft_${company?._id || 'default'}`;
+        const draftStr = localStorage.getItem(draftKey);
+        if (draftStr) {
+          const draft = JSON.parse(draftStr);
+          if (draft.template_uid) setSelectedUid(draft.template_uid);
+          if (draft.color) setColorOverride(draft.color);
+          if (draft.form_json) setTextOverrides(draft.form_json);
+          if (draft.design_edits_json && draft.template_uid) {
+            window.DesignEdits = window.DesignEdits || {};
+            window.DesignEdits[draft.template_uid] = draft.design_edits_json;
+          }
+          restoredFromDraft = true;
+        }
+      } catch (_) {}
+
+      if (!restoredFromDraft) {
+        setSelectedUid(targetUid);
+        setActiveCategory(targetFam);
+        setColorOverride(company?.brandColors?.primary || null);
+      }
+
+      // In the background, check if this company has a saved MongoDB catalogue record
+      if (company?._id) {
+        fetchCatalogueRecords({ companyId: company._id }).then((res) => {
+          if (res?.data && res.data.length > 0) {
+            const latest = res.data[0];
+            setCurrentRecordId(latest._id);
+            if (latest.template_uid) setSelectedUid(latest.template_uid);
+            if (latest.color) setColorOverride(latest.color);
+            if (latest.design_edits_json && latest.template_uid) {
+              window.DesignEdits = window.DesignEdits || {};
+              window.DesignEdits[latest.template_uid] = Object.assign(
+                {},
+                latest.design_edits_json,
+                window.DesignEdits[latest.template_uid] || {}
+              );
+            }
+          }
+        }).catch(() => {});
+      }
     }
   }, [company?._id, company?.name, company?.odopProduct, company?.district]);
 
@@ -805,6 +854,13 @@ export default function DynamicCatalogueStudio({
 
   // Dynamic Resolution of Active Category Products based on selected template / category
   const activeProducts = useMemo(() => {
+    // 1. If explicit products array is passed from parent (e.g. curated via Step 4 checklist),
+    // faithfully respect the user's explicit selection!
+    if (Array.isArray(products)) {
+      return products;
+    }
+
+    // 2. Fallback only if products prop is completely missing:
     const fam = currentFam;
     const famKeywords = {
       garlic: ["garlic", "clove", "lahsun"],
@@ -819,29 +875,11 @@ export default function DynamicCatalogueStudio({
       return famKeywords.some(kw => text.includes(kw));
     };
 
-    // If passed products contains products, check match or companyId
-    if (products && products.length > 0) {
-      if (fam === "editorial" || fam === "simple") {
-        return products;
-      }
-      const matchingPassed = products.filter(isMatch);
-      if (matchingPassed.length > 0) {
-        return matchingPassed;
-      }
-      const compId = company?._id;
-      const compDirect = products.filter(p => compId && p.companyId === compId);
-      if (compDirect.length > 0) {
-        return compDirect;
-      }
-    }
-
-    // If allProducts contains products matching this category, use them
     const matchingAll = (allProducts || []).filter(isMatch);
     if (matchingAll.length > 0) {
       return matchingAll;
     }
 
-    // Otherwise use authentic rich specialty demo products with all high-res photos & specs
     return SPECIALTY_DEMO_PRODUCTS[fam] || DEFAULT_DEMO_PRODUCTS;
   }, [currentFam, products, allProducts, company?._id]);
 
@@ -856,39 +894,41 @@ export default function DynamicCatalogueStudio({
       const cInd = (company.industry || "").toLowerCase();
 
       // Resolve authentic ODOP product & district for company
-      let resolvedOdop = company.odopProduct;
-      let resolvedDist = company.district;
+      const name = (company.name || "").toLowerCase();
+      const addr = (company.contact?.address || "").toLowerCase();
 
-      if (!resolvedOdop || (resolvedOdop === "Kota Doria" && (cName.includes("garlic") || cInd.includes("garlic") || (cName.includes("stone") && !cName.includes("sand")) || (cInd.includes("stone") && !cInd.includes("sand")) || cName.includes("sand")))) {
-        if (cName.includes("garlic") || cInd.includes("garlic") || cName.includes("agro")) {
-          resolvedOdop = "Garlic";
-          resolvedDist = "Baran, Rajasthan";
-        } else if (cName.includes("sand") || cInd.includes("sand")) {
-          resolvedOdop = "Sandstone";
-          resolvedDist = "Bundi, Rajasthan";
-        } else if (cName.includes("stone") || cInd.includes("stone") || cName.includes("granite")) {
-          resolvedOdop = "Kota Stone";
-          resolvedDist = "Jhalawar, Rajasthan";
-        } else if (cName.includes("doria") || cInd.includes("saree") || cInd.includes("handloom")) {
-          resolvedOdop = "Kota Doria";
-          resolvedDist = "Kota, Rajasthan";
-        }
+      let resolvedOdop = company.odopProduct ? company.odopProduct.trim() : "";
+      let resolvedDist = company.district ? company.district.trim() : "";
+
+      // Correct accidental legacy defaults if present
+      if ((resolvedOdop === "Kota Doria" || !resolvedOdop) && (name.includes("garlic") || name.includes("stone") || name.includes("sand") || addr.includes("mandsaur") || addr.includes("jodhpur"))) {
+        if (name.includes("garlic") || addr.includes("mandsaur")) resolvedOdop = "Garlic";
+        else if (name.includes("sand") || addr.includes("jodhpur") || addr.includes("bundi")) resolvedOdop = "Sandstone";
+        else if (name.includes("stone") || addr.includes("jhalawar") || addr.includes("suket") || addr.includes("bangalore")) resolvedOdop = "Kota Stone";
       }
 
-      if (!resolvedDist || resolvedDist === "India") {
-        if (resolvedOdop === "Garlic") resolvedDist = "Baran, Rajasthan";
+      if ((resolvedDist === "Kota" || resolvedDist === "Kota, Rajasthan" || !resolvedDist || resolvedDist === "India") &&
+          (name.includes("garlic") || addr.includes("mandsaur") || addr.includes("baran") ||
+           addr.includes("bangalore") || addr.includes("jigani") ||
+           addr.includes("jodhpur") || name.includes("marwar") || addr.includes("bundi") ||
+           addr.includes("suket") || addr.includes("jhalawar"))) {
+        if (addr.includes("mandsaur")) resolvedDist = "Mandsaur, MP";
+        else if (addr.includes("baran")) resolvedDist = "Baran, Rajasthan";
+        else if (addr.includes("jodhpur") || name.includes("marwar")) resolvedDist = "Jodhpur, Rajasthan";
+        else if (addr.includes("bundi")) resolvedDist = "Bundi, Rajasthan";
+        else if (addr.includes("jhalawar") || addr.includes("suket")) resolvedDist = "Jhalawar, Rajasthan";
+        else if (addr.includes("bangalore") || addr.includes("jigani")) resolvedDist = "Bangalore, Karnataka";
+        else if (resolvedOdop === "Garlic") resolvedDist = "Baran, Rajasthan";
         else if (resolvedOdop === "Kota Stone") resolvedDist = "Jhalawar, Rajasthan";
         else if (resolvedOdop === "Sandstone") resolvedDist = "Bundi, Rajasthan";
-        else if (resolvedOdop === "Kota Doria") resolvedDist = "Kota, Rajasthan";
-        else resolvedDist = defaults.district || "Rajasthan";
       }
 
       return {
         ...defaults,
         ...company,
         name: company.name || defaults.name,
-        district: resolvedDist || defaults.district || "Rajasthan",
-        odopProduct: resolvedOdop || defaults.odopProduct || "ODOP Product",
+        district: resolvedDist || (company.contact?.address ? company.contact.address.split(",").slice(-2).join(",").trim() : "District Pending"),
+        odopProduct: resolvedOdop || company.industry || "ODOP Product",
         tagline: company.tagline || defaults.tagline,
         industry: company.industry || defaults.industry,
         contact: {
@@ -1536,6 +1576,10 @@ export default function DynamicCatalogueStudio({
     });
 
     onRendered(sel || currentSel);
+    const targetUid = (sel && sel.uid) || (currentSel && currentSel.uid) || selectedUid;
+    if (targetUid) {
+      applyAll(host, targetUid, activeProducts);
+    }
     setMode(isEditMode);
     refreshInspectedElements(selectedInspectPage);
 
@@ -1746,25 +1790,21 @@ export default function DynamicCatalogueStudio({
     if (prop === 'bold') {
       const isBold = curEd.bold !== undefined ? curEd.bold : (getComputedStyle(item.el).fontWeight >= 600);
       patch.bold = !isBold;
-      item.el.style.fontWeight = patch.bold ? '700' : 'normal';
     } else if (prop === 'italic') {
       const isItalic = curEd.italic !== undefined ? curEd.italic : (getComputedStyle(item.el).fontStyle === 'italic');
       patch.italic = !isItalic;
-      item.el.style.fontStyle = patch.italic ? 'italic' : 'normal';
     } else if (prop === 'transform') {
       patch.transform = curEd.transform === val ? 'none' : val;
-      item.el.style.textTransform = patch.transform;
     } else if (prop === 'fontFamily') {
       patch.fontFamily = val;
-      item.el.style.fontFamily = val;
     } else if (prop === 'color') {
       patch.color = val;
-      item.el.style.color = val;
     } else if (prop === 'bg') {
       patch.bg = val;
-      item.el.style.backgroundColor = val;
     }
-    window.DesignEdits[selectedUid][key] = Object.assign({}, curEd, patch);
+    const updatedEd = Object.assign({}, curEd, patch);
+    applyEdit(item.el, updatedEd);
+    window.DesignEdits[selectedUid][key] = updatedEd;
     setInspectedTexts([...inspectedTexts]);
   };
 
@@ -1905,7 +1945,21 @@ export default function DynamicCatalogueStudio({
   const handleSaveToMongo = async () => {
     try {
       setIsSavingRecord(true);
-      const edits = (window.DesignEdits && window.DesignEdits[selectedUid]) || {};
+      let edits = {};
+      if (window.DesignEdits) {
+        if (window.DesignEdits['kotadoria:undefined']) {
+          edits = Object.assign({}, edits, window.DesignEdits['kotadoria:undefined']);
+        }
+        if (selectedUid && window.DesignEdits[selectedUid]) {
+          edits = Object.assign({}, edits, window.DesignEdits[selectedUid]);
+        }
+        if (currentSel?.uid && window.DesignEdits[currentSel.uid]) {
+          edits = Object.assign({}, edits, window.DesignEdits[currentSel.uid]);
+        }
+      }
+      if (selectedUid && window.DesignEdits) {
+        window.DesignEdits[selectedUid] = edits;
+      }
 
       const cName = (company?.name || "").toLowerCase();
       const cInd = (company?.industry || "").toLowerCase();
@@ -1925,19 +1979,29 @@ export default function DynamicCatalogueStudio({
         "Kota Doria"
       );
 
+      const activeColor = colorOverride || (company?.brandColors && (company.brandColors.primary || company.brandColors.accent)) || "";
+
       const payload = {
         ent_name: activeCompany?.name || company?.name || "Supreme Granite & Stones",
         companyId: activeCompany?._id || company?._id || null,
         district: activeCompany?.district || resolvedDist,
         product: activeCompany?.odopProduct || resolvedProd,
         template_uid: selectedUid,
-        color: colorOverride || "",
+        color: activeColor,
         status: "draft",
         form_json: textOverrides,
         variants_json: activeProducts,
         design_edits_json: edits,
         logo_file: company?.logoUrl || ""
       };
+
+      try {
+        const draftKey = `catalogue_draft_${activeCompany?._id || company?._id || 'default'}`;
+        localStorage.setItem(draftKey, JSON.stringify(payload));
+        if (selectedUid) {
+          localStorage.setItem(`catalogue_edits_${selectedUid}`, JSON.stringify(edits));
+        }
+      } catch (_) {}
 
       let res;
       if (currentRecordId) {
@@ -1987,7 +2051,14 @@ export default function DynamicCatalogueStudio({
     }
     if (rec.design_edits_json && rec.template_uid) {
       if (!window.DesignEdits) window.DesignEdits = {};
-      window.DesignEdits[rec.template_uid] = rec.design_edits_json;
+      let parsed = rec.design_edits_json;
+      if (typeof parsed === 'string') {
+        try { parsed = JSON.parse(parsed); } catch (_) {}
+      }
+      window.DesignEdits[rec.template_uid] = parsed;
+      try {
+        localStorage.setItem(`catalogue_edits_${rec.template_uid}`, JSON.stringify(parsed));
+      } catch (_) {}
     }
     setIsLoadModalOpen(false);
     setSaveSuccessMsg(`Loaded "${rec.ent_name}"!`);
@@ -2120,6 +2191,30 @@ export default function DynamicCatalogueStudio({
                 title="Browse and select catalogue templates"
               >
                 <Palette size={11} /> 🎨 Change Layout ({TEMPLATE_REGISTRY.length})
+              </button>
+              <span>•</span>
+              <button
+                type="button"
+                onClick={() => {
+                  setIsSidebarCollapsed(false);
+                  setSidebarTab("products");
+                }}
+                style={{
+                  background: sidebarTab === "products" ? "linear-gradient(135deg, #0284c7 0%, #0369a1 100%)" : "rgba(2, 132, 199, 0.15)",
+                  border: "1px solid #0284c7",
+                  color: sidebarTab === "products" ? "#ffffff" : "#38bdf8",
+                  padding: "1px 8px",
+                  borderRadius: "6px",
+                  fontSize: "0.72rem",
+                  fontWeight: 800,
+                  cursor: "pointer",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "4px"
+                }}
+                title="Manage which products are included in this catalogue"
+              >
+                <Boxes size={11} /> 📦 Products ({activeProducts.length})
               </button>
               <span>•</span>
               <span style={{ color: "#38bdf8", fontWeight: 700 }}>Single-Click ANY Text or Photo to Edit</span>
@@ -2315,21 +2410,21 @@ export default function DynamicCatalogueStudio({
         {!isSidebarCollapsed && (
           <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
 
-          {/* Navigation Pill Tabs - 2x3 Spacious Grid (Zero Clipping) */}
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", background: "var(--bg-surface-elevated)", padding: "6px", borderRadius: "12px", border: "1px solid var(--border-medium)", gap: "5px" }}>
+          {/* Navigation Pill Tabs - 7 Spacious Grid Tabs */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", background: "var(--bg-surface-elevated)", padding: "6px", borderRadius: "12px", border: "1px solid var(--border-medium)", gap: "5px" }}>
             {/* TAB 1: LAYOUTS / TEMPLATES (PROMINENT FIRST) */}
             <button
               type="button"
               className={`btn btn-sm ${sidebarTab === "templates" ? "btn-primary" : "btn-outline"}`}
               onClick={() => setSidebarTab("templates")}
               style={{
-                fontSize: "0.76rem",
+                fontSize: "0.75rem",
                 fontWeight: 800,
-                padding: "8px 6px",
+                padding: "8px 4px",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                gap: "5px",
+                gap: "4px",
                 background: sidebarTab === "templates" ? "linear-gradient(135deg, #8b5cf6, #6d28d9)" : "rgba(139, 92, 246, 0.08)",
                 color: sidebarTab === "templates" ? "#ffffff" : "#a78bfa",
                 borderColor: sidebarTab === "templates" ? "#8b5cf6" : "rgba(139, 92, 246, 0.3)",
@@ -2337,10 +2432,33 @@ export default function DynamicCatalogueStudio({
               }}
               title="Select Catalogue Layout Templates & Color Palettes"
             >
-              <Palette size={13} /> 🎨 Layouts
+              <Palette size={12} /> Layouts
             </button>
 
-            {/* TAB 2: TEXT INSPECTOR */}
+            {/* TAB 2: PRODUCTS MANAGER */}
+            <button
+              type="button"
+              className={`btn btn-sm ${sidebarTab === "products" ? "btn-primary" : "btn-outline"}`}
+              onClick={() => setSidebarTab("products")}
+              style={{
+                fontSize: "0.75rem",
+                fontWeight: 800,
+                padding: "8px 4px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: "4px",
+                background: sidebarTab === "products" ? "linear-gradient(135deg, #0284c7, #0369a1)" : "rgba(2, 132, 199, 0.08)",
+                color: sidebarTab === "products" ? "#ffffff" : "#38bdf8",
+                borderColor: sidebarTab === "products" ? "#0284c7" : "rgba(2, 132, 199, 0.3)",
+                boxShadow: sidebarTab === "products" ? "0 2px 8px rgba(2, 132, 199, 0.4)" : "none"
+              }}
+              title="Select which products to include or exclude from this catalogue"
+            >
+              <Boxes size={12} /> Products ({activeProducts.length})
+            </button>
+
+            {/* TAB 3: TEXT INSPECTOR */}
             <button
               type="button"
               className={`btn btn-sm ${sidebarTab === "edit-text" ? "btn-primary" : "btn-outline"}`}
@@ -2349,20 +2467,20 @@ export default function DynamicCatalogueStudio({
                 refreshInspectedElements(selectedInspectPage);
               }}
               style={{
-                fontSize: "0.76rem",
+                fontSize: "0.75rem",
                 fontWeight: 800,
-                padding: "8px 6px",
+                padding: "8px 4px",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                gap: "5px"
+                gap: "4px"
               }}
               title="Edit all text and typography on the active page"
             >
-              <Type size={13} /> Text
+              <Type size={12} /> Text
             </button>
 
-            {/* TAB 3: PHOTOS INSPECTOR */}
+            {/* TAB 4: PHOTOS INSPECTOR */}
             <button
               type="button"
               className={`btn btn-sm ${sidebarTab === "edit-photos" ? "btn-primary" : "btn-outline"}`}
@@ -2371,85 +2489,202 @@ export default function DynamicCatalogueStudio({
                 refreshInspectedElements(selectedInspectPage);
               }}
               style={{
-                fontSize: "0.76rem",
+                fontSize: "0.75rem",
                 fontWeight: 800,
-                padding: "8px 6px",
+                padding: "8px 4px",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                gap: "5px"
+                gap: "4px"
               }}
               title="Inspect and swap photos on the active page"
             >
-              <ImageIcon size={13} /> Photos
+              <ImageIcon size={12} /> Photos
             </button>
 
-            {/* TAB 4: 101 PHOTO BANK */}
+            {/* TAB 5: 101 PHOTO BANK */}
             <button
               type="button"
               className={`btn btn-sm ${sidebarTab === "assets" ? "btn-primary" : "btn-outline"}`}
               onClick={() => setSidebarTab("assets")}
               style={{
-                fontSize: "0.76rem",
+                fontSize: "0.75rem",
                 fontWeight: 800,
-                padding: "8px 6px",
+                padding: "8px 4px",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                gap: "5px",
+                gap: "4px",
                 background: sidebarTab === "assets" ? "linear-gradient(135deg, #8b5cf6, #6d28d9)" : undefined,
                 color: sidebarTab === "assets" ? "#ffffff" : undefined,
                 borderColor: sidebarTab === "assets" ? "#8b5cf6" : undefined
               }}
               title="Browse 101 Real Images: Garlic, Kota Stone, Kota Doria & Sand Stone"
             >
-              <FolderOpen size={13} /> Bank (101)
+              <FolderOpen size={12} /> Bank
             </button>
 
-            {/* TAB 5: INSERT ELEMENTS */}
+            {/* TAB 6: INSERT ELEMENTS */}
             <button
               type="button"
               className={`btn btn-sm ${sidebarTab === "add-elements" ? "btn-primary" : "btn-outline"}`}
               onClick={() => setSidebarTab("add-elements")}
               style={{
-                fontSize: "0.76rem",
+                fontSize: "0.75rem",
                 fontWeight: 800,
-                padding: "8px 6px",
+                padding: "8px 4px",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                gap: "5px",
+                gap: "4px",
                 background: sidebarTab === "add-elements" ? "linear-gradient(135deg, #2563eb, #1d4ed8)" : undefined,
                 color: sidebarTab === "add-elements" ? "#ffffff" : undefined,
                 borderColor: sidebarTab === "add-elements" ? "#2563eb" : undefined
               }}
               title="Insert Extra Headings, Paragraphs, Badges & Photo Frames"
             >
-              <PlusCircle size={13} /> + Elements
+              <PlusCircle size={12} /> + Add
             </button>
 
-            {/* TAB 6: REORDER PAGES */}
+            {/* TAB 7: REORDER PAGES */}
             <button
               type="button"
               className={`btn btn-sm ${sidebarTab === "drag-drop" ? "btn-primary" : "btn-outline"}`}
               onClick={() => setSidebarTab("drag-drop")}
               style={{
-                fontSize: "0.76rem",
+                fontSize: "0.75rem",
                 fontWeight: 800,
-                padding: "8px 6px",
+                padding: "8px 4px",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                gap: "5px",
+                gap: "4px",
                 background: sidebarTab === "drag-drop" ? "linear-gradient(135deg, #10b981, #059669)" : undefined,
                 color: sidebarTab === "drag-drop" ? "#ffffff" : undefined,
                 borderColor: sidebarTab === "drag-drop" ? "#10b981" : undefined
               }}
               title="Reorder and arrange pages in your catalogue"
             >
-              <Layers size={13} /> Pages
+              <Layers size={12} /> Pages
             </button>
           </div>
+
+          {/* TAB: PRODUCTS MANAGER */}
+          {sidebarTab === "products" && (
+            <div className="card" style={{ padding: "1.1rem", background: "var(--bg-surface)", border: "1px solid var(--border-medium)" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.85rem", flexWrap: "wrap", gap: "0.5rem" }}>
+                <div>
+                  <h4 style={{ margin: "0 0 2px", fontSize: "0.95rem", fontWeight: 800, color: "var(--text-primary)", display: "flex", alignItems: "center", gap: "6px" }}>
+                    <Boxes size={16} color="var(--primary)" /> Products ({activeProducts.length} Included)
+                  </h4>
+                  <p style={{ margin: 0, fontSize: "0.74rem", color: "var(--text-secondary)" }}>
+                    Select which products appear on your catalogue page spreads:
+                  </p>
+                </div>
+                <div style={{ display: "flex", gap: "5px" }}>
+                  {onSelectAllProducts && (
+                    <button
+                      type="button"
+                      className="btn btn-outline btn-xs"
+                      onClick={onSelectAllProducts}
+                      style={{ fontSize: "0.72rem", padding: "3px 8px", fontWeight: 700 }}
+                    >
+                      Select All
+                    </button>
+                  )}
+                  {onDeselectAllProducts && (
+                    <button
+                      type="button"
+                      className="btn btn-outline btn-xs"
+                      onClick={onDeselectAllProducts}
+                      style={{ fontSize: "0.72rem", padding: "3px 8px", fontWeight: 700, color: "var(--danger)", borderColor: "var(--danger)" }}
+                    >
+                      Deselect All
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* Product pool list */}
+              {(() => {
+                const pool = (companyProducts && companyProducts.length > 0) ? companyProducts : activeProducts;
+                if (!pool || pool.length === 0) {
+                  return (
+                    <div style={{ textAlign: "center", padding: "1.5rem", color: "var(--text-secondary)", fontSize: "0.82rem" }}>
+                      No products found for this company. Add products in Step 4 or the company catalogue.
+                    </div>
+                  );
+                }
+                return (
+                  <div style={{ display: "flex", flexDirection: "column", gap: "6px", maxHeight: "420px", overflowY: "auto", paddingRight: "4px" }}>
+                    {pool.map((prod, pIdx) => {
+                      const isIncluded = Array.isArray(selectedProductIds)
+                        ? selectedProductIds.includes(prod._id)
+                        : activeProducts.some((ap) => (ap._id && ap._id === prod._id) || ap.name === prod.name);
+                      const thumb = prod.img || prod.image || (prod.images && prod.images[0]?.url) || (prod.images && prod.images[0]) || "";
+                      return (
+                        <div
+                          key={prod._id || pIdx}
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "space-between",
+                            padding: "8px 10px",
+                            borderRadius: "8px",
+                            background: isIncluded ? "var(--bg-surface-elevated)" : "transparent",
+                            border: `1px solid ${isIncluded ? "var(--primary)" : "var(--border-subtle)"}`,
+                            gap: "8px"
+                          }}
+                        >
+                          <label style={{ display: "flex", alignItems: "center", gap: "8px", minWidth: 0, cursor: "pointer", margin: 0, flex: 1 }}>
+                            <input
+                              type="checkbox"
+                              checked={isIncluded}
+                              onChange={() => {
+                                if (onToggleProduct && prod._id) {
+                                  onToggleProduct(prod._id);
+                                }
+                              }}
+                              style={{ accentColor: "var(--primary)", transform: "scale(1.15)", cursor: "pointer" }}
+                            />
+                            {thumb && (
+                              <img
+                                src={thumb}
+                                alt=""
+                                style={{ width: "28px", height: "28px", borderRadius: "5px", objectFit: "cover", flexShrink: 0 }}
+                              />
+                            )}
+                            <div style={{ minWidth: 0 }}>
+                              <div style={{ fontSize: "0.82rem", fontWeight: 700, color: "var(--text-primary)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                                {prod.name || prod.title}
+                              </div>
+                              <div style={{ fontSize: "0.7rem", color: "var(--text-secondary)" }}>
+                                <span style={{ fontWeight: 800, color: "var(--primary)" }}>{prod.sku || `#${(prod._id || pIdx).toString().slice(-4)}`}</span>
+                                {prod.price ? ` • ₹${prod.price}` : ""}
+                              </div>
+                            </div>
+                          </label>
+                          <span
+                            style={{
+                              fontSize: "0.68rem",
+                              fontWeight: 800,
+                              padding: "2px 6px",
+                              borderRadius: "4px",
+                              background: isIncluded ? "rgba(16, 185, 129, 0.12)" : "rgba(148, 163, 184, 0.12)",
+                              color: isIncluded ? "#10b981" : "#94a3b8",
+                              flexShrink: 0
+                            }}
+                          >
+                            {isIncluded ? "INCLUDED" : "EXCLUDED"}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                );
+              })()}
+            </div>
+          )}
 
           {/* TAB 1: EDIT ALL TEXT ON CURRENT PAGE */}
           {sidebarTab === "edit-text" && (

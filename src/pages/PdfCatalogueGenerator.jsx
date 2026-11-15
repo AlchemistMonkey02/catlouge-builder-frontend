@@ -55,6 +55,7 @@ import TemplateDesignStudio, {
 } from "../components/TemplateDesignStudio";
 import DynamicCatalogueRenderer from "../components/DynamicCatalogueRenderer";
 import DynamicCatalogueStudio from "../components/dynamic-catalogue/DynamicCatalogueStudio";
+import { resolveCompanyLocationAndProduct } from "./CompanyManager";
 
 const CANVA_TEMPLATES = [
   {
@@ -386,20 +387,20 @@ export default function PdfCatalogueGenerator() {
   const [isCompanyModalOpen, setIsCompanyModalOpen] = useState(false);
   const [newCompany, setNewCompany] = useState({
     name: "",
-    tagline: "Certified ODOP Heritage Excellence",
-    industry: "Kota Doria Handlooms & Sarees",
-    odopProduct: "Kota Doria",
-    district: "Kota, Rajasthan",
+    tagline: "",
+    industry: "",
+    odopProduct: "",
+    district: "",
     state: "Rajasthan",
-    logoUrl: "/assets/reference/p1_2.png",
+    logoUrl: "",
     brandColors: { primary: "#4E5C43", secondary: "#1C1917", accent: "#C5A059" },
     contact: {
-      email: "contact@enterprise.in",
-      phone: "+91 94600 77112",
-      website: "https://www.odop-rajasthan.gov.in",
-      address: "Bunkar Seva Kendra Road, Kaithun, Kota District, Rajasthan – 325001",
+      email: "",
+      phone: "",
+      website: "",
+      address: "",
     },
-    legal: { gstNumber: "08AAAKK3344D1Z2", taxId: "TAX-ID-99221", currency: "INR" },
+    legal: { gstNumber: "", taxId: "", currency: "INR" },
     wholesaleTerms: "Certified One District One Product (ODOP) enterprise with verified batch provenance.",
   });
 
@@ -418,7 +419,21 @@ export default function PdfCatalogueGenerator() {
       ]);
 
       let chosenCompanyId = "";
-      if (compRes.data && compRes.data.length > 0) {
+      let companyList = (compRes && compRes.data) ? [...compRes.data] : [];
+      try {
+        const localOverrides = JSON.parse(localStorage.getItem("catalogue_local_companies") || "{}");
+        const overrideIds = Object.keys(localOverrides);
+        if (overrideIds.length > 0) {
+          companyList = companyList.map((c) => (localOverrides[c._id] ? { ...c, ...localOverrides[c._id] } : c));
+          overrideIds.forEach((id) => {
+            if (!companyList.some((c) => c._id === id)) {
+              companyList.push(localOverrides[id]);
+            }
+          });
+        }
+      } catch (_) {}
+
+      if (companyList.length > 0) {
         const priorityKeywords = [
           "garlic",
           "kota stone",
@@ -427,7 +442,7 @@ export default function PdfCatalogueGenerator() {
           "kota doria",
           "doria"
         ];
-        const sorted = [...compRes.data].sort((a, b) => {
+        const sorted = companyList.sort((a, b) => {
           const aKey = ((a.name || "") + " " + (a.industry || "")).toLowerCase();
           const bKey = ((b.name || "") + " " + (b.industry || "")).toLowerCase();
           const aIdx = priorityKeywords.findIndex((k) => aKey.includes(k));
@@ -466,58 +481,12 @@ export default function PdfCatalogueGenerator() {
 
   const rawCompany = companies.find((c) => c._id === selectedCompanyId) || companies[0] || {};
   const currentCompany = useMemo(() => {
-    const cName = (rawCompany.name || "").toLowerCase();
-    const cInd = (rawCompany.industry || "").toLowerCase();
-    const cProd = (rawCompany.odopProduct || "").toLowerCase();
-    const cDist = (rawCompany.district || "").toLowerCase();
-
-    // Priority 1: User explicitly configured district and odopProduct in company registration
-    let matchedDistrict = (rawCompany.district && rawCompany.district.trim() !== "India") ? rawCompany.district : "";
-    let matchedOdop = (rawCompany.odopProduct && rawCompany.odopProduct.trim()) ? rawCompany.odopProduct : "";
-
-    // Clear legacy default mismatch (e.g. Garlic/Stone company defaulted to Kota Doria)
-    if (matchedOdop === "Kota Doria" && (cName.includes("garlic") || cInd.includes("garlic") || (cName.includes("stone") && !cName.includes("sand")) || (cInd.includes("stone") && !cInd.includes("sand")) || cName.includes("sand"))) {
-      matchedOdop = "";
-      matchedDistrict = "";
-    }
-
-    // Priority 2: If either is missing, deduce from odopProduct, district, industry, or company name
-    if (!matchedOdop || !matchedDistrict) {
-      if (cProd.includes("doria") || cProd.includes("handloom") || cProd.includes("saree") || cDist.includes("kota")) {
-        if (!matchedDistrict) matchedDistrict = "Kota, Rajasthan";
-        if (!matchedOdop) matchedOdop = "Kota Doria";
-      } else if (cProd.includes("garlic") || cProd.includes("lahsun") || cDist.includes("baran")) {
-        if (!matchedDistrict) matchedDistrict = "Baran, Rajasthan";
-        if (!matchedOdop) matchedOdop = "Garlic";
-      } else if (cProd.includes("stone") || cProd.includes("limestone") || cDist.includes("jhalawar")) {
-        if (!matchedDistrict) matchedDistrict = "Jhalawar, Rajasthan";
-        if (!matchedOdop) matchedOdop = "Kota Stone";
-      } else if (cProd.includes("sand") || cDist.includes("bundi")) {
-        if (!matchedDistrict) matchedDistrict = "Bundi, Rajasthan";
-        if (!matchedOdop) matchedOdop = "Sandstone";
-      } else {
-        const fullText = `${cName} ${cInd}`.toLowerCase();
-        if (fullText.includes("doria") || fullText.includes("saree") || fullText.includes("handloom") || fullText.includes("kaithun") || fullText.includes("parampara")) {
-          if (!matchedDistrict) matchedDistrict = "Kota, Rajasthan";
-          if (!matchedOdop) matchedOdop = "Kota Doria";
-        } else if (fullText.includes("garlic") || fullText.includes("baran")) {
-          if (!matchedDistrict) matchedDistrict = "Baran, Rajasthan";
-          if (!matchedOdop) matchedOdop = "Garlic";
-        } else if (fullText.includes("kota stone") || fullText.includes("limestone") || fullText.includes("jhalawar") || (fullText.includes("stone") && !fullText.includes("sand"))) {
-          if (!matchedDistrict) matchedDistrict = "Jhalawar, Rajasthan";
-          if (!matchedOdop) matchedOdop = "Kota Stone";
-        } else if (fullText.includes("sand") || fullText.includes("bundi")) {
-          if (!matchedDistrict) matchedDistrict = "Bundi, Rajasthan";
-          if (!matchedOdop) matchedOdop = "Sandstone";
-        }
-      }
-    }
-
+    const resolved = resolveCompanyLocationAndProduct(rawCompany);
     return {
       ...rawCompany,
-      district: matchedDistrict || rawCompany.district || "Kota, Rajasthan",
-      odopProduct: matchedOdop || rawCompany.odopProduct || "Kota Doria",
-      state: rawCompany.state || (matchedDistrict.includes("Rajasthan") ? "Rajasthan" : "Rajasthan"),
+      district: (rawCompany.district && rawCompany.district.trim()) ? rawCompany.district.trim() : resolved.district,
+      odopProduct: (rawCompany.odopProduct && rawCompany.odopProduct.trim()) ? rawCompany.odopProduct.trim() : resolved.odopProduct,
+      state: rawCompany.state || (resolved.district.includes("Rajasthan") ? "Rajasthan" : "Rajasthan"),
     };
   }, [rawCompany]);
 
@@ -576,6 +545,24 @@ export default function PdfCatalogueGenerator() {
 
     return allProducts;
   }, [allProducts, selectedCompanyId, currentCompany]);
+
+  // Initialize and synchronize selectedProductIds when companyProducts changes
+  const lastCompanyProductsIds = useRef("");
+  useEffect(() => {
+    if (companyProducts && companyProducts.length > 0) {
+      const idsKey = companyProducts.map((p) => p._id).sort().join(",");
+      if (idsKey !== lastCompanyProductsIds.current) {
+        lastCompanyProductsIds.current = idsKey;
+        setSelectedProductIds((prev) => {
+          const validPrev = prev.filter((id) => companyProducts.some((p) => p._id === id));
+          if (validPrev.length > 0) return validPrev;
+          return companyProducts.map((p) => p._id);
+        });
+      }
+    } else {
+      setSelectedProductIds([]);
+    }
+  }, [companyProducts]);
 
   // When clicking a different company
   const handleSelectCompany = (comp) => {
@@ -742,11 +729,11 @@ export default function PdfCatalogueGenerator() {
   };
 
   const handleSelectAll = () => {
-    if (selectedProductIds.length === companyProducts.length) {
-      setSelectedProductIds([]);
-    } else {
-      setSelectedProductIds(companyProducts.map((p) => p._id));
-    }
+    setSelectedProductIds(companyProducts.map((p) => p._id));
+  };
+
+  const handleDeselectAll = () => {
+    setSelectedProductIds([]);
   };
 
   // Create Company Profile submit
@@ -754,13 +741,43 @@ export default function PdfCatalogueGenerator() {
     e.preventDefault();
     if (!newCompany.name.trim()) return alert("Please enter a company name");
     try {
-      const res = await createCompanyProfile(newCompany);
-      if (res.data) {
-        setCompanies((prev) => [...prev, res.data]);
-        setSelectedCompanyId(res.data._id);
-        handleSelectCompany(res.data);
+      const tempId = "local_comp_" + Date.now();
+      const optimisticNew = {
+        ...newCompany,
+        _id: tempId,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+
+      try {
+        const res = await createCompanyProfile(newCompany);
+        const serverData = (res && res.data) ? res.data : {};
+        const finalId = serverData._id || tempId;
+        const mergedNew = { ...serverData, ...optimisticNew, _id: finalId };
+        setCompanies((prev) => [...prev, mergedNew]);
+        setSelectedCompanyId(finalId);
+        handleSelectCompany(mergedNew);
+        try {
+          const localOverrides = JSON.parse(localStorage.getItem("catalogue_local_companies") || "{}");
+          localOverrides[finalId] = mergedNew;
+          localStorage.setItem("catalogue_local_companies", JSON.stringify(localOverrides));
+        } catch (_) {}
         setIsCompanyModalOpen(false);
+        return;
+      } catch (err) {
+        console.warn("Server creation warning, using local entry:", err);
       }
+
+      // Fallback local addition
+      setCompanies((prev) => [...prev, optimisticNew]);
+      setSelectedCompanyId(tempId);
+      handleSelectCompany(optimisticNew);
+      try {
+        const localOverrides = JSON.parse(localStorage.getItem("catalogue_local_companies") || "{}");
+        localOverrides[tempId] = optimisticNew;
+        localStorage.setItem("catalogue_local_companies", JSON.stringify(localOverrides));
+      } catch (_) {}
+      setIsCompanyModalOpen(false);
     } catch (err) {
       alert("Failed to create company: " + err.message);
     }
@@ -833,10 +850,9 @@ export default function PdfCatalogueGenerator() {
     }
   };
 
-  // Visible products for this catalogue (selected, or all company products by default)
+  // Visible products for this catalogue (faithfully filtered by user selection in Step 4)
   const visibleProducts = useMemo(() => {
-    const filtered = companyProducts.filter((p) => selectedProductIds.includes(p._id));
-    return filtered.length > 0 ? filtered : companyProducts;
+    return companyProducts.filter((p) => selectedProductIds.includes(p._id));
   }, [companyProducts, selectedProductIds]);
 
   // Dynamic canvas container styling per Canva template or custom design
@@ -1009,9 +1025,16 @@ export default function PdfCatalogueGenerator() {
                   <div style={{ fontWeight: 800, fontSize: "0.95rem", color: "var(--text-primary)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
                     {comp.name}
                   </div>
-                  <div style={{ fontSize: "0.82rem", color: "var(--text-secondary)", fontWeight: 600, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", marginTop: "2px" }}>
-                    {comp.industry || "General"} • {comp.tagline}
-                  </div>
+                  {(() => {
+                    const { odopProduct: pOdop, district: pDist } = resolveCompanyLocationAndProduct(comp);
+                    return (
+                      <div style={{ fontSize: "0.80rem", color: "var(--text-secondary)", fontWeight: 600, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", marginTop: "2px", display: "flex", alignItems: "center", gap: "6px" }}>
+                        <span style={{ color: "var(--primary)", fontWeight: 750 }}>{pOdop}</span>
+                        <span>•</span>
+                        <span style={{ color: "#047857", fontWeight: 700 }}>📍 {pDist}</span>
+                      </div>
+                    );
+                  })()}
                 </div>
                 {isSelected && <CheckCircle size={18} color="var(--primary)" />}
               </div>
@@ -1586,12 +1609,35 @@ export default function PdfCatalogueGenerator() {
               </Link>
             )}
             {companyProducts.length > 0 && (
-              <button className="btn btn-outline btn-sm" onClick={handleSelectAll} style={{ fontWeight: 700, fontSize: "0.82rem", color: "var(--text-primary)" }}>
-                {selectedProductIds.length === companyProducts.length ? "Deselect All" : "Select All Products"}
-              </button>
+              <>
+                <button
+                  type="button"
+                  className="btn btn-outline btn-sm"
+                  onClick={handleSelectAll}
+                  style={{ fontWeight: 700, fontSize: "0.82rem", color: "var(--text-primary)" }}
+                >
+                  Select All ({companyProducts.length})
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-outline btn-sm"
+                  onClick={handleDeselectAll}
+                  style={{ fontWeight: 700, fontSize: "0.82rem", color: "var(--danger)", borderColor: "var(--danger)" }}
+                >
+                  Deselect All
+                </button>
+              </>
             )}
           </div>
         </div>
+
+        {/* Zero-product alert notice */}
+        {visibleProducts.length === 0 && companyProducts.length > 0 && (
+          <div style={{ padding: "0.6rem 0.9rem", background: "rgba(245, 158, 11, 0.12)", border: "1px solid rgba(245, 158, 11, 0.35)", borderRadius: "8px", color: "var(--warning)", fontSize: "0.84rem", fontWeight: 700, marginBottom: "0.75rem", display: "flex", alignItems: "center", gap: "8px" }}>
+            <span>⚠️</span>
+            <span>0 products currently selected. Check the checkboxes below to add products back into your catalogue.</span>
+          </div>
+        )}
 
         {/* Product checklist */}
         {companyProducts.length === 0 ? (
@@ -1619,6 +1665,7 @@ export default function PdfCatalogueGenerator() {
           >
             {companyProducts.map((p) => {
               const isChecked = selectedProductIds.includes(p._id);
+              const thumb = p.image || p.img || (p.images && p.images[0]?.url) || (p.images && p.images[0]) || "";
               return (
                 <label
                   key={p._id}
@@ -1629,18 +1676,27 @@ export default function PdfCatalogueGenerator() {
                     fontSize: "0.86rem",
                     color: isChecked ? "var(--text-primary)" : "var(--text-secondary)",
                     cursor: "pointer",
-                    padding: "3px 6px",
+                    padding: "4px 8px",
                     borderRadius: "6px",
                     background: isChecked ? "var(--bg-surface)" : "transparent",
+                    border: isChecked ? "1px solid var(--border-medium)" : "1px solid transparent",
+                    transition: "all 0.15s ease",
                   }}
                 >
                   <input
                     type="checkbox"
                     checked={isChecked}
                     onChange={() => handleToggleProduct(p._id)}
-                    style={{ accentColor: "var(--primary)", transform: "scale(1.1)" }}
+                    style={{ accentColor: "var(--primary)", transform: "scale(1.15)", cursor: "pointer" }}
                   />
-                  <span style={{ fontWeight: 800, color: "var(--primary)" }}>{p.sku}</span>
+                  {thumb && (
+                    <img
+                      src={thumb}
+                      alt=""
+                      style={{ width: "22px", height: "22px", borderRadius: "4px", objectFit: "cover", flexShrink: 0 }}
+                    />
+                  )}
+                  <span style={{ fontWeight: 800, color: "var(--primary)", flexShrink: 0 }}>{p.sku || `#${p._id?.slice(-4)}`}</span>
                   <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontWeight: 600 }}>
                     {p.name}
                   </span>
@@ -1662,6 +1718,11 @@ export default function PdfCatalogueGenerator() {
             onSelectCompany={handleSelectCompany}
             activeQrList={activeQrList}
             includeQr={includeQrInCatalogue}
+            companyProducts={companyProducts}
+            selectedProductIds={selectedProductIds}
+            onToggleProduct={handleToggleProduct}
+            onSelectAllProducts={handleSelectAll}
+            onDeselectAllProducts={handleDeselectAll}
           />
         </div>
       ) : (
@@ -2513,19 +2574,7 @@ export default function PdfCatalogueGenerator() {
                   placeholder="e.g. Supreme Granite & Stones"
                   value={newCompany.name}
                   onChange={(e) => {
-                    const val = e.target.value;
-                    const lower = val.toLowerCase();
-                    let extra = {};
-                    if (lower.includes("garlic") || lower.includes("lahsun") || lower.includes("agro")) {
-                      extra = { odopProduct: "Garlic", district: "Baran, Rajasthan", industry: "Garlic Agro-Commodity & Exports", tagline: "Farm-Fresh High-Allicin Cured Garlic Bulbs" };
-                    } else if (lower.includes("sand") || lower.includes("sandstone")) {
-                      extra = { odopProduct: "Sandstone", district: "Bundi, Rajasthan", industry: "Heritage Sandstone & Architectural Mining", tagline: "Sedimentary Quartz Sandstone Blocks & Tiles" };
-                    } else if (lower.includes("stone") || lower.includes("limestone") || lower.includes("granite")) {
-                      extra = { odopProduct: "Kota Stone", district: "Jhalawar, Rajasthan", industry: "Kota Stone Architectural Mining", tagline: "Indurated Natural Limestone Slabs & Tiles" };
-                    } else if (lower.includes("doria") || lower.includes("saree") || lower.includes("handloom")) {
-                      extra = { odopProduct: "Kota Doria", district: "Kota, Rajasthan", industry: "Kota Doria Handlooms & Sarees", tagline: "GI Certified Gossamer Handloom Drapes" };
-                    }
-                    setNewCompany((prev) => ({ ...prev, name: val, ...extra }));
+                    setNewCompany((prev) => ({ ...prev, name: e.target.value }));
                   }}
                 />
               </div>

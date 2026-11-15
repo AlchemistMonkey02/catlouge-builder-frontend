@@ -32,22 +32,87 @@ import {
   deleteCompanyProfile,
 } from "../services/api";
 
+// Helper to dynamically resolve true company location and product without hardcoding Kota
+export function resolveCompanyLocationAndProduct(comp) {
+  if (!comp) return { odopProduct: "General", district: "Location Pending" };
+  const name = (comp.name || "").toLowerCase();
+  const ind = (comp.industry || "").toLowerCase();
+  const addr = (comp.contact?.address || "").toLowerCase();
+
+  let odop = comp.odopProduct ? comp.odopProduct.trim() : "";
+  let dist = comp.district ? comp.district.trim() : "";
+
+  // 1. Detect if odop was erroneously defaulted to "Kota Doria" on non-Kota company
+  const isErroneousKotaDoria = (odop === "Kota Doria" || !odop) &&
+    (name.includes("garlic") || ind.includes("garlic") || addr.includes("garlic") || addr.includes("mandsaur") ||
+     name.includes("stone") || ind.includes("stone") || addr.includes("suket") || addr.includes("jigani") || addr.includes("bangalore") ||
+     name.includes("sand") || ind.includes("sand") || addr.includes("jodhpur") || addr.includes("bundi") ||
+     name.includes("audio") || ind.includes("audio") || name.includes("electronics") ||
+     name.includes("apparel") || ind.includes("apparel") || name.includes("wellness") || name.includes("furniture"));
+
+  if (isErroneousKotaDoria) {
+    if (name.includes("garlic") || ind.includes("garlic") || addr.includes("garlic") || addr.includes("mandsaur")) {
+      odop = "Garlic";
+    } else if (name.includes("sand") || ind.includes("sand") || addr.includes("jodhpur") || addr.includes("bundi")) {
+      odop = "Sandstone";
+    } else if (name.includes("stone") || ind.includes("stone") || addr.includes("suket") || addr.includes("jigani") || addr.includes("bangalore")) {
+      odop = "Kota Stone";
+    } else if (comp.industry && !comp.industry.includes("Kota Doria")) {
+      odop = comp.industry;
+    } else {
+      odop = "General";
+    }
+  }
+
+  // 2. Detect if district was erroneously defaulted to "Kota" or "Kota, Rajasthan" on a non-Kota company
+  const isErroneousKotaDistrict = (dist === "Kota" || dist === "Kota, Rajasthan" || !dist || dist === "India") &&
+    (name.includes("garlic") || addr.includes("mandsaur") || addr.includes("baran") ||
+     addr.includes("bangalore") || addr.includes("jigani") ||
+     addr.includes("jodhpur") || name.includes("marwar") || addr.includes("bundi") ||
+     addr.includes("suket") || addr.includes("jhalawar") ||
+     name.includes("audio") || addr.includes("gurugram") ||
+     name.includes("apparel") || addr.includes("mumbai") ||
+     name.includes("botanica") || addr.includes("bengaluru") ||
+     name.includes("furniture") || addr.includes("chennai"));
+
+  if (isErroneousKotaDistrict) {
+    if (addr.includes("mandsaur")) dist = "Mandsaur, MP";
+    else if (addr.includes("baran")) dist = "Baran, Rajasthan";
+    else if (addr.includes("jodhpur") || name.includes("marwar")) dist = "Jodhpur, Rajasthan";
+    else if (addr.includes("bundi")) dist = "Bundi, Rajasthan";
+    else if (addr.includes("jhalawar") || addr.includes("suket")) dist = "Jhalawar, Rajasthan";
+    else if (addr.includes("bangalore") || addr.includes("bengaluru") || addr.includes("jigani")) dist = "Bangalore, Karnataka";
+    else if (addr.includes("gurugram") || addr.includes("cybercity")) dist = "Gurugram, Haryana";
+    else if (addr.includes("mumbai") || addr.includes("bandra")) dist = "Mumbai, Maharashtra";
+    else if (addr.includes("chennai")) dist = "Chennai, Tamil Nadu";
+    else if (odop === "Garlic") dist = "Baran, Rajasthan";
+    else if (odop === "Kota Stone") dist = "Jhalawar, Rajasthan";
+    else if (odop === "Sandstone") dist = "Bundi, Rajasthan";
+    else dist = comp.state || "Location Pending";
+  }
+
+  return {
+    odopProduct: odop || comp.industry || "General",
+    district: dist || (comp.contact?.address ? comp.contact.address.split(",").slice(-2).join(",").trim() : "Location Pending")
+  };
+}
+
 const EMPTY_FORM = {
   name: "",
-  tagline: "Exclusive Product Collection",
-  industry: "Kota Doria Handlooms & Sarees",
-  district: "Kota, Rajasthan",
+  tagline: "",
+  industry: "",
+  district: "",
   state: "Rajasthan",
-  odopProduct: "Kota Doria",
+  odopProduct: "",
   enterpriseType: "ODOP Certified Enterprise",
-  whatsappNumber: "+91 94600 77112",
-  logoUrl: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=200",
+  whatsappNumber: "",
+  logoUrl: "",
   brandColors: { primary: "#6366f1", secondary: "#0f172a", accent: "#10b981" },
   contact: {
-    email: "contact@company.com",
-    phone: "+91 98765 43210",
-    website: "https://www.company.com",
-    address: "100 Commercial Plaza, Business District",
+    email: "",
+    phone: "",
+    website: "",
+    address: "",
   },
   qrLinks: {
     businessProfile: "",
@@ -58,7 +123,7 @@ const EMPTY_FORM = {
     custom: "",
     customLabel: "Scan to Order",
   },
-  legal: { gstNumber: "07AAAAA0000A1Z5", taxId: "PAN-998877", currency: "INR" },
+  legal: { gstNumber: "", taxId: "", currency: "INR" },
   wholesaleTerms:
     "Standard Trade Terms: Net 30 payment terms for verified accounts. Minimum order quantity applies.",
 };
@@ -88,17 +153,36 @@ export default function CompanyManager() {
   const loadCompanies = async () => {
     try {
       setLoading(true);
-      const res = await fetchCompanies();
-      if (res.data) {
-        setCompanies(res.data);
+      let list = [];
+      try {
+        const res = await fetchCompanies();
+        if (res && res.data) list = res.data;
+      } catch (err) {
+        console.warn("Error fetching remote companies:", err);
+      }
 
-        // Check if an edit company ID was requested in query string
-        const editId = searchParams.get("edit");
-        if (editId) {
-          const target = res.data.find((c) => c._id === editId);
-          if (target) {
-            openEditModal(target);
-          }
+      // Merge local company updates / overrides
+      try {
+        const localOverrides = JSON.parse(localStorage.getItem("catalogue_local_companies") || "{}");
+        const overrideIds = Object.keys(localOverrides);
+        if (overrideIds.length > 0) {
+          list = list.map((c) => (localOverrides[c._id] ? { ...c, ...localOverrides[c._id] } : c));
+          overrideIds.forEach((id) => {
+            if (!list.some((c) => c._id === id)) {
+              list.push(localOverrides[id]);
+            }
+          });
+        }
+      } catch (_) {}
+
+      setCompanies(list);
+
+      // Check if an edit company ID was requested in query string
+      const editId = searchParams.get("edit");
+      if (editId) {
+        const target = list.find((c) => c._id === editId);
+        if (target) {
+          openEditModal(target);
         }
       }
     } catch (err) {
@@ -119,43 +203,17 @@ export default function CompanyManager() {
 
   const openEditModal = (comp) => {
     setEditingCompanyId(comp._id);
-    const compName = (comp.name || "").toLowerCase();
-    const compInd = (comp.industry || "").toLowerCase();
-    let initialOdop = comp.odopProduct;
-    let initialDistrict = comp.district;
-
-    if (!initialOdop || (initialOdop === "Kota Doria" && (compName.includes("garlic") || compInd.includes("garlic") || compName.includes("stone") || compInd.includes("stone") || compName.includes("sand")))) {
-      if (compName.includes("garlic") || compInd.includes("garlic") || compInd.includes("lahsun")) {
-        initialOdop = "Garlic";
-        initialDistrict = "Baran, Rajasthan";
-      } else if (compName.includes("sand") || compInd.includes("sand")) {
-        initialOdop = "Sandstone";
-        initialDistrict = "Bundi, Rajasthan";
-      } else if (compName.includes("stone") || compInd.includes("stone") || compInd.includes("limestone")) {
-        initialOdop = "Kota Stone";
-        initialDistrict = "Jhalawar, Rajasthan";
-      } else if (compName.includes("doria") || compInd.includes("doria") || compInd.includes("saree") || compInd.includes("handloom")) {
-        initialOdop = "Kota Doria";
-        initialDistrict = "Kota, Rajasthan";
-      }
-    }
-
-    if (!initialDistrict || initialDistrict === "India") {
-      if (initialOdop === "Garlic") initialDistrict = "Baran, Rajasthan";
-      else if (initialOdop === "Kota Stone") initialDistrict = "Jhalawar, Rajasthan";
-      else if (initialOdop === "Sandstone") initialDistrict = "Bundi, Rajasthan";
-      else if (initialOdop === "Kota Doria") initialDistrict = "Kota, Rajasthan";
-    }
+    const { odopProduct: initialOdop, district: initialDistrict } = resolveCompanyLocationAndProduct(comp);
 
     setFormData({
       name: comp.name || "",
       tagline: comp.tagline || "",
-      industry: comp.industry || (initialOdop === "Garlic" ? "Garlic Specialty & Agro Commodities" : initialOdop === "Kota Stone" ? "Kota Stone Architectural Limestone" : initialOdop === "Sandstone" ? "Sandstone Heritage Masonry & Mining" : "Kota Doria Handlooms & Sarees"),
-      district: initialDistrict || "Kota, Rajasthan",
+      industry: comp.industry || initialOdop || "",
+      district: (comp.district && comp.district.trim()) ? comp.district.trim() : (initialDistrict || ""),
       state: comp.state || "Rajasthan",
-      odopProduct: initialOdop || "Kota Doria",
+      odopProduct: (comp.odopProduct && comp.odopProduct.trim()) ? comp.odopProduct.trim() : (initialOdop || ""),
       enterpriseType: comp.enterpriseType || "ODOP Certified Enterprise",
-      whatsappNumber: comp.whatsappNumber || comp.contact?.phone || "+91 94600 77112",
+      whatsappNumber: comp.whatsappNumber || comp.contact?.phone || "",
       logoUrl: comp.logoUrl || "",
       brandColors: {
         primary: comp.brandColors?.primary || "#6366f1",
@@ -219,27 +277,83 @@ export default function CompanyManager() {
     try {
       setSaving(true);
       if (editingCompanyId) {
-        // Edit existing company
-        const res = await updateCompanyProfile(editingCompanyId, formData);
-        if (res.data) {
-          setCompanies((prev) =>
-            prev.map((c) => (c._id === editingCompanyId ? res.data : c))
-          );
-          setSaveSuccess(true);
-          setTimeout(() => {
-            closeModal();
-          }, 600);
+        // Edit existing company: build updated object immediately
+        const optimisticCompany = {
+          ...formData,
+          _id: editingCompanyId,
+          updatedAt: new Date().toISOString(),
+        };
+
+        // 1. Immediately update in-memory state
+        setCompanies((prev) =>
+          prev.map((c) => (c._id === editingCompanyId ? { ...c, ...optimisticCompany } : c))
+        );
+
+        // 2. Persist to localStorage immediately
+        try {
+          const localOverrides = JSON.parse(localStorage.getItem("catalogue_local_companies") || "{}");
+          localOverrides[editingCompanyId] = { ...(localOverrides[editingCompanyId] || {}), ...optimisticCompany };
+          localStorage.setItem("catalogue_local_companies", JSON.stringify(localOverrides));
+        } catch (storageErr) {
+          console.warn("Storage sync warning:", storageErr);
         }
+
+        // 3. Attempt server update
+        try {
+          const res = await updateCompanyProfile(editingCompanyId, formData);
+          const serverData = (res && res.data) ? res.data : {};
+          const merged = { ...serverData, ...optimisticCompany };
+          setCompanies((prev) =>
+            prev.map((c) => (c._id === editingCompanyId ? merged : c))
+          );
+          try {
+            const localOverrides = JSON.parse(localStorage.getItem("catalogue_local_companies") || "{}");
+            localOverrides[editingCompanyId] = merged;
+            localStorage.setItem("catalogue_local_companies", JSON.stringify(localOverrides));
+          } catch (_) {}
+        } catch (serverErr) {
+          console.warn("Server update warning, local version preserved:", serverErr);
+        }
+
+        setSaveSuccess(true);
+        setTimeout(() => {
+          closeModal();
+        }, 600);
       } else {
         // Create new company
-        const res = await createCompanyProfile(formData);
-        if (res.data) {
-          setCompanies((prev) => [...prev, res.data]);
-          setSaveSuccess(true);
-          setTimeout(() => {
-            closeModal();
-          }, 600);
+        const tempId = "local_comp_" + Date.now();
+        const optimisticNew = {
+          ...formData,
+          _id: tempId,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        };
+
+        try {
+          const res = await createCompanyProfile(formData);
+          const serverData = (res && res.data) ? res.data : {};
+          const finalId = serverData._id || tempId;
+          const mergedNew = { ...serverData, ...optimisticNew, _id: finalId };
+          setCompanies((prev) => [...prev, mergedNew]);
+          try {
+            const localOverrides = JSON.parse(localStorage.getItem("catalogue_local_companies") || "{}");
+            localOverrides[finalId] = mergedNew;
+            localStorage.setItem("catalogue_local_companies", JSON.stringify(localOverrides));
+          } catch (_) {}
+        } catch (serverErr) {
+          console.warn("Server create failed, saving locally:", serverErr);
+          setCompanies((prev) => [...prev, optimisticNew]);
+          try {
+            const localOverrides = JSON.parse(localStorage.getItem("catalogue_local_companies") || "{}");
+            localOverrides[tempId] = optimisticNew;
+            localStorage.setItem("catalogue_local_companies", JSON.stringify(localOverrides));
+          } catch (_) {}
         }
+
+        setSaveSuccess(true);
+        setTimeout(() => {
+          closeModal();
+        }, 600);
       }
     } catch (err) {
       alert("Error saving company profile: " + (err.response?.data?.message || err.message));
@@ -251,10 +365,17 @@ export default function CompanyManager() {
   const handleDeleteCompany = async (id, name) => {
     if (!window.confirm(`Delete company profile for "${name}"? This cannot be undone.`)) return;
     try {
-      await deleteCompanyProfile(id);
       setCompanies((prev) => prev.filter((c) => c._id !== id));
+      try {
+        const localOverrides = JSON.parse(localStorage.getItem("catalogue_local_companies") || "{}");
+        if (localOverrides[id]) {
+          delete localOverrides[id];
+          localStorage.setItem("catalogue_local_companies", JSON.stringify(localOverrides));
+        }
+      } catch (_) {}
+      await deleteCompanyProfile(id);
     } catch (err) {
-      alert("Delete failed: " + err.message);
+      console.warn("Delete remote warning:", err);
     }
   };
 
@@ -689,31 +810,39 @@ export default function CompanyManager() {
                               flexWrap: "wrap",
                             }}
                           >
-                            
-                            <span
-                              style={{
-                                color: primaryColor,
-                                fontWeight: 750,
-                                background: `${primaryColor}15`,
-                                padding: "1px 6px",
-                                borderRadius: "var(--radius-sm)",
-                                fontSize: "0.75rem",
-                              }}
-                            >
-                              {comp.odopProduct || comp.industry || "General"}
-                            </span>
-                            <span
-                              style={{
-                                color: "#047857",
-                                fontWeight: 750,
-                                background: "rgba(16, 185, 129, 0.12)",
-                                padding: "1px 6px",
-                                borderRadius: "var(--radius-sm)",
-                                fontSize: "0.75rem",
-                              }}
-                            >
-                              📍 {comp.district || (comp.odopProduct === "Garlic" ? "Baran, Rajasthan" : comp.odopProduct === "Kota Stone" ? "Jhalawar, Rajasthan" : comp.odopProduct === "Sandstone" ? "Bundi, Rajasthan" : "Kota, Rajasthan")}
-                            </span>
+                            {(() => {
+                              const resolved = resolveCompanyLocationAndProduct(comp);
+                              const displayDistrict = (comp.district && comp.district.trim()) ? comp.district.trim() : resolved.district;
+                              const displayOdop = (comp.odopProduct && comp.odopProduct.trim()) ? comp.odopProduct.trim() : resolved.odopProduct;
+                              return (
+                                <>
+                                  <span
+                                    style={{
+                                      color: primaryColor,
+                                      fontWeight: 750,
+                                      background: `${primaryColor}15`,
+                                      padding: "1px 6px",
+                                      borderRadius: "var(--radius-sm)",
+                                      fontSize: "0.75rem",
+                                    }}
+                                  >
+                                    {displayOdop}
+                                  </span>
+                                  <span
+                                    style={{
+                                      color: "#047857",
+                                      fontWeight: 750,
+                                      background: "rgba(16, 185, 129, 0.12)",
+                                      padding: "1px 6px",
+                                      borderRadius: "var(--radius-sm)",
+                                      fontSize: "0.75rem",
+                                    }}
+                                  >
+                                    📍 {displayDistrict}
+                                  </span>
+                                </>
+                              );
+                            })()}
                             <span style={{ color: "var(--text-muted)" }}>•</span>
                             <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: "160px" }}>
                               {comp.tagline}
@@ -1034,29 +1163,14 @@ export default function CompanyManager() {
                       required
                       className="input-field"
                       style={{ paddingLeft: "0.85rem" }}
-                      placeholder="e.g. Supreme Granite & Stones or Acme Audio"
+                      placeholder="e.g. Supreme Granite & Stones or Malwa Fresh Garlic"
                       value={formData.name}
                       onChange={(e) => {
-                        const val = e.target.value;
-                        const lower = val.toLowerCase();
-                        let extra = {};
-                        if (!editingCompanyId) {
-                          if (lower.includes("garlic") || lower.includes("lahsun") || lower.includes("agro")) {
-                            extra = { odopProduct: "Garlic", district: "Baran, Rajasthan", industry: "Garlic Specialty & Agro Commodities" };
-                          } else if (lower.includes("sand") || lower.includes("sandstone")) {
-                            extra = { odopProduct: "Sandstone", district: "Bundi, Rajasthan", industry: "Sandstone Heritage Masonry & Mining" };
-                          } else if (lower.includes("stone") || lower.includes("limestone") || lower.includes("granite")) {
-                            extra = { odopProduct: "Kota Stone", district: "Jhalawar, Rajasthan", industry: "Kota Stone Architectural Limestone" };
-                          } else if (lower.includes("doria") || lower.includes("saree") || lower.includes("handloom")) {
-                            extra = { odopProduct: "Kota Doria", district: "Kota, Rajasthan", industry: "Kota Doria Handlooms & Sarees" };
-                          }
-                        }
-                        setFormData({ ...formData, name: val, ...extra });
+                        setFormData({ ...formData, name: e.target.value });
                       }}
                     />
                   </div>
 
-                  
                   {/* ODOP CATEGORY & DISTRICT REGISTRATION */}
                   <div
                     style={{
@@ -1079,10 +1193,10 @@ export default function CompanyManager() {
                       }}
                     >
                       <MapPin size={16} style={{ color: "var(--primary)" }} />
-                      Under Which ODOP Category is Company Registering?
+                      Registered District &amp; ODOP Product Category
                     </label>
                     <p style={{ fontSize: "0.78rem", color: "var(--text-muted)", margin: "0 0 10px 0" }}>
-                      Select the official Government ODOP (One District One Product) sector to link the correct district and product specifications:
+                      Type your official district and product below (or click a quick preset to auto-fill):
                     </p>
 
                     <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "0.6rem", marginBottom: "0.75rem" }}>
@@ -1117,8 +1231,8 @@ export default function CompanyManager() {
                         },
                       ].map((odop) => {
                         const isSelected =
-                          (formData.odopProduct || "").toLowerCase().includes(odop.product.toLowerCase()) ||
-                          (formData.district || "").toLowerCase().includes(odop.district.split(",")[0].toLowerCase());
+                          Boolean(formData.odopProduct && formData.odopProduct.toLowerCase() === odop.product.toLowerCase()) &&
+                          Boolean(formData.district && formData.district.toLowerCase() === odop.district.toLowerCase());
                         return (
                           <button
                             key={odop.product}
@@ -1163,7 +1277,7 @@ export default function CompanyManager() {
                           className="input-field"
                           style={{ paddingLeft: "0.85rem" }}
                           value={formData.odopProduct || ""}
-                          placeholder="e.g. Garlic, Kota Stone, Sandstone, Kota Doria"
+                          placeholder="e.g. Garlic, Kota Stone, Sandstone, Handloom, Spices"
                           onChange={(e) => setFormData({ ...formData, odopProduct: e.target.value })}
                         />
                       </div>
@@ -1176,7 +1290,7 @@ export default function CompanyManager() {
                           className="input-field"
                           style={{ paddingLeft: "0.85rem" }}
                           value={formData.district || ""}
-                          placeholder="e.g. Baran, Rajasthan or Jhalawar, Rajasthan"
+                          placeholder="e.g. Mandsaur, MP or Baran, Rajasthan or Jodhpur"
                           onChange={(e) => setFormData({ ...formData, district: e.target.value })}
                         />
                       </div>

@@ -102,7 +102,13 @@ function photoFrame(el, pg) {
 const firstPhotoIn = el => (isPhoto(el) ? el : [...el.querySelectorAll('*')].find(isPhoto) || null);
 const rec = () => {
   if (!uid) return {};
-  EDITS[uid] = EDITS[uid] || {};
+  if (typeof window !== 'undefined') {
+    window.DesignEdits = window.DesignEdits || {};
+    window.DesignEdits[uid] = window.DesignEdits[uid] || EDITS[uid] || {};
+    EDITS[uid] = window.DesignEdits[uid];
+  } else {
+    EDITS[uid] = EDITS[uid] || {};
+  }
   return EDITS[uid];
 };
 
@@ -194,27 +200,98 @@ export function applyEdit(el, ed, photoUrl) {
     if (/px$/.test(cs.lineHeight)) s.lineHeight = (parseFloat(cs.lineHeight) * ed.fsMul) + 'px';
   }
   if (ed.fontFamily !== undefined) {
-    s.fontFamily = ed.fontFamily || '';
+    if (ed.fontFamily) {
+      s.setProperty('font-family', ed.fontFamily, 'important');
+      if (el.querySelectorAll) {
+        el.querySelectorAll('h1, h2, h3, h4, h5, h6, p, span, div, b, strong, em, i, a, label').forEach(tc => {
+          tc.style.setProperty('font-family', ed.fontFamily, 'important');
+        });
+      }
+    } else {
+      s.removeProperty('font-family');
+      if (el.querySelectorAll) {
+        el.querySelectorAll('h1, h2, h3, h4, h5, h6, p, span, div, b, strong, em, i, a, label').forEach(tc => {
+          tc.style.removeProperty('font-family');
+        });
+      }
+    }
   }
-  if (ed.color) s.color = ed.color;
-  if (ed.bg !== undefined) s.backgroundColor = ed.bg;
+
+  // Text Color with child cascade & !important priority
+  if (ed.color) {
+    s.setProperty('color', ed.color, 'important');
+    if (el.querySelectorAll) {
+      el.querySelectorAll('h1, h2, h3, h4, h5, h6, p, span, div, b, strong, em, i, u, font, label, small').forEach(tc => {
+        tc.style.setProperty('color', ed.color, 'important');
+      });
+      el.querySelectorAll('font[color]').forEach(f => {
+        f.style.setProperty('color', ed.color, 'important');
+      });
+    }
+  } else if (ed.color === '') {
+    s.removeProperty('color');
+    if (el.querySelectorAll) {
+      el.querySelectorAll('h1, h2, h3, h4, h5, h6, p, span, div, b, strong, em, i, u, font, label, small').forEach(tc => {
+        tc.style.removeProperty('color');
+      });
+    }
+  }
+
+  // Background Fill with full gradient & image clear
+  if (ed.bg !== undefined) {
+    if (ed.bg === 'transparent' || ed.bg === '' || ed.bg === 'none') {
+      s.setProperty('background', 'transparent', 'important');
+      s.setProperty('background-color', 'transparent', 'important');
+      s.setProperty('background-image', 'none', 'important');
+    } else {
+      s.setProperty('background', ed.bg, 'important');
+      s.setProperty('background-color', ed.bg, 'important');
+      s.setProperty('background-image', 'none', 'important');
+    }
+  }
+
   if (ed.bold !== undefined) {
-    s.fontWeight = ed.bold ? '700' : 'normal';
+    s.setProperty('font-weight', ed.bold ? '700' : 'normal', 'important');
+    if (el.querySelectorAll) {
+      el.querySelectorAll('h1, h2, h3, h4, h5, h6, p, span, div, b, strong, em, i, label').forEach(tc => {
+        tc.style.setProperty('font-weight', ed.bold ? '700' : 'normal', 'important');
+      });
+    }
   }
   if (ed.italic !== undefined) {
-    s.fontStyle = ed.italic ? 'italic' : 'normal';
+    s.setProperty('font-style', ed.italic ? 'italic' : 'normal', 'important');
+    if (el.querySelectorAll) {
+      el.querySelectorAll('h1, h2, h3, h4, h5, h6, p, span, div, b, strong, em, i, label').forEach(tc => {
+        tc.style.setProperty('font-style', ed.italic ? 'italic' : 'normal', 'important');
+      });
+    }
   }
   if (ed.underline !== undefined) {
-    s.textDecoration = ed.underline ? 'underline' : 'none';
+    s.setProperty('text-decoration', ed.underline ? 'underline' : 'none', 'important');
   }
   if (ed.transform !== undefined) {
-    s.textTransform = ed.transform || 'none';
+    s.setProperty('text-transform', ed.transform || 'none', 'important');
+    if (el.querySelectorAll) {
+      el.querySelectorAll('h1, h2, h3, h4, h5, h6, p, span, div, b, strong, em, i, label').forEach(tc => {
+        tc.style.setProperty('text-transform', ed.transform || 'none', 'important');
+      });
+    }
   }
   if (ed.align !== undefined) {
-    s.textAlign = ed.align || '';
+    s.setProperty('text-align', ed.align || '', 'important');
+    if (el.querySelectorAll) {
+      el.querySelectorAll('h1, h2, h3, h4, h5, h6, p, span, div, b, strong, em, i, label').forEach(tc => {
+        tc.style.setProperty('text-align', ed.align || '', 'important');
+      });
+    }
   }
   if (ed.letterSpacing !== undefined) {
-    s.letterSpacing = ed.letterSpacing || 'normal';
+    s.setProperty('letter-spacing', ed.letterSpacing || 'normal', 'important');
+    if (el.querySelectorAll) {
+      el.querySelectorAll('h1, h2, h3, h4, h5, h6, p, span, div, b, strong, em, i, label').forEach(tc => {
+        tc.style.setProperty('letter-spacing', ed.letterSpacing || 'normal', 'important');
+      });
+    }
   }
 
   // 4. Width and Height
@@ -320,12 +397,22 @@ export function applyEdit(el, ed, photoUrl) {
 
 // Called by page builder to apply all stored edits of this template onto pages
 export async function applyAll(host, templateId, items) {
-  const edits = EDITS[templateId];
+  let edits = (window.DesignEdits && window.DesignEdits[templateId]) || EDITS[templateId];
+  if (!edits && typeof window !== 'undefined') {
+    try {
+      const cached = localStorage.getItem('catalogue_edits_' + templateId);
+      if (cached) edits = JSON.parse(cached);
+    } catch (_) {}
+  }
   if (!edits || !host) return;
   for (const key of Object.keys(edits)) {
-    const [pi, p] = key.split('|'), pg = host.children[+pi];
+    const [pi, p] = key.split('|');
+    const child = host.children[+pi];
+    if (!child) continue;
+    const pg = (child.classList && child.classList.contains('pvpage')) ? child.firstElementChild : child;
     if (!pg) continue;
-    const el = byPath(pg, p ? p.split('.').map(Number) : []);
+    const pathIndices = (p !== undefined && p !== '') ? p.split('.').map(Number) : [];
+    const el = byPath(pg, pathIndices);
     if (!el) continue;
     const ed = edits[key], it = ed.photo != null ? (items && items[ed.photo]) : null;
     applyEdit(el, ed, (it && it.img) || ed.customImg);
@@ -349,6 +436,9 @@ export function setEdit(patch, live = true, quiet = false) {
   if (sel.photo) patch = Object.assign({ kind: 'photo' }, patch);
   const all = rec(), ed = Object.assign({}, all[sel.key] || {}, patch);
   if (isEmpty(ed)) delete all[sel.key]; else all[sel.key] = ed;
+  if (uid && typeof window !== 'undefined') {
+    try { localStorage.setItem('catalogue_edits_' + uid, JSON.stringify(all)); } catch (_) {}
+  }
   if (live) {
     applyEdit(sel.el, ed, patch.photo != null || ed.photo != null ? currentPhotoUrl(ed) : null);
     refit(sel.inner || sel.el);
@@ -885,7 +975,10 @@ function drawBar() {
   const curScale = (ed.w && base && base.w) ? Math.round((ed.w / base.w) * 100) : 100;
   let h = '';
   if (layers.length > 1) {
-    h += '<div class="bar-row bar-layers"><span>Layers:</span>' + layers.map((l, i) => '<button type="button" data-layer="' + i + '" class="' + (l === (sel.inner || sel.el) ? 'on' : '') + '">' + safe(labelOf(l)) + '</button>').join('') + '</div>';
+    h += '<div class="bar-row bar-layers"><span>Layers:</span>' + layers.map((l, i) => {
+      const isCur = l === (sel.inner || sel.el) || l === sel.el;
+      return '<button type="button" data-layer="' + i + '" class="' + (isCur ? 'on' : '') + '" style="' + (isCur ? 'background:#2563eb!important;color:#ffffff!important;border-color:#2563eb!important;font-weight:700;' : '') + '">' + safe(labelOf(l)) + '</button>';
+    }).join('') + '</div>';
   }
   if (photo) {
     h += '<div class="bar-row" style="margin-bottom:8px;">' +
@@ -1216,6 +1309,13 @@ function onBar(ev) {
     const hasSelection = selObj && !selObj.isCollapsed && sel && sel.el.contains(selObj.anchorNode);
     if (hasSelection) {
       document.execCommand('hiliteColor', false, 'transparent');
+      if (sel && sel.el) {
+        sel.el.querySelectorAll('mark, font[style*="background"], span[style*="background"]').forEach(m => {
+          m.style.setProperty('background', 'transparent', 'important');
+          m.style.setProperty('background-color', 'transparent', 'important');
+          m.style.setProperty('background-image', 'none', 'important');
+        });
+      }
       const all = rec();
       all[sel.key] = Object.assign({}, all[sel.key] || {}, { html: clean(sel.el) });
       if (window.onCatalogueTextEdited) window.onCatalogueTextEdited(sel.el);
@@ -1223,7 +1323,12 @@ function onBar(ev) {
       return;
     }
     setEdit({ bg: 'transparent' });
-    if (sel && sel.el) sel.el.style.backgroundColor = 'transparent';
+    if (sel && sel.el) {
+      sel.el.style.setProperty('background', 'transparent', 'important');
+      sel.el.style.setProperty('background-color', 'transparent', 'important');
+      sel.el.style.setProperty('background-image', 'none', 'important');
+    }
+    if (window.onCatalogueTextEdited) window.onCatalogueTextEdited(sel?.el);
     place();
     drawBar();
     return;
@@ -1273,23 +1378,49 @@ function onBarInput(ev) {
   if (ev.target.id === 'bColor') {
     const colorVal = ev.target.value;
     const selObj = window.getSelection();
-    const hasSelection = selObj && !selObj.isCollapsed && sel.el.contains(selObj.anchorNode);
+    const hasSelection = selObj && !selObj.isCollapsed && sel && sel.el.contains(selObj.anchorNode);
     if (hasSelection) {
-      document.execCommand('foreColor', false, colorVal);
+      try {
+        const range = selObj.getRangeAt(0);
+        const span = document.createElement('span');
+        span.style.setProperty('color', colorVal, 'important');
+        range.surroundContents(span);
+      } catch (_) {
+        document.execCommand('foreColor', false, colorVal);
+        if (sel && sel.el) {
+          sel.el.querySelectorAll('font[color]').forEach(f => {
+            f.style.setProperty('color', f.getAttribute('color') || colorVal, 'important');
+          });
+        }
+      }
       return;
     }
     setEdit({ color: colorVal }, true, true);
+    if (window.onCatalogueTextEdited) window.onCatalogueTextEdited(sel?.el);
     return;
   }
   if (ev.target.id === 'bBgColor') {
     const colorVal = ev.target.value;
     const selObj = window.getSelection();
-    const hasSelection = selObj && !selObj.isCollapsed && sel.el.contains(selObj.anchorNode);
+    const hasSelection = selObj && !selObj.isCollapsed && sel && sel.el.contains(selObj.anchorNode);
     if (hasSelection) {
-      document.execCommand('hiliteColor', false, colorVal);
+      try {
+        const range = selObj.getRangeAt(0);
+        const span = document.createElement('span');
+        span.style.setProperty('background-color', colorVal, 'important');
+        range.surroundContents(span);
+      } catch (_) {
+        document.execCommand('hiliteColor', false, colorVal);
+        if (sel && sel.el) {
+          sel.el.querySelectorAll('mark, span[style*="background"]').forEach(m => {
+            m.style.setProperty('background-color', colorVal, 'important');
+          });
+        }
+      }
       return;
     }
     setEdit({ bg: colorVal }, true, true);
+    if (window.onCatalogueTextEdited) window.onCatalogueTextEdited(sel?.el);
     return;
   }
 }
@@ -1322,9 +1453,21 @@ function onBarChange(ev) {
   } else if (ev.target.id === 'bColor') {
     const colorVal = ev.target.value;
     const selObj = window.getSelection();
-    const hasSelection = selObj && !selObj.isCollapsed && sel.el.contains(selObj.anchorNode);
+    const hasSelection = selObj && !selObj.isCollapsed && sel && sel.el.contains(selObj.anchorNode);
     if (hasSelection) {
-      document.execCommand('foreColor', false, colorVal);
+      try {
+        const range = selObj.getRangeAt(0);
+        const span = document.createElement('span');
+        span.style.setProperty('color', colorVal, 'important');
+        range.surroundContents(span);
+      } catch (_) {
+        document.execCommand('foreColor', false, colorVal);
+        if (sel && sel.el) {
+          sel.el.querySelectorAll('font[color]').forEach(f => {
+            f.style.setProperty('color', f.getAttribute('color') || colorVal, 'important');
+          });
+        }
+      }
       snapshot();
       const all = rec();
       all[sel.key] = Object.assign({}, all[sel.key] || {}, { html: clean(sel.el) });
@@ -1334,12 +1477,25 @@ function onBarChange(ev) {
     }
     snapshot();
     setEdit({ color: colorVal });
+    if (window.onCatalogueTextEdited) window.onCatalogueTextEdited(sel?.el);
   } else if (ev.target.id === 'bBgColor') {
     const colorVal = ev.target.value;
     const selObj = window.getSelection();
-    const hasSelection = selObj && !selObj.isCollapsed && sel.el.contains(selObj.anchorNode);
+    const hasSelection = selObj && !selObj.isCollapsed && sel && sel.el.contains(selObj.anchorNode);
     if (hasSelection) {
-      document.execCommand('hiliteColor', false, colorVal);
+      try {
+        const range = selObj.getRangeAt(0);
+        const span = document.createElement('span');
+        span.style.setProperty('background-color', colorVal, 'important');
+        range.surroundContents(span);
+      } catch (_) {
+        document.execCommand('hiliteColor', false, colorVal);
+        if (sel && sel.el) {
+          sel.el.querySelectorAll('mark, span[style*="background"]').forEach(m => {
+            m.style.setProperty('background-color', colorVal, 'important');
+          });
+        }
+      }
       snapshot();
       const all = rec();
       all[sel.key] = Object.assign({}, all[sel.key] || {}, { html: clean(sel.el) });
@@ -1349,6 +1505,7 @@ function onBarChange(ev) {
     }
     snapshot();
     setEdit({ bg: colorVal });
+    if (window.onCatalogueTextEdited) window.onCatalogueTextEdited(sel?.el);
   } else if (ev.target.id === 'bPhoto') {
     snapshot();
     const v = ev.target.value;
@@ -1478,7 +1635,39 @@ function initDragAndDrop(h) {
 }
 
 export function onRendered(selTemplate) {
-  uid = selTemplate ? (selTemplate.fam + ':' + selTemplate.id) : null;
+  if (typeof selTemplate === 'string') {
+    uid = selTemplate;
+  } else if (selTemplate) {
+    uid = selTemplate.uid || (selTemplate.fam ? (selTemplate.fam + ':' + (selTemplate.id || (selTemplate.t && selTemplate.t.id) || '')) : (selTemplate.id || null));
+  } else {
+    uid = null;
+  }
+
+  // Synchronize window.DesignEdits and EDITS
+  if (typeof window !== 'undefined') {
+    window.DesignEdits = window.DesignEdits || {};
+    if (uid) {
+      // Migrate any edits saved under undefined template IDs
+      if (window.DesignEdits['kotadoria:undefined']) {
+        window.DesignEdits[uid] = Object.assign({}, window.DesignEdits['kotadoria:undefined'], window.DesignEdits[uid] || {});
+        delete window.DesignEdits['kotadoria:undefined'];
+      }
+      if (EDITS['kotadoria:undefined']) {
+        EDITS[uid] = Object.assign({}, EDITS['kotadoria:undefined'], EDITS[uid] || {});
+        delete EDITS['kotadoria:undefined'];
+      }
+      // Restore from localStorage if memory is empty
+      if (!window.DesignEdits[uid] || Object.keys(window.DesignEdits[uid]).length === 0) {
+        try {
+          const cached = localStorage.getItem('catalogue_edits_' + uid);
+          if (cached) window.DesignEdits[uid] = JSON.parse(cached);
+        } catch (_) {}
+      }
+      window.DesignEdits[uid] = window.DesignEdits[uid] || EDITS[uid] || {};
+      EDITS[uid] = window.DesignEdits[uid];
+    }
+  }
+
   const h = host();
   if (!h) return;
   initDragAndDrop(h);

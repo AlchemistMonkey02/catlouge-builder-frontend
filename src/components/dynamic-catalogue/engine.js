@@ -401,8 +401,12 @@ export async function fitPages(pages, items, templateUid) {
     document.body.appendChild(host);
 
     try {
-      if (templateUid && window.DesignEditor) {
-        await window.DesignEditor.applyAll(host, templateUid, items);
+      if (templateUid) {
+        if (window.DesignEditor?.applyAll) {
+          await window.DesignEditor.applyAll(host, templateUid, items);
+        } else {
+          await applyAll(host, templateUid, items);
+        }
       }
       for (const pg of host.querySelectorAll(':scope > .pg')) {
         for (const e of pg.querySelectorAll('*')) {
@@ -638,17 +642,35 @@ export async function buildCatalogue({
 
   // District & ODOP Product - strictly preserve company registration fields
   const cName = (company?.name || '').toLowerCase();
-  let resolvedDistrict = (company?.district && company.district.trim() !== 'India') ? company.district : '';
-  let resolvedOdop = (company?.odopProduct && company.odopProduct.trim()) ? company.odopProduct : '';
+  const cAddr = (company?.contact?.address || '').toLowerCase();
+  let resolvedDistrict = (company?.district && company.district.trim() !== 'India') ? company.district.trim() : '';
+  let resolvedOdop = (company?.odopProduct && company.odopProduct.trim()) ? company.odopProduct.trim() : '';
 
   // Clear legacy default mismatch if company clearly belongs to another sector
-  if (resolvedOdop === 'Kota Doria' && (cName.includes('garlic') || compInd.includes('garlic') || (cName.includes('stone') && !cName.includes('sand')) || (compInd.includes('stone') && !compInd.includes('sand')) || cName.includes('sand'))) {
-    resolvedOdop = '';
-    resolvedDistrict = '';
+  if ((resolvedOdop === 'Kota Doria' || !resolvedOdop) && (cName.includes('garlic') || cName.includes('stone') || cName.includes('sand') || cAddr.includes('mandsaur') || cAddr.includes('jodhpur') || cAddr.includes('bangalore'))) {
+    if (cName.includes('garlic') || cAddr.includes('mandsaur')) resolvedOdop = 'Garlic';
+    else if (cName.includes('sand') || cAddr.includes('jodhpur') || cAddr.includes('bundi')) resolvedOdop = 'Sandstone';
+    else if (cName.includes('stone') || cAddr.includes('jhalawar') || cAddr.includes('suket') || cAddr.includes('bangalore')) resolvedOdop = 'Kota Stone';
   }
 
-  const district = resolvedDistrict || matchedDistrict || catDefaults.district || 'Rajasthan';
-  const odopProduct = resolvedOdop || matchedOdop || catDefaults.odopProduct || 'ODOP Product';
+  if ((resolvedDistrict === 'Kota' || resolvedDistrict === 'Kota, Rajasthan' || !resolvedDistrict) &&
+      (cName.includes('garlic') || cAddr.includes('mandsaur') || cAddr.includes('baran') ||
+       cAddr.includes('bangalore') || cAddr.includes('jigani') ||
+       cAddr.includes('jodhpur') || cName.includes('marwar') || cAddr.includes('bundi') ||
+       cAddr.includes('suket') || cAddr.includes('jhalawar'))) {
+    if (cAddr.includes('mandsaur')) resolvedDistrict = 'Mandsaur, MP';
+    else if (cAddr.includes('baran')) resolvedDistrict = 'Baran, Rajasthan';
+    else if (cAddr.includes('jodhpur') || cName.includes('marwar')) resolvedDistrict = 'Jodhpur, Rajasthan';
+    else if (cAddr.includes('bundi')) resolvedDistrict = 'Bundi, Rajasthan';
+    else if (cAddr.includes('jhalawar') || cAddr.includes('suket')) resolvedDistrict = 'Jhalawar, Rajasthan';
+    else if (cAddr.includes('bangalore') || cAddr.includes('jigani')) resolvedDistrict = 'Bangalore, Karnataka';
+    else if (resolvedOdop === 'Garlic') resolvedDistrict = 'Baran, Rajasthan';
+    else if (resolvedOdop === 'Kota Stone') resolvedDistrict = 'Jhalawar, Rajasthan';
+    else if (resolvedOdop === 'Sandstone') resolvedDistrict = 'Bundi, Rajasthan';
+  }
+
+  const district = resolvedDistrict || (company?.contact?.address ? company.contact.address.split(',').slice(-2).join(',').trim() : (matchedDistrict || 'District Pending'));
+  const odopProduct = resolvedOdop || matchedOdop || company?.industry || 'ODOP Product';
 
   const state = company?.state || (district && district.includes('Rajasthan') ? 'Rajasthan' : 'Rajasthan');
 
@@ -728,8 +750,9 @@ export async function buildCatalogue({
     }
   }
 
-  const themedSel = colorOverride && sel.theme
-    ? Object.assign({}, sel.t, { theme: recolorTheme(sel.theme, colorOverride) })
+  const effectiveColor = colorOverride || info?.brandColors?.primary || info?.brandColors?.accent || (company?.brandColors && (company.brandColors.primary || company.brandColors.accent));
+  const themedSel = effectiveColor && sel.theme
+    ? Object.assign({}, sel.t, { theme: recolorTheme(sel.theme, effectiveColor) })
     : (sel.t || sel);
 
   const ctx = {
@@ -738,7 +761,8 @@ export async function buildCatalogue({
     copy,
     qr: primaryQr,
     qrs,
-    pf: 'Digital Profile'
+    pf: 'Digital Profile',
+    th: themedSel.theme || sel.theme
   };
 
   const pgs = sel.mod.render(themedSel, ctx);

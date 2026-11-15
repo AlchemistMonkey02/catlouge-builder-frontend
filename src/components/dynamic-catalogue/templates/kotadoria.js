@@ -212,7 +212,7 @@ function paramparaCover(c) {
 
           <h1 class="parampara-logo-title">${E(brand)}</h1>
           <div class="parampara-edition-badge">WHOLESALE TRADE LOOKBOOK &bull; 2026</div>
-          <div class="parampara-odop-badge" style="display:inline-flex; align-items:center; justify-content:center; gap:8px; background:rgba(197,160,89,0.18); border:1px solid #c5a059; padding:4px 14px; border-radius:20px; font-size:9.5px; font-weight:700; color:#fdfbf7; margin:6px auto 10px; letter-spacing:0.06em;">
+          <div class="parampara-odop-badge" style="display:inline-flex; align-items:center; justify-content:center; gap:8px; background:rgba(255,255,255,0.12); border:1px solid var(--acc, #c5a059); padding:4px 14px; border-radius:20px; font-size:9.5px; font-weight:700; color:#fdfbf7; margin:6px auto 10px; letter-spacing:0.06em;">
             <span>📍 District: <b>${E(c.info.district || 'Kota, Rajasthan')}</b></span>
             <span style="opacity:0.6">&bull;</span>
             <span>🏷️ ODOP Product: <b>${E(c.info.odopProduct || 'Kota Doria')}</b></span>
@@ -526,19 +526,20 @@ function paramparaWholesaleEnquiry(c, pageNum) {
 }
 
 function renderParamparaSuite(t, c) {
+  const th = t.theme || c.th || {};
   const style = `
-    --bg:#fdfbf7;
-    --ink:#221610;
-    --muted:#635348;
-    --acc:#c5a059;
-    --dark:#240c14;
-    --soft:#f7f0e4;
-    --line:#e5d5be;
-    --onDark:#ffffff;
-    --hf:'Playfair Display', serif;
-    --bf:'Inter', sans-serif;
-    background-color:#fdfbf7;
-    font-family:'Inter', sans-serif;
+    --bg:${th.bg || '#fdfbf7'};
+    --ink:${th.ink || '#221610'};
+    --muted:${th.muted || '#635348'};
+    --acc:${th.acc || '#c5a059'};
+    --dark:${th.dark || '#240c14'};
+    --soft:${th.soft || '#f7f0e4'};
+    --line:${th.line || '#e5d5be'};
+    --onDark:${th.onDark || '#ffffff'};
+    --hf:${t.hf || "'Playfair Display', serif"};
+    --bf:${t.bf || "'Inter', sans-serif"};
+    background-color:${th.bg || '#fdfbf7'};
+    font-family:${t.bf || "'Inter', sans-serif"};
   `;
 
   const wrap = (h, dark = false) => `
@@ -944,19 +945,20 @@ function silkenClosing(c, pageNum) {
 }
 
 function renderSilkenSagaSuite(t, c) {
+  const th = t.theme || c.th || {};
   const style = `
-    --bg:#fcf7f5;
-    --ink:#2a0e1b;
-    --muted:#6b4353;
-    --acc:#800020;
-    --dark:#420815;
-    --soft:#faeae6;
-    --line:#ecd4cc;
-    --onDark:#ffffff;
-    --hf:'Playfair Display', serif;
-    --bf:'Inter', sans-serif;
-    background-color:#fcf7f5;
-    font-family:'Inter', sans-serif;
+    --bg:${th.bg || '#fcf7f5'};
+    --ink:${th.ink || '#2a0e1b'};
+    --muted:${th.muted || '#6b4353'};
+    --acc:${th.acc || '#800020'};
+    --dark:${th.dark || '#420815'};
+    --soft:${th.soft || '#faeae6'};
+    --line:${th.line || '#ecd4cc'};
+    --onDark:${th.onDark || '#ffffff'};
+    --hf:${t.hf || "'Playfair Display', serif"};
+    --bf:${t.bf || "'Inter', sans-serif"};
+    background-color:${th.bg || '#fcf7f5'};
+    font-family:${t.bf || "'Inter', sans-serif"};
   `;
 
   const wrap = h => `<div class="pg kotadoria-pg silken-pg" style="${style}">${h}</div>`;
@@ -981,20 +983,20 @@ function renderSilkenSagaSuite(t, c) {
 // ============================================================================
 
 const wrapKd = (h, t, extraCls = '') => {
-  const th = t.theme;
+  const th = t.theme || {};
   const style = `
-    --bg:${th.bg};
-    --ink:${th.ink};
-    --muted:${th.muted};
-    --acc:${th.acc};
-    --dark:${th.dark};
-    --soft:${th.soft};
-    --line:${th.line};
-    --onDark:${th.onDark};
-    --hf:${t.hf};
-    --bf:${t.bf};
-    background-color:${th.bg};
-    font-family:${t.bf};
+    --bg:${th.bg || '#fdfbf7'};
+    --ink:${th.ink || '#221610'};
+    --muted:${th.muted || '#635348'};
+    --acc:${th.acc || '#c5a059'};
+    --dark:${th.dark || '#240c14'};
+    --soft:${th.soft || '#f7f0e4'};
+    --line:${th.line || '#e5d5be'};
+    --onDark:${th.onDark || '#ffffff'};
+    --hf:${t.hf || "'Playfair Display', serif"};
+    --bf:${t.bf || "'Inter', sans-serif"};
+    background-color:${th.bg || '#fdfbf7'};
+    font-family:${t.bf || "'Inter', sans-serif"};
   `;
   return `<div class="pg kotadoria-pg ${t.id}-mode ${extraCls}" style="${style}">${h}</div>`;
 };
@@ -3229,15 +3231,15 @@ const CSS = `
 /* -------------------------------------------------------------------------- */
 /* kd-7: SAPPHIRE VELVET ROYAL COUTURE MASTERPIECE 2-PER-PAGE SPREAD          */
 /* -------------------------------------------------------------------------- */
-.kd7-noir-cover { height: 100%; display: flex; align-items: center; justify-content: center; position: relative; background: radial-gradient(circle at center, #1e1b2e 0%, #0c0a14 100%); margin: -44px; padding: 44px; box-sizing: border-box; }
+.kd7-noir-cover { height: 100%; display: flex; align-items: center; justify-content: center; position: relative; background: radial-gradient(circle at center, var(--soft, #1e1b2e) 0%, var(--dark, #0c0a14) 100%); margin: -44px; padding: 44px; box-sizing: border-box; }
 .kd7-stars-grid { position: absolute; inset: 0; background-image: radial-gradient(circle, rgba(234,179,8,0.15) 1px, transparent 1px); background-size: 16px 16px; }
-.kd7-couture-content { position: relative; text-align: center; max-width: 620px; width: 100%; border: 1px solid rgba(234,179,8,0.4); padding: 44px; border-radius: 18px; background: rgba(12,10,20,0.85); box-shadow: 0 16px 40px rgba(0,0,0,0.6); }
-.kd7-crest { font-size: 12px; font-weight: 800; letter-spacing: 0.25em; color: #eab308; margin-bottom: 8px; }
+.kd7-couture-content { position: relative; text-align: center; max-width: 620px; width: 100%; border: 1px solid var(--acc, rgba(234,179,8,0.4)); padding: 44px; border-radius: 18px; background: var(--bg, rgba(12,10,20,0.85)); box-shadow: 0 16px 40px rgba(0,0,0,0.6); }
+.kd7-crest { font-size: 12px; font-weight: 800; letter-spacing: 0.25em; color: var(--acc, #eab308); margin-bottom: 8px; }
 .kd7-gold-title { font-family: var(--hf); font-size: 38px; color: #ffffff; margin: 0 0 6px; letter-spacing: 0.08em; }
-.kd7-gold-line { width: 80px; height: 2px; background: #eab308; margin: 0 auto 12px; }
+.kd7-gold-line { width: 80px; height: 2px; background: var(--acc, #eab308); margin: 0 auto 12px; }
 .kd7-tagline { font-size: 12px; color: #d4d4d8; font-weight: 500; margin-bottom: 24px; }
-.kd7-hero-window { width: 340px; height: 380px; border-radius: 12px; margin: 0 auto 24px; background-size: cover; background-position: center; border: 2px solid #eab308; position: relative; }
-.kd7-gold-border-corner { position: absolute; width: 14px; height: 14px; border-color: #eab308; border-style: solid; }
+.kd7-hero-window { width: 340px; height: 380px; border-radius: 12px; margin: 0 auto 24px; background-size: cover; background-position: center; border: 2px solid var(--acc, #eab308); position: relative; }
+.kd7-gold-border-corner { position: absolute; width: 14px; height: 14px; border-color: var(--acc, #eab308); border-style: solid; }
 .kd7-gold-border-corner.tl { top: -2px; left: -2px; border-width: 3px 0 0 3px; }
 .kd7-gold-border-corner.tr { top: -2px; right: -2px; border-width: 3px 3px 0 0; }
 .kd7-gold-border-corner.bl { bottom: -2px; left: -2px; border-width: 0 0 3px 3px; }
@@ -3245,52 +3247,52 @@ const CSS = `
 .kd7-provenance { font-size: 9.5px; letter-spacing: 0.16em; color: #a1a1aa; font-weight: 700; }
 
 .kd7-noir-story { display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 26px; height: 860px; align-items: center; color: #f4f4f5; }
-.kd7-gold-badge { font-size: 9.5px; font-weight: 800; letter-spacing: 0.2em; color: #eab308; }
+.kd7-gold-badge { font-size: 9.5px; font-weight: 800; letter-spacing: 0.2em; color: var(--acc, #eab308); }
 .kd7-story-left h2 { font-family: var(--hf); font-size: 30px; margin: 8px 0 16px; color: #fff; }
 .kd7-story-left p { font-size: 12px; line-height: 1.7; color: #d4d4d8; margin-bottom: 14px; }
-.kd7-hallmark-box { background: rgba(234,179,8,0.08); border: 1px solid rgba(234,179,8,0.3); border-radius: 10px; padding: 18px; margin-top: 20px; }
-.kd7-hallmark-box h4 { font-size: 13px; color: #eab308; margin: 0 0 6px; }
+.kd7-hallmark-box { background: rgba(234,179,8,0.08); border: 1px solid var(--acc, rgba(234,179,8,0.3)); border-radius: 10px; padding: 18px; margin-top: 20px; }
+.kd7-hallmark-box h4 { font-size: 13px; color: var(--acc, #eab308); margin: 0 0 6px; }
 .kd7-hallmark-box p { font-size: 11px; color: #e4e4e7; margin: 0; }
-.kd7-story-right { height: 740px; border-radius: 14px; background-size: cover; background-position: center; border: 2px solid #eab308; position: relative; }
-.kd7-portrait-caption { position: absolute; bottom: 16px; left: 16px; right: 16px; background: rgba(0,0,0,0.85); color: #eab308; padding: 8px 12px; border-radius: 6px; font-size: 10px; font-weight: 700; text-align: center; }
+.kd7-story-right { height: 740px; border-radius: 14px; background-size: cover; background-position: center; border: 2px solid var(--acc, #eab308); position: relative; }
+.kd7-portrait-caption { position: absolute; bottom: 16px; left: 16px; right: 16px; background: rgba(0,0,0,0.85); color: var(--acc, #eab308); padding: 8px 12px; border-radius: 6px; font-size: 10px; font-weight: 700; text-align: center; }
 
 .kd7-noir-head { margin-bottom: 20px; }
 .kd7-noir-head h2 { font-family: var(--hf); font-size: 26px; color: #fff; margin: 0 0 4px; }
 .kd7-noir-head p { font-size: 11.5px; color: #a1a1aa; }
 .kd7-couture-grid { display: flex; flex-direction: column; gap: 24px; }
-.kd7-couture-card { display: grid; grid-template-columns: 280px 1fr; background: rgba(255,255,255,0.04); border: 1px solid rgba(234,179,8,0.35); border-radius: 14px; overflow: hidden; }
+.kd7-couture-card { display: grid; grid-template-columns: 280px 1fr; background: rgba(255,255,255,0.04); border: 1px solid var(--acc, rgba(234,179,8,0.35)); border-radius: 14px; overflow: hidden; }
 .kd7-couture-img { height: 340px; background-size: cover; background-position: center; position: relative; }
-.kd7-edition-chip { position: absolute; top: 12px; left: 12px; background: #eab308; color: #000; font-size: 8.5px; font-weight: 800; padding: 3px 8px; border-radius: 4px; }
+.kd7-edition-chip { position: absolute; top: 12px; left: 12px; background: var(--acc, #eab308); color: #000; font-size: 8.5px; font-weight: 800; padding: 3px 8px; border-radius: 4px; }
 .kd7-couture-body { padding: 24px 28px; display: flex; flex-direction: column; justify-content: space-between; color: #f4f4f5; }
 .kd7-meta-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
-.kd7-code { font-size: 10px; font-weight: 800; color: #eab308; }
-.kd7-khat-tag { font-size: 9px; background: rgba(234,179,8,0.15); color: #eab308; padding: 2px 8px; border-radius: 4px; font-weight: 700; }
+.kd7-code { font-size: 10px; font-weight: 800; color: var(--acc, #eab308); }
+.kd7-khat-tag { font-size: 9px; background: rgba(234,179,8,0.15); color: var(--acc, #eab308); padding: 2px 8px; border-radius: 4px; font-weight: 700; }
 .kd7-couture-body h3 { font-family: var(--hf); font-size: 20px; color: #fff; margin: 0 0 6px; }
 .kd7-couture-body p { font-size: 11.5px; line-height: 1.6; color: #a1a1aa; margin: 0 0 14px; }
 .kd7-specs-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 10.5px; color: #d4d4d8; background: rgba(0,0,0,0.3); padding: 12px; border-radius: 8px; margin-bottom: 14px; }
 .kd7-specs-grid span { color: #a1a1aa; }
 .kd7-couture-foot { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 10px; }
-.kd7-price { font-size: 18px; font-weight: 800; color: #eab308; }
+.kd7-price { font-size: 18px; font-weight: 800; color: var(--acc, #eab308); }
 .kd7-bespoke-tag { font-size: 10px; color: #a1a1aa; font-weight: 700; }
 
 .kd7-noir-tech { height: 860px; color: #f4f4f5; }
 .kd7-noir-tech h3 { font-family: var(--hf); font-size: 24px; color: #fff; margin: 0 0 20px; }
 .kd7-tech-metrics-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 24px; }
-.kd7-spec-panel { background: rgba(255,255,255,0.04); border: 1px solid rgba(234,179,8,0.3); border-radius: 12px; padding: 22px; }
-.kd7-spec-panel h4 { font-size: 14px; color: #eab308; margin: 0 0 14px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 8px; }
+.kd7-spec-panel { background: rgba(255,255,255,0.04); border: 1px solid var(--acc, rgba(234,179,8,0.3)); border-radius: 12px; padding: 22px; }
+.kd7-spec-panel h4 { font-size: 14px; color: var(--acc, #eab308); margin: 0 0 14px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 8px; }
 .kd7-spec-item { display: flex; justify-content: space-between; font-size: 11.5px; margin-bottom: 10px; }
 .kd7-spec-item span { color: #a1a1aa; }
 .kd7-spec-item b { color: #fff; }
-.kd7-hallmark-badge { background: rgba(234,179,8,0.1); border: 1px solid #eab308; border-radius: 10px; padding: 16px; text-align: center; color: #eab308; font-weight: 700; font-size: 11.5px; }
+.kd7-hallmark-badge { background: rgba(234,179,8,0.1); border: 1px solid var(--acc, #eab308); border-radius: 10px; padding: 16px; text-align: center; color: var(--acc, #eab308); font-weight: 700; font-size: 11.5px; }
 
 .kd7-noir-closing { height: 100%; display: flex; align-items: center; justify-content: center; }
-.kd7-vip-box { border: 1px solid rgba(234,179,8,0.5); background: rgba(18,16,25,0.9); padding: 44px; border-radius: 16px; text-align: center; max-width: 600px; width: 100%; color: #fff; box-shadow: 0 14px 36px rgba(0,0,0,0.5); }
+.kd7-vip-box { border: 1px solid var(--acc, rgba(234,179,8,0.5)); background: rgba(18,16,25,0.9); padding: 44px; border-radius: 16px; text-align: center; max-width: 600px; width: 100%; color: #fff; box-shadow: 0 14px 36px rgba(0,0,0,0.5); }
 .kd7-crest-small { font-size: 28px; margin-bottom: 8px; }
 .kd7-vip-box h2 { font-family: var(--hf); font-size: 26px; color: #fff; margin: 0 0 8px; }
 .kd7-vip-box p { font-size: 12px; color: #a1a1aa; margin-bottom: 24px; }
 .kd7-vip-contacts { display: flex; flex-direction: column; gap: 10px; text-align: left; background: rgba(255,255,255,0.05); padding: 18px; border-radius: 8px; margin-bottom: 20px; }
 .kd7-vip-contacts div { display: flex; justify-content: space-between; font-size: 11.5px; }
-.kd7-vip-contacts span { color: #eab308; }
+.kd7-vip-contacts span { color: var(--acc, #eab308); }
 .kd7-vip-contacts b { color: #fff; }
 .kd7-courier-note { font-size: 10.5px; color: #d4d4d8; font-style: italic; }
 

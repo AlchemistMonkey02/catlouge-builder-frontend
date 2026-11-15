@@ -527,10 +527,18 @@
 .dz-bar .bar-layers button {
   padding: 4px 8px;
   font-size: 11px;
-  max-width: 120px;
+  max-width: 140px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.dz-bar .bar-layers button.on {
+  background: #2563eb !important;
+  color: #ffffff !important;
+  border-color: #2563eb !important;
+  font-weight: 700 !important;
+  box-shadow: 0 2px 6px rgba(37, 99, 235, 0.35);
 }
 
 .dz-bar .bar-row-shapes {
