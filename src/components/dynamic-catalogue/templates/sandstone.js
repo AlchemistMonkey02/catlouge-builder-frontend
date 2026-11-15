@@ -1,6 +1,8 @@
 /* Sand Stone Catalogue Templates (8 dedicated structurally distinct architectural templates)
    Specialized for Jodhpur Sandstone, Teakwood, Rainbow, Dholpur, Hand-chiseled rockface & Cladding */
 
+import { formatProductPrice, formatProductPriceRange } from "../priceUtils.js";
+
 const E = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const cap = s => (s || '').toUpperCase();
 const pn = n => String(n).padStart(2, '0');
@@ -11,14 +13,7 @@ const fmtWa = w => {
   s = s.replace(/^(\+?91\s*)+/gi, '').replace(/^\+/, '').trim();
   return `+91 ${s}`;
 };
-const fmtPrice = p => {
-  if (p == null || p === '') return '₹135 / sq.ft';
-  const s = String(p).trim();
-  if (s.startsWith('₹')) return s;
-  const num = Number(s.replace(/[^0-9.]/g, ''));
-  if (!isNaN(num) && num > 0) return `₹${num.toLocaleString('en-IN')} / sq.ft`;
-  return 'Price on Request';
-};
+const fmtPrice = (p, unit, item) => formatProductPrice(p, unit, item);
 
 const th = (name, bg, ink, muted, acc, dark, soft, line, onDark) => ({ name, bg, ink, muted, acc, dark, soft, line, onDark });
 
@@ -227,18 +222,18 @@ function renderSandstoneProductCard(it, idx, c, prefix = 'snd') {
     if (!rawImg || typeof rawImg !== 'string') rawImg = it.angle1 || '/assets/sand-stone/Agra-Red-Sandstone-Sandblasted.jpg';
   }
   const cardImg = typeof rawImg === 'string' && rawImg ? rawImg : '/assets/sand-stone/Agra-Red-Sandstone-Sandblasted.jpg';
-  const cardPrice = fmtPrice(it.price || it.formattedPrice || 135);
+  const cardPrice = fmtPrice(it.price || it.formattedPrice, it.unit, it);
   const cardSku = it.sku || it.code || `#${prefix.toUpperCase()}-${pn(idx + 1)}`;
   const cardName = (it.name || it.title || 'Royal Agra Red Sandstone').replace(/\s*\([^)]*Angle[^)]*\)/gi, '').trim();
   const cardDesc = it.shortDescription || it.description || 'Natural sedimentary quartz sandstone with high weather resistance and rich texture.';
-  const cardTag = it.subcategory || it.productType || 'SANDSTONE';
+  const cardTag = it.subcategory || it.productType || it.category || (it.brand ? it.brand.toUpperCase() : 'SANDSTONE');
   const cardCraft = (c.info && c.info.ent) || it.brand || 'Heritage Sandstone Guild';
 
   const specSize = it.size || '600x900 mm (25-30 mm Calibrated Sawn)';
   const specMaterial = it.material || it.materialComposition || 'Natural Quartzite Sandstone';
   const specFinish = it.finish || 'Sandblasted / Hand-Chiseled / Honed';
   const specApp = it.application || it.useApplication || 'Exterior Facades, Cladding & Paving';
-  const specPriceRange = it.priceRange || `${cardPrice} – ₹190 / sq.ft`;
+  const specPriceRange = formatProductPriceRange(it.priceRange, it.price, null, it.unit, it);
   const specMoq = it.moq || '400 sq.ft (Project Lot)';
 
   const safeImg = typeof cardImg === 'string' ? cardImg.replace(/'/g, '%27') : '/assets/sand-stone/Agra-Red-Sandstone-Sandblasted.jpg';

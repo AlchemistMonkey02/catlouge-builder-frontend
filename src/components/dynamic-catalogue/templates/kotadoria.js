@@ -4,6 +4,8 @@
    - Silken Saga Celebration & Wedding Lookbook (exact recreation of Silken_Saga_Banarasi_Sarees.pdf)
 */
 
+import { formatProductPrice, formatProductPriceRange } from "../priceUtils.js";
+
 const E = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const cap = s => (s || '').toUpperCase();
 const pn = n => String(n).padStart(2, '0');
@@ -31,14 +33,7 @@ const bg = u => {
   const cleanUrl = String(url).replace(/'/g, '%27');
   return `background-image:url('${cleanUrl}');background-size:cover;background-position:center;`;
 };
-const fmtPrice = p => {
-  if (p == null || p === '') return '₹4,200';
-  const s = String(p).trim();
-  if (s.startsWith('₹')) return s;
-  const num = Number(s.replace(/[^0-9.]/g, ''));
-  if (!isNaN(num) && num > 0) return `₹${num.toLocaleString('en-IN')}`;
-  return `₹${s}`;
-};
+const fmtPrice = (p, unit, item) => formatProductPrice(p, unit, item);
 const fmtWa = w => {
   if (!w) return '';
   let s = String(w).trim();
@@ -1101,7 +1096,7 @@ function kd1_story(c, no) {
 
 function renderKdProductCard(it, idx, c, prefix = 'kd') {
   const cardImg = getImgUrl(it) || '/assets/kota-doria/bagru-hand-block-print-kota-doria-cotton-natural-dyed-3pc-unstitched-602.jpg';
-  const cardPrice = fmtPrice(it.price || it.formattedPrice || 3200);
+  const cardPrice = fmtPrice(it.price || it.formattedPrice || 3200, it.unit, it);
   const cardSku = it.sku || it.code || `#${prefix.toUpperCase()}-${pn(idx + 1)}`;
   const cardName = it.name || it.title || 'Royal Handloom Ensemble';
   const cardDesc = it.shortDescription || it.description || 'Intricate zari pallu with micro square khat weave on pit-loom.';
@@ -1112,7 +1107,7 @@ function renderKdProductCard(it, idx, c, prefix = 'kd') {
   const specMaterial = it.material || it.materialComposition || 'Pure Mulberry Silk-Cotton';
   const specFinish = it.finish || 'Tested Lurex Gold Zari';
   const specApp = it.application || it.useApplication || 'Bridal & Festive Drapes';
-  const specPriceRange = it.priceRange || `${cardPrice} – ₹6,500`;
+  const specPriceRange = formatProductPriceRange(it.priceRange, it.price || 3200, 6500, it.unit, it);
   const specMoq = it.moq || '10 Pieces (Wholesale)';
 
   const safeImg = cardImg.replace(/'/g, '%27');
@@ -1186,7 +1181,7 @@ function kd1_products(c, no, slice, pageIdx, totalPages) {
     <div class="kd1-grid">
       ${slice.map((it, idx) => {
         const cardImg = getImgUrl(it) || '/assets/kota-doria/0X2A0389_db4c4b42-1d9b-405b-9ea0-664b5017af38.jpg';
-        const cardPrice = fmtPrice(it.price || it.formattedPrice || 4200);
+        const cardPrice = fmtPrice(it.price || it.formattedPrice || 4200, it.unit, it);
         const cardSku = it.sku || it.code || `#KD1-${pn(idx + 1)}`;
         const cardName = it.name || it.title || 'Royal Handloom Ensemble';
         const cardDesc = it.shortDescription || it.description || 'Intricate zari pallu with micro square khat weave on pit-loom.';
@@ -1198,7 +1193,7 @@ function kd1_products(c, no, slice, pageIdx, totalPages) {
         const specMaterial = it.material || it.materialComposition || 'Pure Mulberry Silk-Cotton';
         const specFinish = it.finish || 'Tested Lurex Gold Zari';
         const specApp = it.application || it.useApplication || 'Bridal & Festive Drapes';
-        const specPriceRange = it.priceRange || `${cardPrice} – ₹6,500`;
+        const specPriceRange = formatProductPriceRange(it.priceRange, it.price || 4200, 6500, it.unit, it);
         const specMoq = it.moq || '10 Pieces (Wholesale)';
 
         const safeImg = cardImg.replace(/'/g, '%27');

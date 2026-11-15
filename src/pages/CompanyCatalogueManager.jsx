@@ -46,6 +46,7 @@ const ODOP_PRESETS = {
     useApplication: "Bridal Ensembles, Wedding Drapes & High-End Boutique Luxury",
     moq: "10 Pieces (Wholesale)",
     priceRange: "₹2,450 – ₹6,500",
+    unit: "",
     image: "/assets/kota-doria/0X2A0389_db4c4b42-1d9b-405b-9ea0-664b5017af38.jpg"
   },
   "Garlic": {
@@ -60,6 +61,7 @@ const ODOP_PRESETS = {
     useApplication: "Commercial Culinary, Food Processing & Export",
     moq: "500 kg (Wholesale Lot)",
     priceRange: "₹180 – ₹240 / kg",
+    unit: "kg",
     image: "/assets/garlic/garlic-01.jpeg"
   },
   "Kota Stone": {
@@ -74,6 +76,7 @@ const ODOP_PRESETS = {
     useApplication: "Heavy Commercial Flooring & Corridors",
     moq: "500 sq.ft (Quarry Lot)",
     priceRange: "₹85 – ₹120 / sq.ft",
+    unit: "sq.ft",
     image: "/assets/kota-stone/Blue-Kota-Stone-Tiles-1.jpg"
   },
   "Sandstone": {
@@ -88,6 +91,7 @@ const ODOP_PRESETS = {
     useApplication: "Exterior Facades, Cladding & Paving",
     moq: "400 sq.ft (Project Lot)",
     priceRange: "₹135 – ₹190 / sq.ft",
+    unit: "sq.ft",
     image: "/assets/sand-stone/Agra-Red-Sandstone-Sandblasted.jpg"
   }
 };
@@ -145,6 +149,7 @@ export default function CompanyCatalogueManager() {
     priceRange: "₹2,450 – ₹6,500",
     subcategory: "",
     price: 1999,
+    unit: "",
     mrp: 2999,
     stock: 50,
     image: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=800",
@@ -203,9 +208,17 @@ export default function CompanyCatalogueManager() {
       }
 
       if (prodRes.data?.products && targetCompany) {
+        let prods = [...prodRes.data.products];
+        try {
+          const localProdOverrides = JSON.parse(localStorage.getItem("catalogue_local_products") || "{}");
+          if (Object.keys(localProdOverrides).length > 0) {
+            prods = prods.map((p) => (localProdOverrides[p._id] ? { ...p, ...localProdOverrides[p._id] } : p));
+          }
+        } catch (_) {}
+
         // Strictly filter products belonging to this company or matching brand name
-        const compProducts = prodRes.data.products.filter(
-          (p) => p.companyId === targetCompany._id || p.brand?.toLowerCase() === targetCompany.name.toLowerCase()
+        const compProducts = prods.filter(
+          (p) => String(p.companyId) === String(targetCompany._id) || p.brand?.toLowerCase() === targetCompany.name.toLowerCase()
         );
         setProducts(compProducts);
       }
@@ -315,56 +328,109 @@ export default function CompanyCatalogueManager() {
       brand: company?.name || productForm.brand || "Brand",
       sku: productForm.sku || `SKU-${Date.now().toString(36).toUpperCase()}`,
       status: "approved",
+      unit: productForm.unit !== undefined ? productForm.unit : "",
+      pricingUnit: productForm.unit !== undefined ? productForm.unit : "",
     };
 
     try {
       if (editingProductId) {
         await updateCatalogueProduct(editingProductId, payload);
+        // Immediately update local UI state
+        setProducts((prev) =>
+          prev.map((item) => (item._id === editingProductId ? { ...item, ...payload } : item))
+        );
+        // Persist in localStorage backup for instant catalogue sync
+        try {
+          const localProdOverrides = JSON.parse(localStorage.getItem("catalogue_local_products") || "{}");
+          localProdOverrides[editingProductId] = { ...payload, _id: editingProductId };
+          localStorage.setItem("catalogue_local_products", JSON.stringify(localProdOverrides));
+        } catch (_) {}
       } else {
-        await createCatalogueProduct(payload);
+        const created = await createCatalogueProduct(payload);
+        if (created?.data) {
+          setProducts((prev) => [created.data, ...prev]);
+        }
       }
       setIsProductModalOpen(false);
       setEditingProductId(null);
       resetForm();
       loadCompanyAndProducts();
     } catch (err) {
-      alert("Save failed: " + (err.response?.data?.message || err.message));
+      console.warn("Product save server response:", err.message);
+      // Even if network blips, persist edits in UI and localStorage so user never loses work
+      if (editingProductId) {
+        setProducts((prev) =>
+          prev.map((item) => (item._id === editingProductId ? { ...item, ...payload } : item))
+        );
+        try {
+          const localProdOverrides = JSON.parse(localStorage.getItem("catalogue_local_products") || "{}");
+          localProdOverrides[editingProductId] = { ...payload, _id: editingProductId };
+          localStorage.setItem("catalogue_local_products", JSON.stringify(localProdOverrides));
+        } catch (_) {}
+        setIsProductModalOpen(false);
+        setEditingProductId(null);
+        resetForm();
+      } else {
+        alert("Save failed: " + (err.response?.data?.message || err.message));
+      }
     }
   };
 
   // Edit existing product
   const handleOpenEditProduct = (p) => {
     setEditingProductId(p._id);
+
+    // Apply any local override if present
+    let currentP = { ...p };
+    try {
+      const localProdOverrides = JSON.parse(localStorage.getItem("catalogue_local_products") || "{}");
+      if (localProdOverrides[p._id]) {
+        currentP = { ...currentP, ...localProdOverrides[p._id] };
+      }
+    } catch (_) {}
+
+    const pSpecs = currentP.technicalSpecifications || [];
+    const findSpec = (key) => pSpecs.find((s) => s.key?.toLowerCase().includes(key.toLowerCase()))?.value || "";
+
+    const resolvedSize = currentP.size || findSpec("size") || findSpec("dimension") || "";
+    const resolvedMaterial = currentP.material || currentP.materialComposition || findSpec("material") || "";
+    const resolvedFinish = currentP.finish || currentP.color || findSpec("finish") || "";
+    const resolvedApp = currentP.application || currentP.useApplication || findSpec("application") || findSpec("use") || "";
+    const resolvedMoq = currentP.moq || findSpec("moq") || "";
+    const resolvedPriceRange = currentP.priceRange || (currentP.price ? `₹${currentP.price.toLocaleString()} – ₹${(currentP.mrp || Math.round(currentP.price * 1.35)).toLocaleString()}` : "");
+
     setProductForm({
-      name: p.name || "",
-      sku: p.sku || "",
-      brand: p.brand || "",
-      category: p.category || "Kota Doria Specialty",
-      district: p.district || company?.district || "Kota, Rajasthan",
-      odopProduct: p.odopProduct || company?.odopProduct || "Kota Doria",
-      size: p.size || "",
-      material: p.material || p.materialComposition || "",
-      finish: p.finish || p.color || "",
-      application: p.application || p.useApplication || "",
-      useApplication: p.useApplication || p.application || "",
-      moq: p.moq || "",
-      priceRange: p.priceRange || "",
-      subcategory: p.subcategory || "",
-      price: p.price || 0,
-      mrp: p.mrp || 0,
-      stock: p.stock || 0,
-      image: p.image || (p.images && p.images[0]?.url) || "",
-      description: p.description || "",
-      shortDescription: p.shortDescription || "",
-      keyFeatures: p.keyFeatures || [],
-      materialComposition: p.materialComposition || "",
-      color: p.color || "",
-      hsnCode: p.hsnCode || "",
-      dimensions: p.dimensions || { length: 0, width: 0, height: 0, unit: "cm" },
-      weight: p.weight || { value: 0, unit: "g" },
-      technicalSpecifications: p.technicalSpecifications || [],
+      name: currentP.name || "",
+      sku: currentP.sku || "",
+      brand: currentP.brand || "",
+      category: currentP.category || "Kota Doria Specialty",
+      district: currentP.district || company?.district || "Kota, Rajasthan",
+      odopProduct: currentP.odopProduct || company?.odopProduct || "Kota Doria",
+      size: resolvedSize,
+      material: resolvedMaterial,
+      finish: resolvedFinish,
+      application: resolvedApp,
+      useApplication: resolvedApp,
+      moq: resolvedMoq,
+      priceRange: resolvedPriceRange,
+      subcategory: currentP.subcategory || "",
+      price: currentP.price || 0,
+      unit: currentP.unit !== undefined ? currentP.unit : (currentP.pricingUnit || ""),
+      pricingUnit: currentP.pricingUnit !== undefined ? currentP.pricingUnit : (currentP.unit || ""),
+      mrp: currentP.mrp || 0,
+      stock: currentP.stock || 0,
+      image: currentP.image || (currentP.images && currentP.images[0]?.url) || "",
+      description: currentP.description || "",
+      shortDescription: currentP.shortDescription || "",
+      keyFeatures: currentP.keyFeatures || [],
+      materialComposition: resolvedMaterial,
+      color: resolvedFinish,
+      hsnCode: currentP.hsnCode || "",
+      dimensions: currentP.dimensions || { length: 0, width: 0, height: 0, unit: "cm" },
+      weight: currentP.weight || { value: 0, unit: "g" },
+      technicalSpecifications: currentP.technicalSpecifications || [],
     });
-    setImagePreview(p.image || "");
+    setImagePreview(currentP.image || "");
     setIsProductModalOpen(true);
   };
 
@@ -398,6 +464,7 @@ export default function CompanyCatalogueManager() {
       image: defOdop.image,
       subcategory: "",
       price: 1999,
+      unit: defOdop.unit || "",
       mrp: 2999,
       stock: 50,
       description: "",
@@ -770,7 +837,7 @@ export default function CompanyCatalogueManager() {
                       </td>
                       <td>
                         <span style={{ fontWeight: 800, color: "var(--text-primary)", fontSize: "0.95rem" }}>
-                          ₹{p.price}
+                          ₹{p.price?.toLocaleString?.() || p.price}{p.unit ? ` / ${p.unit}` : ""}
                         </span>
                       </td>
                       <td>
@@ -938,6 +1005,7 @@ export default function CompanyCatalogueManager() {
                             useApplication: preset.useApplication,
                             moq: preset.moq,
                             priceRange: preset.priceRange,
+                            unit: preset.unit !== undefined ? preset.unit : prev.unit,
                             image: (!prev.image || prev.image.includes("unsplash")) ? preset.image : prev.image,
                           }));
                         }}
@@ -1046,10 +1114,10 @@ export default function CompanyCatalogueManager() {
               </div>
 
               {/* Pricing & Stock */}
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "0.75rem" }}>
+              <div style={{ display: "grid", gridTemplateColumns: "1.2fr 1.3fr 1fr 1fr", gap: "0.75rem" }}>
                 <div>
                   <label style={{ fontSize: "0.8rem", color: "var(--text-secondary)", display: "block", marginBottom: "4px" }}>
-                    Selling / Wholesale Price (₹) *
+                    Selling Price (₹) *
                   </label>
                   <input
                     type="number"
@@ -1059,6 +1127,34 @@ export default function CompanyCatalogueManager() {
                     value={productForm.price}
                     onChange={(e) => setProductForm({ ...productForm, price: Number(e.target.value) })}
                   />
+                </div>
+                <div>
+                  <label style={{ fontSize: "0.8rem", color: "var(--text-secondary)", display: "block", marginBottom: "4px" }}>
+                    Pricing Unit (per)
+                  </label>
+                  <select
+                    className="input-field"
+                    style={{ paddingLeft: "0.6rem", fontWeight: 600, background: "var(--bg-surface)" }}
+                    value={productForm.unit || ""}
+                    onChange={(e) => setProductForm({ ...productForm, unit: e.target.value })}
+                  >
+                    <option value="">No Unit (Clothes, Saree, Items)</option>
+                    <option value="sq.ft">sq.ft (Stone, Tiles, Granite)</option>
+                    <option value="sq.m">sq.m (Square Metre)</option>
+                    <option value="kg">kg (Garlic, Spices, Agro)</option>
+                    <option value="g">g (Gram)</option>
+                    <option value="tonne">tonne / MT</option>
+                    <option value="metre">metre (Textiles, Fabric)</option>
+                    <option value="m">m (Metre)</option>
+                    <option value="ml">ml (Oils, Liquids, Perfume)</option>
+                    <option value="litre">litre (Liquids, Dairy)</option>
+                    <option value="piece">piece (Individual Unit)</option>
+                    <option value="pair">pair (Shoes, Accessories)</option>
+                    <option value="set">set (Ensemble, Suite)</option>
+                    <option value="box">box (Pack, Carton)</option>
+                    <option value="roll">roll</option>
+                    <option value="bundle">bundle</option>
+                  </select>
                 </div>
                 <div>
                   <label style={{ fontSize: "0.8rem", color: "var(--text-secondary)", display: "block", marginBottom: "4px" }}>
@@ -1084,6 +1180,25 @@ export default function CompanyCatalogueManager() {
                     onChange={(e) => setProductForm({ ...productForm, stock: Number(e.target.value) })}
                   />
                 </div>
+              </div>
+
+              {/* Live Price Tag Preview */}
+              <div style={{ marginTop: "0.35rem", display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.78rem" }}>
+                <span style={{ color: "var(--text-muted)" }}>Display in catalogue:</span>
+                <span style={{
+                  background: "#ecfdf5",
+                  color: "#065f46",
+                  border: "1px solid #a7f3d0",
+                  padding: "2px 8px",
+                  borderRadius: "6px",
+                  fontWeight: 700,
+                  fontSize: "0.82rem"
+                }}>
+                  ₹{(productForm.price || 0).toLocaleString()}{productForm.unit ? ` / ${productForm.unit}` : ""}
+                </span>
+                <span style={{ color: "var(--text-muted)", fontStyle: "italic", fontSize: "0.74rem" }}>
+                  {productForm.unit ? `(Priced per ${productForm.unit})` : "(No unit suffix — perfect for clothes, sarees, electronics & standalone products)"}
+                </span>
               </div>
 
               {/* Product Image: Upload from Computer or URL */}

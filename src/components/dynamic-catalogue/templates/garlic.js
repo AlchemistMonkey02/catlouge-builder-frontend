@@ -1,6 +1,8 @@
 /* Garlic Catalogue Templates (8 dedicated structurally distinct professional templates)
    Specialized for Fresh Garlic Bulbs, Export Grades, Peeled Cloves, Flakes & Agri-Commodity */
 
+import { formatProductPrice, formatProductPriceRange } from "../priceUtils.js";
+
 const E = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const cap = s => (s || '').toUpperCase();
 const pn = n => String(n).padStart(2, '0');
@@ -11,14 +13,7 @@ const fmtWa = w => {
   s = s.replace(/^(\+?91\s*)+/gi, '').replace(/^\+/, '').trim();
   return `+91 ${s}`;
 };
-const fmtPrice = p => {
-  if (p == null || p === '') return '₹180 / kg';
-  const s = String(p).trim();
-  if (s.startsWith('₹')) return s;
-  const num = Number(s.replace(/[^0-9.]/g, ''));
-  if (!isNaN(num) && num > 0) return `₹${num.toLocaleString('en-IN')} / kg`;
-  return 'Price on Request';
-};
+const fmtPrice = (p, unit, item) => formatProductPrice(p, unit, item);
 
 const th = (name, bg, ink, muted, acc, dark, soft, line, onDark) => ({ name, bg, ink, muted, acc, dark, soft, line, onDark });
 
@@ -230,18 +225,18 @@ function renderGarlicProductCard(it, idx, c, prefix = 'grl') {
     if (!rawImg || typeof rawImg !== 'string') rawImg = it.angle1 || '/assets/garlic/garlic-01.jpeg';
   }
   const cardImg = typeof rawImg === 'string' && rawImg ? rawImg : '/assets/garlic/garlic-01.jpeg';
-  const cardPrice = fmtPrice(it.price || it.formattedPrice || 180);
+  const cardPrice = fmtPrice(it.price || it.formattedPrice, it.unit, it);
   const cardSku = it.sku || it.code || `#${prefix.toUpperCase()}-${pn(idx + 1)}`;
   const cardName = (it.name || it.title || 'Grade-A Export Fresh Garlic Bulbs').replace(/\s*\([^)]*Angle[^)]*\)/gi, '').trim();
   const cardDesc = it.shortDescription || it.description || 'Sun-cured large caliber garlic bulbs from Malwa soil with papery white skins and rich aromatic allicin.';
-  const cardTag = it.subcategory || it.productType || 'EXPORT GARLIC';
+  const cardTag = it.subcategory || it.productType || it.category || (it.brand ? it.brand.toUpperCase() : 'PREMIUM SELECTION');
   const cardCraft = (c.info && c.info.ent) || it.brand || 'Malwa Agro Producer Co.';
 
   const specSize = it.size || '50 - 65 mm (Grade A+ Large)';
   const specMaterial = it.material || it.materialComposition || '100% Organically Grown Malwa Garlic';
   const specFinish = it.finish || 'Sun-Cured Export Clean White Skin';
   const specApp = it.application || it.useApplication || 'Commercial Culinary, Dehydration & Export';
-  const specPriceRange = it.priceRange || `${cardPrice} – ₹240 / kg`;
+  const specPriceRange = formatProductPriceRange(it.priceRange, it.price, null, it.unit, it);
   const specMoq = it.moq || '500 kg (Wholesale Lot)';
 
   const safeImg = typeof cardImg === 'string' ? cardImg.replace(/'/g, '%27') : '/assets/garlic/garlic-01.jpeg';

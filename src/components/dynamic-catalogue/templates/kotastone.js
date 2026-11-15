@@ -1,6 +1,8 @@
 /* Kota Stone Catalogue Templates (8 dedicated structurally distinct architectural templates)
    Specialized for Blue-Green Limestone, Mirror Polish, Leather Finish, Commercial Paving & Cobbles */
 
+import { formatProductPrice, formatProductPriceRange } from "../priceUtils.js";
+
 const E = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const cap = s => (s || '').toUpperCase();
 const pn = n => String(n).padStart(2, '0');
@@ -11,14 +13,7 @@ const fmtWa = w => {
   s = s.replace(/^(\+?91\s*)+/gi, '').replace(/^\+/, '').trim();
   return `+91 ${s}`;
 };
-const fmtPrice = p => {
-  if (p == null || p === '') return '₹85 / sq.ft';
-  const s = String(p).trim();
-  if (s.startsWith('₹')) return s;
-  const num = Number(s.replace(/[^0-9.]/g, ''));
-  if (!isNaN(num) && num > 0) return `₹${num.toLocaleString('en-IN')} / sq.ft`;
-  return 'Price on Request';
-};
+const fmtPrice = (p, unit, item) => formatProductPrice(p, unit, item);
 
 let uid = 0;
 const cut = (img, x, y, w, h, pts, extra) => {
@@ -229,18 +224,18 @@ function renderKotaStoneProductCard(it, idx, c, prefix = 'kts') {
     if (!rawImg || typeof rawImg !== 'string') rawImg = it.angle1 || '/assets/kota-stone/Blue-Kota-Stone-Tiles-1.jpg';
   }
   const cardImg = typeof rawImg === 'string' && rawImg ? rawImg : '/assets/kota-stone/Blue-Kota-Stone-Tiles-1.jpg';
-  const cardPrice = fmtPrice(it.price || it.formattedPrice || 85);
+  const cardPrice = fmtPrice(it.price || it.formattedPrice, it.unit, it);
   const cardSku = it.sku || it.code || `#${prefix.toUpperCase()}-${pn(idx + 1)}`;
   const cardName = (it.name || it.title || 'Kota Stone Architectural Slab').replace(/\s*\([^)]*Angle[^)]*\)/gi, '').trim();
   const cardDesc = it.shortDescription || it.description || 'Natural fine-grained limestone with non-slip texture and high compressive strength.';
-  const cardTag = it.subcategory || it.productType || 'ARCHITECTURAL STONE';
+  const cardTag = it.subcategory || it.productType || it.category || (it.brand ? it.brand.toUpperCase() : 'ARCHITECTURAL STONE');
   const cardCraft = (c.info && c.info.ent) || it.brand || 'Kota Stone Quarry Guild';
 
   const specSize = it.size || '600x600 mm (18-20 mm Calibrated)';
   const specMaterial = it.material || it.materialComposition || 'Natural Indurated Limestone (Kota Stone)';
   const specFinish = it.finish || 'Mirror High Polish / Honed';
   const specApp = it.application || it.useApplication || 'Heavy Commercial Flooring & Corridors';
-  const specPriceRange = it.priceRange || `${cardPrice} – ₹120 / sq.ft`;
+  const specPriceRange = formatProductPriceRange(it.priceRange, it.price, null, it.unit, it);
   const specMoq = it.moq || '500 sq.ft (Quarry Lot)';
 
   const safeImg = typeof cardImg === 'string' ? cardImg.replace(/'/g, '%27') : '/assets/kota-stone/Blue-Kota-Stone-Tiles-1.jpg';

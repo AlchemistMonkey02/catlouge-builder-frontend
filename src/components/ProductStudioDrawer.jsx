@@ -36,6 +36,7 @@ const ODOP_PRESETS = {
     application: "Bridal Ensembles, Wedding Drapes & High-End Boutique Luxury",
     moq: "10 Pieces (Wholesale)",
     priceRange: "₹2,450 – ₹6,500",
+    unit: "",
   },
   "Garlic": {
     category: "Garlic Specialty",
@@ -47,6 +48,7 @@ const ODOP_PRESETS = {
     application: "Commercial Culinary, Food Processing & Export",
     moq: "500 kg (Wholesale Lot)",
     priceRange: "₹180 – ₹240 / kg",
+    unit: "kg",
   },
   "Kota Stone": {
     category: "Kota Stone Specialty",
@@ -58,6 +60,7 @@ const ODOP_PRESETS = {
     application: "Heavy Commercial Flooring & Corridors",
     moq: "500 sq.ft (Quarry Lot)",
     priceRange: "₹85 – ₹120 / sq.ft",
+    unit: "sq.ft",
   },
   "Sandstone": {
     category: "Sand Stone Specialty",
@@ -69,6 +72,7 @@ const ODOP_PRESETS = {
     application: "Exterior Facades, Cladding & Paving",
     moq: "400 sq.ft (Project Lot)",
     priceRange: "₹135 – ₹190 / sq.ft",
+    unit: "sq.ft",
   },
 };
 // AI features commented out:
@@ -375,6 +379,7 @@ export default function ProductStudioDrawer({ product, onClose, onSave }) {
                             useApplication: preset.application,
                             moq: preset.moq,
                             priceRange: preset.priceRange,
+                            unit: preset.unit !== undefined ? preset.unit : prev.unit,
                           }));
                         }}
                         style={{
@@ -549,8 +554,8 @@ export default function ProductStudioDrawer({ product, onClose, onSave }) {
                 </div>
               </div>
 
-              {/* Pricing, Stock, Tax */}
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "1rem" }}>
+              {/* Pricing, Stock, Unit */}
+              <div style={{ display: "grid", gridTemplateColumns: "1.2fr 1.3fr 1fr 1fr", gap: "0.75rem" }}>
                 <div className="card">
                   <label style={{ fontSize: "0.8rem", color: "var(--text-secondary)", display: "block", marginBottom: "4px" }}>
                     Selling Price (₹)
@@ -562,6 +567,34 @@ export default function ProductStudioDrawer({ product, onClose, onSave }) {
                     value={formData.price || 0}
                     onChange={(e) => handleChange("price", Number(e.target.value))}
                   />
+                </div>
+                <div className="card">
+                  <label style={{ fontSize: "0.8rem", color: "var(--text-secondary)", display: "block", marginBottom: "4px" }}>
+                    Pricing Unit (per)
+                  </label>
+                  <select
+                    className="input-field"
+                    style={{ paddingLeft: "0.6rem", fontWeight: 600, background: "var(--bg-surface)" }}
+                    value={formData.unit || ""}
+                    onChange={(e) => handleChange("unit", e.target.value)}
+                  >
+                    <option value="">No Unit (Clothes, Saree, Items)</option>
+                    <option value="sq.ft">sq.ft (Stone, Tiles, Granite)</option>
+                    <option value="sq.m">sq.m (Square Metre)</option>
+                    <option value="kg">kg (Garlic, Spices, Agro)</option>
+                    <option value="g">g (Gram)</option>
+                    <option value="tonne">tonne / MT</option>
+                    <option value="metre">metre (Textiles, Fabric)</option>
+                    <option value="m">m (Metre)</option>
+                    <option value="ml">ml (Oils, Liquids, Perfume)</option>
+                    <option value="litre">litre (Liquids, Dairy)</option>
+                    <option value="piece">piece (Individual Unit)</option>
+                    <option value="pair">pair (Shoes, Accessories)</option>
+                    <option value="set">set (Ensemble, Suite)</option>
+                    <option value="box">box (Pack, Carton)</option>
+                    <option value="roll">roll</option>
+                    <option value="bundle">bundle</option>
+                  </select>
                 </div>
                 <div className="card">
                   <label style={{ fontSize: "0.8rem", color: "var(--text-secondary)", display: "block", marginBottom: "4px" }}>
@@ -587,6 +620,25 @@ export default function ProductStudioDrawer({ product, onClose, onSave }) {
                     onChange={(e) => handleChange("stock", Number(e.target.value))}
                   />
                 </div>
+              </div>
+
+              {/* Live Price Tag Preview */}
+              <div style={{ marginTop: "0.25rem", marginBottom: "0.75rem", display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.78rem" }}>
+                <span style={{ color: "var(--text-muted)" }}>Display in catalogue:</span>
+                <span style={{
+                  background: "#ecfdf5",
+                  color: "#065f46",
+                  border: "1px solid #a7f3d0",
+                  padding: "2px 8px",
+                  borderRadius: "6px",
+                  fontWeight: 700,
+                  fontSize: "0.82rem"
+                }}>
+                  ₹{(formData.price || 0).toLocaleString()}{formData.unit ? ` / ${formData.unit}` : ""}
+                </span>
+                <span style={{ color: "var(--text-muted)", fontStyle: "italic", fontSize: "0.74rem" }}>
+                  {formData.unit ? `(Priced per ${formData.unit})` : "(No unit suffix — perfect for clothes, sarees, electronics & standalone products)"}
+                </span>
               </div>
 
               {/* Category, Brand, HSN */}

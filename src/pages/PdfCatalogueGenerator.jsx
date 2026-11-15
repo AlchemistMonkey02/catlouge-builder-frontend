@@ -462,12 +462,18 @@ export default function PdfCatalogueGenerator() {
       }
 
       if (prodRes.data?.products) {
-        const prods = prodRes.data.products;
+        let prods = [...prodRes.data.products];
+        try {
+          const localProdOverrides = JSON.parse(localStorage.getItem("catalogue_local_products") || "{}");
+          if (Object.keys(localProdOverrides).length > 0) {
+            prods = prods.map((p) => (localProdOverrides[p._id] ? { ...p, ...localProdOverrides[p._id] } : p));
+          }
+        } catch (_) {}
         setAllProducts(prods);
 
         // Filter products for chosen company
         const compProds = prods.filter(
-          (p) => p.companyId === chosenCompanyId || (chosenCompanyId && p.brand?.toLowerCase() === compRes.data?.find((c) => c._id === chosenCompanyId)?.name?.toLowerCase())
+          (p) => String(p.companyId) === String(chosenCompanyId) || (chosenCompanyId && p.brand?.toLowerCase() === compRes.data?.find((c) => String(c._id) === String(chosenCompanyId))?.name?.toLowerCase())
         );
 
         setSelectedProductIds(compProds.map((p) => p._id));

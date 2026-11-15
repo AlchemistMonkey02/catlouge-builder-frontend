@@ -303,6 +303,7 @@ export default function AiProductStudio() {
     brand: "ai Studio",
     category: "General",
     price: 1999,
+    unit: "",
     mrp: 2999,
   });
 
@@ -3006,7 +3007,7 @@ export default function AiProductStudio() {
                             {p.sku}
                           </span>
                           <span style={{ fontSize: "0.74rem", fontWeight: 700, color: "var(--text-primary)" }}>
-                            ₹{p.price?.toLocaleString()}
+                            ₹{p.price?.toLocaleString()}{p.unit ? ` / ${p.unit}` : ""}
                           </span>
                           {p.brand && (
                             <span style={{ fontSize: "0.72rem", color: "var(--text-muted)" }}>
@@ -3203,8 +3204,8 @@ export default function AiProductStudio() {
                 </div>
               </div>
 
-              {/* Price & Category */}
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.75rem" }}>
+              {/* Price, Unit & Category */}
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1.2fr 1fr", gap: "0.75rem" }}>
                 <div>
                   <label style={{ fontSize: "0.82rem", fontWeight: 650, color: "var(--text-primary)", display: "block", marginBottom: "4px" }}>
                     Selling Price (₹):
@@ -3219,6 +3220,34 @@ export default function AiProductStudio() {
                 </div>
                 <div>
                   <label style={{ fontSize: "0.82rem", fontWeight: 650, color: "var(--text-primary)", display: "block", marginBottom: "4px" }}>
+                    Pricing Unit (per):
+                  </label>
+                  <select
+                    className="input-field"
+                    style={{ width: "100%", fontWeight: 600, background: "var(--bg-surface)" }}
+                    value={newProductForm.unit || ""}
+                    onChange={(e) => setNewProductForm({ ...newProductForm, unit: e.target.value })}
+                  >
+                    <option value="">No Unit (Clothes, Saree, Items)</option>
+                    <option value="sq.ft">sq.ft (Stone, Tiles, Granite)</option>
+                    <option value="sq.m">sq.m (Square Metre)</option>
+                    <option value="kg">kg (Garlic, Spices, Agro)</option>
+                    <option value="g">g (Gram)</option>
+                    <option value="tonne">tonne / MT</option>
+                    <option value="metre">metre (Textiles, Fabric)</option>
+                    <option value="m">m (Metre)</option>
+                    <option value="ml">ml (Oils, Liquids)</option>
+                    <option value="litre">litre (Liquids, Dairy)</option>
+                    <option value="piece">piece (Individual Unit)</option>
+                    <option value="pair">pair (Shoes, Accessories)</option>
+                    <option value="set">set (Ensemble, Suite)</option>
+                    <option value="box">box (Pack, Carton)</option>
+                    <option value="roll">roll</option>
+                    <option value="bundle">bundle</option>
+                  </select>
+                </div>
+                <div>
+                  <label style={{ fontSize: "0.82rem", fontWeight: 650, color: "var(--text-primary)", display: "block", marginBottom: "4px" }}>
                     Category:
                   </label>
                   <input
@@ -3229,6 +3258,25 @@ export default function AiProductStudio() {
                     style={{ width: "100%" }}
                   />
                 </div>
+              </div>
+
+              {/* Live Price Tag Preview */}
+              <div style={{ marginTop: "0.25rem", display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.78rem" }}>
+                <span style={{ color: "var(--text-muted)" }}>Display in catalogue:</span>
+                <span style={{
+                  background: "#ecfdf5",
+                  color: "#065f46",
+                  border: "1px solid #a7f3d0",
+                  padding: "2px 8px",
+                  borderRadius: "6px",
+                  fontWeight: 750,
+                  fontSize: "0.82rem"
+                }}>
+                  ₹{(newProductForm.price || 0).toLocaleString()}{newProductForm.unit ? ` / ${newProductForm.unit}` : ""}
+                </span>
+                <span style={{ color: "var(--text-muted)", fontStyle: "italic", fontSize: "0.74rem" }}>
+                  {newProductForm.unit ? `(Priced per ${newProductForm.unit})` : "(No unit suffix — perfect for clothes, sarees, electronics & standalone products)"}
+                </span>
               </div>
             </div>
 

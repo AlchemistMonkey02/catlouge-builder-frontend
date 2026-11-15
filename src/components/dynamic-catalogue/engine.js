@@ -18,6 +18,7 @@ import STONECAT_TEMPLATES from "./templates/stonecatalogs.js";
 import GARLIC_TEMPLATES from "./templates/garlic.js";
 import SANDSTONE_TEMPLATES from "./templates/sandstone.js";
 import KOTADORIA_TEMPLATES from "./templates/kotadoria.js";
+import { formatProductPrice, formatProductPriceRange } from "./priceUtils.js";
 import { recolorTheme } from "./colour.js";
 import { getCopy } from "./content.js";
 import { applyAll, onRendered } from "./editor.js";
@@ -311,20 +312,36 @@ export async function prepareItems(products) {
       }
     }
 
-    // i) Price range, wherever available
-    const priceNum = v.price != null && !isNaN(Number(v.price)) ? Number(v.price) : 0;
-    const mrpNum = v.mrp != null && !isNaN(Number(v.mrp)) ? Number(v.mrp) : (priceNum ? Math.round(priceNum * 1.35) : 0);
-    const priceStr = priceNum ? `₹${priceNum.toLocaleString('en-IN')}` : 'Price on Request';
-    let priceRange = v.priceRange || '';
-    if (!priceRange) {
-      if (priceNum && mrpNum && mrpNum > priceNum) {
-        priceRange = `₹${priceNum.toLocaleString('en-IN')} – ₹${mrpNum.toLocaleString('en-IN')}`;
-      } else if (priceNum) {
-        priceRange = `₹${priceNum.toLocaleString('en-IN')}`;
+    // Unit resolution & Pricing
+    let resolvedUnit = v.unit !== undefined ? v.unit : (v.pricingUnit ?? v.priceUnit);
+    if (resolvedUnit === undefined || resolvedUnit === null) {
+      if (
+        catLower.includes('doria') ||
+        subLower.includes('saree') ||
+        subLower.includes('dupatta') ||
+        subLower.includes('suit') ||
+        catLower.includes('apparel') ||
+        catLower.includes('fashion') ||
+        catLower.includes('cloth') ||
+        catLower.includes('audio') ||
+        catLower.includes('tech')
+      ) {
+        resolvedUnit = ''; // Clothes, sarees, fashion, audio -> NO UNIT
+      } else if (catLower.includes('stone') || catLower.includes('sand') || catLower.includes('granite') || catLower.includes('limestone')) {
+        resolvedUnit = 'sq.ft';
+      } else if (catLower.includes('garlic')) {
+        resolvedUnit = 'kg';
       } else {
-        priceRange = '₹1,450 – ₹5,200 (Wholesale)';
+        resolvedUnit = '';
       }
     }
+    resolvedUnit = String(resolvedUnit || '').trim();
+    if (/^(none|null|undefined|-|no unit)$/i.test(resolvedUnit)) resolvedUnit = '';
+
+    const priceNum = v.price != null && !isNaN(Number(v.price)) ? Number(v.price) : 0;
+    const mrpNum = v.mrp != null && !isNaN(Number(v.mrp)) ? Number(v.mrp) : (priceNum ? Math.round(priceNum * 1.35) : 0);
+    const priceFormatted = formatProductPrice(priceNum || v.price, resolvedUnit, v);
+    const priceRange = formatProductPriceRange(v.priceRange, priceNum, mrpNum, resolvedUnit, v);
 
     // j) Minimum order quantity (MOQ), wherever applicable
     let moq = v.moq || (v.wholesalePrice ? '50 pcs' : '');
@@ -355,6 +372,8 @@ export async function prepareItems(products) {
       ...v, // Retain all rich model properties
       name,
       title: name,
+      unit: resolvedUnit,
+      pricingUnit: resolvedUnit,
       shortDescription,
       description: v.description || shortDescription,
       verifiedCopy: true,
@@ -365,8 +384,9 @@ export async function prepareItems(products) {
       application,
       useApplication: application,
       use: application,
-      price: priceNum || priceStr,
-      formattedPrice: priceStr,
+      price: priceFormatted,
+      rawPrice: priceNum,
+      formattedPrice: priceFormatted,
       mrp: mrpNum,
       priceRange,
       moq,
