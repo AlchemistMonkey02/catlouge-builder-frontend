@@ -1,6 +1,7 @@
 import axios from "axios";
 import {
   API_BASE_URL,
+  LIVE_API_BASE_URL,
   ASSETS_BASE_URL,
   API_TIMEOUT,
   API_ENDPOINTS,
@@ -11,6 +12,7 @@ import {
 // Re-export config and endpoints for direct access from any consumer
 export {
   API_BASE_URL,
+  LIVE_API_BASE_URL,
   ASSETS_BASE_URL,
   API_TIMEOUT,
   API_ENDPOINTS,

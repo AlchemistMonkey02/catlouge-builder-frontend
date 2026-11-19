@@ -8,9 +8,12 @@
  * - Asset / image CDN path resolution
  */
 
+// Live production backend API endpoint
+export const LIVE_API_BASE_URL = "https://catlougeapi.geoplanetsolution.com/api";
+
 // Environment-driven Base URL resolution:
 // Reads from Vite environment variable (VITE_API_URL / VITE_API_BASE_URL / VITE_BACKEND_URL)
-// with a safe fallback to local development server.
+// with default fallback to the live production server.
 const resolveApiBaseUrl = () => {
   if (typeof import.meta !== "undefined" && import.meta.env) {
     if (import.meta.env.VITE_API_URL) {
@@ -24,7 +27,7 @@ const resolveApiBaseUrl = () => {
       return clean.endsWith("/api") ? clean : `${clean}/api`;
     }
   }
-  return "http://localhost:5012/api";
+  return LIVE_API_BASE_URL;
 };
 
 export const API_BASE_URL = resolveApiBaseUrl();
