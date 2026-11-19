@@ -23,6 +23,26 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+// Automatically clear stale or invalid tokens when reported by the server
+api.interceptors.response.use(
+  (response) => {
+    if (response.headers && response.headers["x-token-invalid"]) {
+      localStorage.removeItem("token");
+    }
+    return response;
+  },
+  (error) => {
+    if (
+      error.response &&
+      (error.response.status === 401 ||
+        (error.response.headers && error.response.headers["x-token-invalid"]))
+    ) {
+      localStorage.removeItem("token");
+    }
+    return Promise.reject(error);
+  }
+);
+
 
 
 // --- AUTHENTICATION ---
@@ -299,6 +319,21 @@ export const deleteCompanyProfile = async (id) => {
   return data;
 };
 
+export const fetchCompanyDataBank = async (companyId) => {
+  const { data } = await api.get(API_ENDPOINTS.COMPANIES.DATA_BANK(companyId));
+  return data;
+};
+
+export const updateCompanyDataBank = async (companyId, dataBank) => {
+  const { data } = await api.put(API_ENDPOINTS.COMPANIES.DATA_BANK(companyId), { dataBank });
+  return data;
+};
+
+export const resetCompanyDataBank = async (companyId) => {
+  const { data } = await api.post(API_ENDPOINTS.COMPANIES.DATA_BANK_RESET(companyId));
+  return data;
+};
+
 // Legacy store products compatibility
 export const fetchProducts = async (params = {}) => {
   const cleanParams = Object.fromEntries(
@@ -339,6 +374,11 @@ export const updateCatalogueRecord = async (id, payload) => {
 
 export const deleteCatalogueRecord = async (id) => {
   const { data } = await api.delete(API_ENDPOINTS.CATALOGUE_RECORDS.BY_ID(id));
+  return data;
+};
+
+export const publishCatalogueRecordLive = async (id, payload) => {
+  const { data } = await api.post(`/catalogue-records/${id}/publish-live`, payload);
   return data;
 };
 

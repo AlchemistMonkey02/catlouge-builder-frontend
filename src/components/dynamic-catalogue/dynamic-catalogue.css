@@ -884,5 +884,35 @@
   opacity: 1;
 }
 
+/* Modal Overlay Isolation & Suppress Editor Overlays */
+.dynamic-catalogue-modal-backdrop {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 99999 !important;
+  background: rgba(11, 15, 25, 0.82) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 20px !important;
+  overflow-y: auto !important;
+}
+
+body.modal-open .dz-bar,
+body.modal-open .dz-sel,
+body.modal-open .dz-hov,
+body.modal-open .editpanel,
+body.dynamic-catalogue-modal-active .dz-bar,
+body.dynamic-catalogue-modal-active .dz-sel,
+body.dynamic-catalogue-modal-active .dz-hov,
+body.dynamic-catalogue-modal-active .editpanel {
+  display: none !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+  opacity: 0 !important;
+}
+
+
 
 

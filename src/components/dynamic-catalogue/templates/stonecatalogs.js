@@ -5,8 +5,13 @@ const pn = n => String(n).padStart(2, '0');
 const bg = (u, pos) => `background-image:url(${u});background-position:${pos || 'center'}`;
 let uid = 0;
 const svgCut = (img, x, y, w, h, pts) => {
-  const id = 's' + (++uid), p = pts.map(q => `${q[0] * w / 100},${q[1] * h / 100}`).join(' ');
-  return `<svg style="position:absolute;left:${x}px;top:${y}px" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg"><defs><clipPath id="${id}"><polygon points="${p}"/></clipPath></defs><image href="${img}" x="0" y="0" width="${w}" height="${h}" preserveAspectRatio="xMidYMid slice" clip-path="url(#${id})"/></svg>`;
+  const polyStr = pts.map(q => `${q[0]}% ${q[1]}%`).join(', ');
+  const safeImg = (img || '').replace(/'/g, '%27');
+  return `
+    <div style="position:absolute;left:${x}px;top:${y}px;width:${w}px;height:${h}px;overflow:hidden;clip-path:polygon(${polyStr});-webkit-clip-path:polygon(${polyStr});background:#e5e7eb;">
+      <img src="${safeImg}" alt="Cut Hero" style="width:100%;height:100%;object-fit:cover;display:block;" />
+    </div>
+  `;
 };
 const initials = n => { const w = (n || '').replace(/[^A-Za-z ]/g, '').split(/\s+/).filter(Boolean); return ((w[0] || '?')[0] + (w[1] ? w[1][0] : '')).toUpperCase(); };
 const logoBox = (c, cls) => c.info.logo ? `<div class="${cls} lg"><img src="${c.info.logo}"></div>` : `<div class="${cls} lg mono">${E(initials(c.info.ent))}</div>`;
@@ -54,7 +59,7 @@ const x1 = {
   contact: c => `<div class="x-full" style="${bg((c.items[c.items.length - 1] || {}).img || '')};width:520px"></div>
     <div class="x-dark">${logoBox(c, 'x-logo2')}<div class="x-cname2">${E(c.info.ent)}</div>
       <div class="x-ci"><b>Corporate office</b>${E(c.info.addr || 'India')}</div><div class="x-ci"><b>Phone</b>${E(c.info.person || '')} · ${E(c.info.mobile || '')}${c.info.wa && c.info.wa !== c.info.mobile ? ' · WhatsApp ' + E(c.info.wa) : ''}</div><div class="x-ci"><b>Email</b>${E(c.info.email || '')}</div>${c.info.gst ? `<div class="x-ci"><b>GSTIN</b>${E(c.info.gst)}</div>` : ''}
-      ${(c.info.socials || []).length ? `<div class="x-soc">${c.info.socials.map(s => `<span class="soc" data-url="${E(s[1])}">${s[0]}</span>`).join('')}</div>` : ''}${c.qr ? `<div class="x-qr"><img class="qrimg" src="${c.qr}"></div>` : ''}</div>`
+      ${(c.info.socials || []).length ? `<div class="x-soc">${c.info.socials.map(s => `<span class="soc" data-url="${E(s[1])}">${s[0]}</span>`).join('')}</div>` : ''}${c.qr ? `<div class="x-qr"><a href="${E(c.info?.link || c.info?.website || (c.info?.mobile ? `https://wa.me/${String(c.info.mobile).replace(/\D/g, '')}` : '#'))}" target="_blank" rel="noopener noreferrer" data-qr-url="${E(c.info?.link || c.info?.website || '')}" style="text-decoration:none; color:inherit; display:flex; flex-direction:column; align-items:center;"><img class="qrimg" src="${c.qr}"><span class="qr-click-btn" style="display:inline-block; font-size:10px; font-weight:700; color:#2563eb; text-decoration:underline; margin-top:3px;">Click here ↗</span></a></div>` : ''}</div>`
 };
 
 /* =============== X2 : panel catalogue (portrait) =============== */
@@ -71,7 +76,7 @@ const x2 = {
   grid: (c, items) => `${logoBox(c, 'p-logo')}<div class="p-gtitle">Our range</div><div class="p-grid">${items.map(it => `<div><div class="g" style="${bg(it.img)}"></div><b>${E(it.code)}</b></div>`).join('')}</div>
     <div class="p-icons">${['Strong & durable', 'Natural look', 'Easy to install', 'Low maintenance', 'Custom sizes', 'Eco-friendly'].map(t => `<div><i></i><span>${E(t)}</span></div>`).join('')}</div>`,
   spread: (c, it) => `<div class="p-sl" style="${bg(it.img)}"></div><div class="p-sr" style="${bg(it.img, 'right bottom')}"></div><div class="p-scode">${E(it.code)}</div><div class="p-sname">${E(it.name)}</div><div class="p-sspec">${E([it.size, it.finish || it.material, it.price].filter(Boolean).join('  ·  '))}</div>`,
-  contact: c => `${logoBox(c, 'p-logo')}<div class="p-end"><h3>${E(c.info.ent)}</h3><p>${E(c.info.addr || 'India')}</p><p>${E(c.info.person || '')} · ${E(c.info.mobile || '')}</p><p>${E(c.info.email || '')}</p>${c.qr ? `<img class="qrimg" src="${c.qr}">` : ''}</div>`
+  contact: c => `${logoBox(c, 'p-logo')}<div class="p-end"><h3>${E(c.info.ent)}</h3><p>${E(c.info.addr || 'India')}</p><p>${E(c.info.person || '')} · ${E(c.info.mobile || '')}</p><p>${E(c.info.email || '')}</p>${c.qr ? `<a href="${E(c.info?.link || c.info?.website || (c.info?.mobile ? `https://wa.me/${String(c.info.mobile).replace(/\D/g, '')}` : '#'))}" target="_blank" rel="noopener noreferrer" data-qr-url="${E(c.info?.link || c.info?.website || '')}" style="text-decoration:none; color:inherit; display:flex; flex-direction:column; align-items:center;"><img class="qrimg" src="${c.qr}"><span class="qr-click-btn" style="display:inline-block; font-size:10px; font-weight:700; color:#2563eb; text-decoration:underline; margin-top:3px;">Click here ↗</span></a>` : ''}</div>`
 };
 
 /* =============== X3 : swatch mosaic (portrait) =============== */
@@ -84,10 +89,24 @@ const x3 = {
     [B / 2, B * 1.5, B * 2.5].forEach(x => tris.push([D(x), 0]));
     [0, B, 2 * B].forEach(x => tris.push([D(x), h]));
     [B / 2, B * 1.5, B * 2.5].forEach(x => tris.push([U(x), h]));
-    const defs = tris.map((t, k) => `<clipPath id="${id}_${k}"><polygon points="${t[0].map(p => p[0] + ',' + (p[1] + t[1])).join(' ')}"/></clipPath>`).join('');
-    const body = tris.map((t, k) => `<image href="${im(k)}" x="0" y="0" width="794" height="540" preserveAspectRatio="xMidYMid slice" clip-path="url(#${id}_${k})"/><polygon points="${t[0].map(p => p[0] + ',' + (p[1] + t[1])).join(' ')}" fill="none" stroke="#ffffff" stroke-width="5"/>`).join('');
-    return `<svg style="position:absolute;left:0;top:0" width="794" height="540" viewBox="0 0 794 540" xmlns="http://www.w3.org/2000/svg"><defs>${defs}</defs>${body}</svg>
-    <div class="m-ctitle">PRODUCT<br>CATALOGUE</div><div class="m-cbrand">${logoBox(c, 'm-logo')}<b>${E(c.info.ent)}</b><span>${E(c.info.district || 'India')}</span></div>`;
+
+    const htmlTris = tris.map((t, k) => {
+      const polyPts = t[0].map(p => `${(p[0] / 794 * 100).toFixed(2)}% ${((p[1] + t[1]) / 540 * 100).toFixed(2)}%`).join(', ');
+      const imgSrc = (im(k) || '').replace(/'/g, '%27');
+      return `<div style="position:absolute;left:0;top:0;width:794px;height:540px;clip-path:polygon(${polyPts});-webkit-clip-path:polygon(${polyPts});overflow:hidden;pointer-events:none;">
+        <img src="${imgSrc}" style="width:100%;height:100%;object-fit:cover;display:block;" onerror="this.onerror=null; this.src='/assets/kota-stone/Blue-Kota-Stone-Tiles-1.jpg';" />
+      </div>`;
+    }).join('');
+
+    const lines = tris.map(t => `<polygon points="${t[0].map(p => p[0] + ',' + (p[1] + t[1])).join(' ')}" fill="none" stroke="#ffffff" stroke-width="5"/>`).join('');
+
+    return `
+      <div style="position:absolute;left:0;top:0;width:794px;height:540px;overflow:hidden;">
+        ${htmlTris}
+        <svg style="position:absolute;left:0;top:0;pointer-events:none;" width="794" height="540" viewBox="0 0 794 540" xmlns="http://www.w3.org/2000/svg">${lines}</svg>
+      </div>
+      <div class="m-ctitle">PRODUCT<br>CATALOGUE</div><div class="m-cbrand">${logoBox(c, 'm-logo')}<b>${E(c.info.ent)}</b><span>${E(c.info.district || 'India')}</span></div>
+    `;
   },
   about: c => `<h2 class="m-h">ABOUT US</h2><div class="m-tx"><p>${E(c.info.desc || 'Premium materials crafted to exact specifications.')}</p><p>${E(c.info.use ? 'Our products are used for: ' + c.info.use + '.' : '')}</p></div>
     <div class="m-why"><h4>WHY CHOOSE US?</h4>${((c.copy && c.copy.why) || ['Quality assurance', 'Fast delivery', 'Fair pricing', 'Customized solutions']).slice(0, 4).map(t => `<div><i></i>${E(t)}</div>`).join('')}</div>
@@ -95,7 +114,7 @@ const x3 = {
   section: c => `<div class="m-secph" style="${bg(c.hero)}"></div><div class="m-sect">${E(cap(c.info.product || 'CATALOGUE'))}</div><div class="m-secsub">${E((c.info.desc || '').split('. ')[0])}.</div>`,
   mosaic: (c, items, no) => `<div class="m-mos">${items.map((it, k) => `<div class="t${items.length % 2 && k === items.length - 1 ? ' wide' : ''}" style="${bg(it.img)}"><span>${E(cap(it.name))}</span></div>`).join('')}</div><div class="m-no">${pn(no)}</div>`,
   specs: c => `<div class="m-dark"><div class="m-sp"><h3>SPECIFICATIONS</h3>${[['SIZES', [...new Set(c.items.map(i => i.size).filter(Boolean))].slice(0, 3).join(' · ') || 'on request'], ['THICKNESS', (c.items[0] && c.items[0].thickness) || 'standard calibrated'], ['FINISHES', [...new Set(c.items.map(i => i.finish || i.material).filter(Boolean))].slice(0, 3).join(', ') || 'natural, polished, custom'], ['APPLICATIONS', c.info.use || 'commercial & residential']].map(r => `<div><b>${r[0]}</b><span>${E(r[1])}</span></div>`).join('')}</div>
-    <h3 class="m-cu">CONTACT US</h3><div class="m-cbox"><div><p>⌂ ${E(c.info.addr || 'India')}</p><p>☎ ${E(c.info.person || '')}: ${E(c.info.mobile || '')}</p><p>@ ${E(c.info.email || '')}</p>${c.info.gst ? `<p>GSTIN ${E(c.info.gst)}</p>` : ''}</div>${c.qr ? `<img class="qrimg" src="${c.qr}">` : ''}</div></div>`
+    <h3 class="m-cu">CONTACT US</h3><div class="m-cbox"><div><p>⌂ ${E(c.info.addr || 'India')}</p><p>☎ ${E(c.info.person || '')}: ${E(c.info.mobile || '')}</p><p>@ ${E(c.info.email || '')}</p>${c.info.gst ? `<p>GSTIN ${E(c.info.gst)}</p>` : ''}</div>${c.qr ? `<a href="${E(c.info?.link || c.info?.website || (c.info?.mobile ? `https://wa.me/${String(c.info.mobile).replace(/\D/g, '')}` : '#'))}" target="_blank" rel="noopener noreferrer" data-qr-url="${E(c.info?.link || c.info?.website || '')}" style="text-decoration:none; color:inherit; display:flex; flex-direction:column; align-items:center;"><img class="qrimg" src="${c.qr}"><span class="qr-click-btn" style="display:inline-block; font-size:10px; font-weight:700; color:#2563eb; text-decoration:underline; margin-top:3px;">Click here ↗</span></a>` : ''}</div></div>`
 };
 
 function pageCount(t, n){

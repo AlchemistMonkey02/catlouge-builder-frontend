@@ -37,16 +37,23 @@ import {
   Minimize2,
   PanelLeftOpen,
   PanelLeftClose,
-  Boxes
+  Boxes,
+  Globe,
+  Share2,
+  Check,
+  MessageCircle,
+  Sliders
 } from "lucide-react";
 import confetti from "canvas-confetti";
 import {
   TEMPLATE_REGISTRY,
   byUid,
   buildCatalogue,
-  exportDynamicPdf
+  exportDynamicPdf,
+  qrDataUrl
 } from "./engine";
 import ImageUpscaleModal from "../ImageUpscaleModal";
+import CompanyDataBankModal from "../CompanyDataBankModal";
 import {
   setMode,
   isEditing,
@@ -57,15 +64,20 @@ import {
   applyAll,
   keyFor,
   select,
-  startText
+  startText,
+  setEditorCompanyId,
+  clearAllEditorEdits
 } from "./editor";
 import { getCopy } from "./content";
 import {
   fetchCatalogueRecords,
   createCatalogueRecord,
   updateCatalogueRecord,
-  deleteCatalogueRecord
+  deleteCatalogueRecord,
+  publishCatalogueRecordLive,
+  fetchCompanyDataBank
 } from "../../services/api";
+import { getDefaultDataBank, resolveCompanyCategory } from "../../utils/defaultDataBank";
 import {
   KOTA_STONE_ASSETS,
   KOTA_DORIA_ASSETS,
@@ -86,7 +98,7 @@ const PRESET_SWATCHES = [
   { label: "Forest Olive", color: "#365314" }
 ];
 
-const SPECIALTY_DEMO_PRODUCTS = {
+export const SPECIALTY_DEMO_PRODUCTS = {
   garlic: [
     {
       _id: "demo_g1",
@@ -664,35 +676,65 @@ const SPECIALTY_GALLERY_PHOTOS = {
 
 export function detectCompanyFamily(comp) {
   if (!comp) return "garlic";
-  const text = `${comp.name || ""} ${comp.industry || ""} ${comp.category || ""}`.toLowerCase();
-  const odop = (comp.odopProduct || "").toLowerCase();
-  const dist = (comp.district || "").toLowerCase();
+  const fam = resolveCompanyCategory(comp);
+  return fam === "general" ? "editorial" : fam;
+}
 
-  // 1. Direct name / industry specialty check
-  if (text.includes("garlic") || text.includes("lahsun")) return "garlic";
-  if (text.includes("sandstone") || text.includes("sand stone")) return "sandstone";
-  if (text.includes("kota stone") || text.includes("limestone") || (text.includes("stone") && !text.includes("sand"))) return "kotastone";
-  if (text.includes("doria") || text.includes("saree") || text.includes("handloom") || text.includes("kaithun") || text.includes("parampara")) return "kotadoria";
+export function isProductCompatibleWithFamily(product, fam) {
+  if (!product) return false;
+  if (!fam) return true;
+  const pName = (product.name || product.title || "").toLowerCase();
+  const pCat = (product.category || "").toLowerCase();
+  const pSub = (product.subcategory || product.productType || "").toLowerCase();
+  const pBrand = (product.brand || "").toLowerCase();
+  let pImg = "";
+  if (typeof product.image === "string") pImg = product.image.toLowerCase();
+  else if (typeof product.img === "string") pImg = product.img.toLowerCase();
+  else if (Array.isArray(product.images) && product.images[0]) {
+    const f = product.images[0];
+    pImg = (typeof f === "string" ? f : (f?.url || f?.img || "")).toLowerCase();
+  }
+  const fullP = `${pName} ${pCat} ${pSub} ${pBrand} ${pImg}`;
 
-  // 2. ODOP product
-  if (odop.includes("garlic") || odop.includes("lahsun") || odop.includes("agro")) return "garlic";
-  if (odop.includes("sand") || odop.includes("sandstone")) return "sandstone";
-  if (odop.includes("kota stone") || odop.includes("limestone") || (odop.includes("stone") && !odop.includes("sand"))) return "kotastone";
-  if (odop.includes("doria") || odop.includes("handloom") || odop.includes("saree")) return "kotadoria";
+  if (fam === "garlic") {
+    // REJECT sarees, fabrics, stones, sandstones, tiles
+    if (fullP.includes("saree") || fullP.includes("doria") || fullP.includes("handloom") || fullP.includes("dupatta") || fullP.includes("lehenga") || fullP.includes("stone") || fullP.includes("sandstone") || fullP.includes("granite") || fullP.includes("marble") || fullP.includes("limestone") || fullP.includes("tile") || fullP.includes("paving") || pImg.includes("kota-doria") || pImg.includes("kota-stone") || pImg.includes("sand-stone")) {
+      return false;
+    }
+    return fullP.includes("garlic") || fullP.includes("clove") || fullP.includes("lahsun") || fullP.includes("agro") || fullP.includes("spice") || fullP.includes("produce") || fullP.includes("fresh") || fullP.includes("kg") || fullP.includes("grade") || pImg.includes("garlic");
+  }
 
-  // 3. District
-  if (dist.includes("baran")) return "garlic";
-  if (dist.includes("bundi")) return "sandstone";
-  if (dist.includes("jhalawar")) return "kotastone";
-  if (dist.includes("kota")) return "kotadoria";
+  if (fam === "kotastone") {
+    // REJECT sarees, fabrics, garlic, sandstone
+    if (fullP.includes("saree") || fullP.includes("doria") || fullP.includes("handloom") || fullP.includes("garlic") || fullP.includes("clove") || fullP.includes("lahsun") || (fullP.includes("sand") && !fullP.includes("kota")) || pImg.includes("kota-doria") || pImg.includes("garlic") || pImg.includes("sand-stone")) {
+      return false;
+    }
+    return fullP.includes("kota") || fullP.includes("limestone") || fullP.includes("stone") || fullP.includes("paving") || fullP.includes("blue") || fullP.includes("flooring") || fullP.includes("slab") || fullP.includes("tile") || pImg.includes("kota-stone");
+  }
 
-  return "editorial";
+  if (fam === "sandstone") {
+    // REJECT sarees, fabrics, garlic, kota limestone
+    if (fullP.includes("saree") || fullP.includes("doria") || fullP.includes("handloom") || fullP.includes("garlic") || fullP.includes("clove") || fullP.includes("lahsun") || fullP.includes("kota stone") || pImg.includes("kota-doria") || pImg.includes("garlic") || pImg.includes("kota-stone")) {
+      return false;
+    }
+    return fullP.includes("sand") || fullP.includes("sandstone") || fullP.includes("bundi") || fullP.includes("agra") || fullP.includes("dholpur") || fullP.includes("teakwood") || fullP.includes("jali") || fullP.includes("cladding") || fullP.includes("stone") || pImg.includes("sand-stone");
+  }
+
+  if (fam === "kotadoria") {
+    // REJECT garlic, stones
+    if (fullP.includes("garlic") || fullP.includes("clove") || fullP.includes("lahsun") || fullP.includes("stone") || fullP.includes("limestone") || fullP.includes("sandstone") || fullP.includes("granite") || fullP.includes("paving") || pImg.includes("garlic") || pImg.includes("kota-stone") || pImg.includes("sand-stone")) {
+      return false;
+    }
+    return fullP.includes("doria") || fullP.includes("saree") || fullP.includes("handloom") || fullP.includes("khat") || fullP.includes("dupatta") || fullP.includes("silk") || fullP.includes("zari") || fullP.includes("cotton") || fullP.includes("fabric") || pImg.includes("kota-doria");
+  }
+
+  return true;
 }
 
 const FAMILY_DEFAULT_TEMPLATES = {
   garlic: "garlic:garlic-1",
   kotastone: "kotastone:ks-b1",
-  sandstone: "sandstone:ss-b1",
+  sandstone: "sandstone:ss-1",
   kotadoria: "kotadoria:kd-1",
   editorial: "editorial:ed-1",
   simple: "simple:kd1",
@@ -726,11 +768,14 @@ export default function DynamicCatalogueStudio({
   const [customColor, setCustomColor] = useState("#2c3e91");
 
   // Whenever the target company changes from Step 1, auto-switch the template and category to match
-  const lastCompanyIdRef = useRef(`${company?._id || ""}_${company?.name || ""}_${company?.odopProduct || ""}_${company?.district || ""}`);
+  const lastCompanyIdRef = useRef("");
   useEffect(() => {
     const compKey = `${company?._id || ""}_${company?.name || ""}_${company?.odopProduct || ""}_${company?.district || ""}`;
     if (compKey && compKey !== lastCompanyIdRef.current) {
       lastCompanyIdRef.current = compKey;
+      setEditorCompanyId(company?._id || null);
+      clearAllEditorEdits();
+
       const targetFam = detectCompanyFamily(company);
       const targetUid = FAMILY_DEFAULT_TEMPLATES[targetFam] || "garlic:garlic-1";
 
@@ -741,14 +786,19 @@ export default function DynamicCatalogueStudio({
         const draftStr = localStorage.getItem(draftKey);
         if (draftStr) {
           const draft = JSON.parse(draftStr);
-          if (draft.template_uid) setSelectedUid(draft.template_uid);
-          if (draft.color) setColorOverride(draft.color);
-          if (draft.form_json) setTextOverrides(draft.form_json);
-          if (draft.design_edits_json && draft.template_uid) {
-            window.DesignEdits = window.DesignEdits || {};
-            window.DesignEdits[draft.template_uid] = draft.design_edits_json;
+          const draftFam = (draft.template_uid || "").split(":")[0];
+          // Only restore template and edits if it strictly belongs to targetFam!
+          if (draft.template_uid && draftFam === targetFam) {
+            setSelectedUid(draft.template_uid);
+            setActiveCategory(targetFam);
+            restoredFromDraft = true;
+            if (draft.color) setColorOverride(draft.color);
+            if (draft.form_json) setTextOverrides(draft.form_json);
+            if (draft.design_edits_json) {
+              window.DesignEdits = window.DesignEdits || {};
+              window.DesignEdits[draft.template_uid] = draft.design_edits_json;
+            }
           }
-          restoredFromDraft = true;
         }
       } catch (_) {}
 
@@ -756,23 +806,35 @@ export default function DynamicCatalogueStudio({
         setSelectedUid(targetUid);
         setActiveCategory(targetFam);
         setColorOverride(company?.brandColors?.primary || null);
+        setTextOverrides({ tagline: "", why: "", apps: "", values: "" });
+        if (typeof window !== "undefined") {
+          window.DesignEdits = {};
+        }
       }
 
       // In the background, check if this company has a saved MongoDB catalogue record
       if (company?._id) {
         fetchCatalogueRecords({ companyId: company._id }).then((res) => {
           if (res?.data && res.data.length > 0) {
-            const latest = res.data[0];
-            setCurrentRecordId(latest._id);
-            if (latest.template_uid) setSelectedUid(latest.template_uid);
-            if (latest.color) setColorOverride(latest.color);
-            if (latest.design_edits_json && latest.template_uid) {
-              window.DesignEdits = window.DesignEdits || {};
-              window.DesignEdits[latest.template_uid] = Object.assign(
-                {},
-                latest.design_edits_json,
-                window.DesignEdits[latest.template_uid] || {}
-              );
+            // Find record matching targetFam, or take latest
+            const matchRec = res.data.find(r => (r.template_uid || "").split(":")[0] === targetFam) || res.data[0];
+            const matchFam = (matchRec.template_uid || "").split(":")[0];
+            if (matchRec.template_uid && matchFam === targetFam) {
+              setCurrentRecordId(matchRec._id);
+              setSelectedUid(matchRec.template_uid);
+              setActiveCategory(targetFam);
+              if (matchRec.design_edits_json) {
+                window.DesignEdits = window.DesignEdits || {};
+                window.DesignEdits[matchRec.template_uid] = Object.assign(
+                  {},
+                  matchRec.design_edits_json,
+                  window.DesignEdits[matchRec.template_uid] || {}
+                );
+              }
+              if (matchRec.color) setColorOverride(matchRec.color);
+            } else {
+              setSelectedUid(targetUid);
+              setActiveCategory(targetFam);
             }
           }
         }).catch(() => {});
@@ -850,55 +912,70 @@ export default function DynamicCatalogueStudio({
   const [isStudioUpscaleOpen, setIsStudioUpscaleOpen] = useState(false);
   const [pendingStudioUploadImg, setPendingStudioUploadImg] = useState("");
 
-  const currentFam = selectedUid?.split(":")[0] || "garlic";
+  // Live Online Publishing States
+  const [isPublishingLive, setIsPublishingLive] = useState(false);
+  const [isLiveModalOpen, setIsLiveModalOpen] = useState(false);
+  const [currentLiveUrl, setCurrentLiveUrl] = useState("");
+  const [liveQrCodeUrl, setLiveQrCodeUrl] = useState("");
+  const [copiedLiveLink, setCopiedLiveLink] = useState(false);
+
+  // Company Data Bank Integration States
+  const [isCompanyDataBankModalOpen, setIsCompanyDataBankModalOpen] = useState(false);
+  const [companyDataBank, setCompanyDataBank] = useState(() => null);
+  const [dataBankFilter, setDataBankFilter] = useState("all"); // "all", "headings", "taglines", "paragraphs", "specs"
+  const [dataBankCopiedId, setDataBankCopiedId] = useState(null);
+
+  const currentFam = (selectedUid?.split(":")[0]) || detectCompanyFamily(company) || "garlic";
 
   // Dynamic Resolution of Active Category Products based on selected template / category
   const activeProducts = useMemo(() => {
-    // 1. If explicit products array is passed from parent (e.g. curated via Step 4 checklist),
-    // faithfully respect the user's explicit selection!
-    if (Array.isArray(products)) {
-      return products;
+    const fam = currentFam;
+
+    // 1. If explicit products array is passed from parent, filter out cross-category items!
+    if (Array.isArray(products) && products.length > 0) {
+      const compatible = products.filter(p => isProductCompatibleWithFamily(p, fam));
+      if (compatible.length > 0) {
+        return compatible;
+      }
     }
 
-    // 2. Fallback only if products prop is completely missing:
-    const fam = currentFam;
-    const famKeywords = {
-      garlic: ["garlic", "clove", "lahsun"],
-      kotastone: ["kota stone", "limestone", "blue stone", "suket", "paving"],
-      sandstone: ["sand stone", "sandstone", "agra red", "jodhpur", "bundi", "teakwood", "mint"],
-      kotadoria: ["doria", "saree", "handloom", "zari", "khat", "bagru", "sanganeri", "dupatta", "parampara"],
-      stonecat: ["stone", "granite", "marble", "paving", "slate"]
-    }[fam] || [fam];
-
-    const isMatch = (p) => {
-      const text = `${p.name || ''} ${p.title || ''} ${p.category || ''} ${p.subcategory || ''} ${p.brand || ''} ${p.industry || ''}`.toLowerCase();
-      return famKeywords.some(kw => text.includes(kw));
-    };
-
-    const matchingAll = (allProducts || []).filter(isMatch);
+    // 2. Fallback to allProducts matching this family
+    const matchingAll = (allProducts || []).filter(p => isProductCompatibleWithFamily(p, fam));
     if (matchingAll.length > 0) {
       return matchingAll;
     }
 
-    return SPECIALTY_DEMO_PRODUCTS[fam] || DEFAULT_DEMO_PRODUCTS;
+    // 3. Fallback to authentic specialty demo products for this family
+    return SPECIALTY_DEMO_PRODUCTS[fam] || SPECIALTY_DEMO_PRODUCTS.garlic;
   }, [currentFam, products, allProducts, company?._id]);
 
   // Dynamic Resolution of Active Company:
   // If a company profile is selected or provided by the user, faithfully keep and use that registered company!
   const activeCompany = useMemo(() => {
+    const compFam = detectCompanyFamily(company);
     const fam = currentFam;
-    if (company && (company.name || company._id)) {
-      const defaults = SPECIALTY_COMPANIES[fam] || SPECIALTY_COMPANIES.garlic;
 
-      const cName = (company.name || "").toLowerCase();
-      const cInd = (company.industry || "").toLowerCase();
+    // Isolate cross-category leaks: if current template family is a specialty (sandstone, kotastone, kotadoria, garlic)
+    // and current company belongs to a completely different sector, prioritize matching company from `companies`
+    let targetComp = company;
+    if (["sandstone", "kotastone", "kotadoria", "garlic"].includes(fam) && compFam !== fam && compFam !== "editorial" && compFam !== "general") {
+      const matchComp = (companies || []).find((c) => detectCompanyFamily(c) === fam);
+      if (matchComp) {
+        targetComp = matchComp;
+      } else {
+        targetComp = SPECIALTY_COMPANIES[fam] || company;
+      }
+    }
 
-      // Resolve authentic ODOP product & district for company
-      const name = (company.name || "").toLowerCase();
-      const addr = (company.contact?.address || "").toLowerCase();
+    const effectiveFam = detectCompanyFamily(targetComp);
+    const defaults = SPECIALTY_COMPANIES[effectiveFam] || SPECIALTY_COMPANIES[fam] || SPECIALTY_COMPANIES.sandstone;
 
-      let resolvedOdop = company.odopProduct ? company.odopProduct.trim() : "";
-      let resolvedDist = company.district ? company.district.trim() : "";
+    if (targetComp && (targetComp.name || targetComp._id)) {
+      const name = (targetComp.name || "").toLowerCase();
+      const addr = (targetComp.contact?.address || "").toLowerCase();
+
+      let resolvedOdop = targetComp.odopProduct ? targetComp.odopProduct.trim() : "";
+      let resolvedDist = targetComp.district ? targetComp.district.trim() : "";
 
       // Correct accidental legacy defaults if present
       if ((resolvedOdop === "Kota Doria" || !resolvedOdop) && (name.includes("garlic") || name.includes("stone") || name.includes("sand") || addr.includes("mandsaur") || addr.includes("jodhpur"))) {
@@ -925,23 +1002,77 @@ export default function DynamicCatalogueStudio({
 
       return {
         ...defaults,
-        ...company,
-        name: company.name || defaults.name,
-        district: resolvedDist || (company.contact?.address ? company.contact.address.split(",").slice(-2).join(",").trim() : "District Pending"),
-        odopProduct: resolvedOdop || company.industry || "ODOP Product",
-        tagline: company.tagline || defaults.tagline,
-        industry: company.industry || defaults.industry,
+        ...targetComp,
+        name: targetComp.name || defaults.name,
+        district: resolvedDist || (targetComp.contact?.address ? targetComp.contact.address.split(",").slice(-2).join(",").trim() : defaults.district),
+        odopProduct: resolvedOdop || targetComp.odopProduct || targetComp.industry || defaults.odopProduct,
+        tagline: targetComp.tagline || defaults.tagline,
+        industry: targetComp.industry || defaults.industry,
         contact: {
           ...defaults.contact,
-          ...(company.contact || {})
+          ...(targetComp.contact || {})
         },
-        brandColors: company.brandColors || defaults.brandColors,
-        logoUrl: company.logoUrl || defaults.logoUrl
+        brandColors: targetComp.brandColors || defaults.brandColors,
+        logoUrl: targetComp.logoUrl || defaults.logoUrl
       };
     }
 
-    return SPECIALTY_COMPANIES[fam] || SPECIALTY_COMPANIES.garlic;
-  }, [currentFam, company]);
+    return defaults;
+  }, [currentFam, company, companies]);
+
+  // Sync Data Bank from activeCompany or fetch from server
+  useEffect(() => {
+    const targetComp = activeCompany || company;
+    const targetFam = detectCompanyFamily(targetComp);
+
+    if (activeCompany?.dataBank && (!activeCompany.dataBank.family || activeCompany.dataBank.family === targetFam)) {
+      setCompanyDataBank(activeCompany.dataBank);
+    } else if (company?.dataBank && (!company.dataBank.family || company.dataBank.family === targetFam)) {
+      setCompanyDataBank(company.dataBank);
+    } else if (targetComp?._id) {
+      fetchCompanyDataBank(targetComp._id)
+        .then((res) => {
+          const bank = res?.data?.data || res?.data?.dataBank;
+          if (bank && (!bank.family || bank.family === targetFam)) {
+            setCompanyDataBank(bank);
+          } else {
+            setCompanyDataBank(getDefaultDataBank(targetComp));
+          }
+        })
+        .catch(() => {
+          setCompanyDataBank(getDefaultDataBank(targetComp));
+        });
+    } else {
+      setCompanyDataBank(getDefaultDataBank(targetComp));
+    }
+  }, [activeCompany?._id, company?._id, activeCompany?.dataBank, company?.dataBank, currentFam]);
+
+  // Effective Data Bank: Use company's custom MongoDB Data Bank, or auto-seed ODOP industry defaults
+  const effectiveDataBank = useMemo(() => {
+    let bank = null;
+    if (companyDataBank && (companyDataBank.headings || companyDataBank.specifications)) {
+      bank = companyDataBank;
+    } else {
+      bank = getDefaultDataBank(activeCompany || company) || {};
+    }
+    return {
+      headings: [],
+      taglines: [],
+      paragraphs: [],
+      featureHighlights: [],
+      ...bank,
+      specifications: {
+        thicknesses: [],
+        sizes: [],
+        finishes: [],
+        materials: [],
+        applications: [],
+        moqs: [],
+        priceRanges: [],
+        ...(bank?.specifications || {})
+      }
+    };
+  }, [companyDataBank, activeCompany, company]);
 
   // Real Photo Bank (Garlic, Kota Stone, Kota Doria, Sandstone) state & filtering
   const [assetTab, setAssetTab] = useState("all");
@@ -1329,7 +1460,7 @@ export default function DynamicCatalogueStudio({
   };
 
   // Add an extra element to a page (heading, subheading, paragraph, callout, price tag, bullet, photo, divider)
-  const handleAddElement = (type, targetPageIdx = selectedInspectPage) => {
+  const handleAddElement = (type, targetPageIdx = selectedInspectPage, customText = null) => {
     const host = previewHostRef.current;
     if (!host) return;
     const cards = host.querySelectorAll(".pvpage");
@@ -1348,28 +1479,28 @@ export default function DynamicCatalogueStudio({
 
     if (type === "heading" || type === "h1") {
       el.style.cssText = `position:absolute;left:56px;top:${topOffset}px;font-size:30px;font-weight:800;font-family:'Montserrat',sans-serif;color:#1e293b;line-height:1.2;cursor:move;z-index:60;max-width:640px;`;
-      el.textContent = "New Headline Title";
+      el.textContent = customText || "New Headline Title";
     } else if (type === "subheading" || type === "h2") {
       el.style.cssText = `position:absolute;left:56px;top:${topOffset}px;font-size:18px;font-weight:700;font-family:'Montserrat',sans-serif;color:${brandColor};text-transform:uppercase;letter-spacing:1.5px;cursor:move;z-index:60;max-width:640px;`;
-      el.textContent = "Section Subheading";
+      el.textContent = customText || "Section Subheading";
     } else if (type === "paragraph" || type === "body") {
       el.style.cssText = `position:absolute;left:56px;top:${topOffset}px;font-size:14px;font-weight:400;font-family:'Montserrat',sans-serif;color:#475569;line-height:1.6;cursor:move;z-index:60;max-width:560px;`;
-      el.textContent = "Enter descriptive paragraph copy here. Natural split textures, precision calibration, and durable architectural appeal.";
+      el.textContent = customText || "Enter descriptive paragraph copy here. Natural split textures, precision calibration, and durable architectural appeal.";
     } else if (type === "textarea") {
       el.style.cssText = `position:absolute;left:56px;top:${topOffset}px;font-size:14px;font-weight:400;font-family:'Montserrat',sans-serif;color:#334155;line-height:1.6;cursor:move;z-index:60;max-width:580px;background:rgba(248,250,252,0.9);border:1px solid #e2e8f0;border-radius:8px;padding:12px 16px;`;
-      el.textContent = "Multi-line text area content. Ideal for detailed technical specifications, project certifications, warranty terms, and company narrative.";
+      el.textContent = customText || "Multi-line text area content. Ideal for detailed technical specifications, project certifications, warranty terms, and company narrative.";
     } else if (type === "text") {
       el.style.cssText = `position:absolute;left:56px;top:${topOffset}px;font-size:15px;font-weight:600;font-family:'Montserrat',sans-serif;color:#1e293b;cursor:move;z-index:60;max-width:480px;`;
-      el.textContent = "Custom Text Element";
+      el.textContent = customText || "Custom Text Element";
     } else if (type === "callout") {
       el.style.cssText = `position:absolute;left:56px;top:${topOffset}px;font-size:13.5px;font-weight:600;font-family:'Montserrat',sans-serif;color:#1e293b;background:rgba(59,130,246,0.08);border-left:4px solid ${brandColor};border-radius:6px;padding:12px 18px;cursor:move;z-index:60;max-width:480px;line-height:1.5;`;
-      el.textContent = "★ Special Note: Available in custom finishes, edge profiles, and direct nationwide dispatch.";
+      el.textContent = customText || "★ Special Note: Available in custom finishes, edge profiles, and direct nationwide dispatch.";
     } else if (type === "price") {
       el.style.cssText = `position:absolute;left:56px;top:${topOffset}px;font-size:18px;font-weight:800;font-family:'Montserrat',sans-serif;color:#ffffff;background:#0f172a;border-radius:99px;padding:8px 22px;display:inline-block;cursor:move;z-index:60;box-shadow:0 4px 14px rgba(0,0,0,0.18);`;
-      el.textContent = "₹ 1,450 / sq.ft";
+      el.textContent = customText || "₹ 1,450 / sq.ft";
     } else if (type === "bullet") {
       el.style.cssText = `position:absolute;left:56px;top:${topOffset}px;font-size:13.5px;font-weight:600;font-family:'Montserrat',sans-serif;color:#059669;background:#ecfdf5;border:1.5px solid #a7f3d0;border-radius:8px;padding:8px 16px;display:inline-block;cursor:move;z-index:60;`;
-      el.textContent = "✓ 100% Anti-Slip & Weatherproof Natural Stone";
+      el.textContent = customText || "✓ 100% Anti-Slip & Weatherproof Natural Stone";
     } else if (type === "photo") {
       el.className = "custom-user-el photo-frame";
       el.style.cssText = `position:absolute;left:56px;top:${topOffset}px;width:300px;height:200px;border-radius:10px;overflow:hidden;box-shadow:0 8px 24px rgba(0,0,0,0.12);cursor:move;z-index:60;background:#f8fafc;`;
@@ -1686,6 +1817,12 @@ export default function DynamicCatalogueStudio({
       else if (currentFam === "garlic") setSwapModalCategory("garlic");
       else setSwapModalCategory("all");
 
+      // Hide editor handles, blue selection box, and floating toolbar while swap modal is open
+      select(null);
+      if (typeof window !== "undefined" && window.hideCatalogueEditorOverlays) {
+        window.hideCatalogueEditorOverlays(true);
+      }
+
       setIsSwapModalOpen(true);
     };
 
@@ -1694,6 +1831,28 @@ export default function DynamicCatalogueStudio({
       window.onTriggerPhotoSwap = null;
     };
   }, [currentFam, selectedInspectPage]);
+
+  // Suppress all floating toolbars, selection outlines, and sticky panels while any modal is open
+  const isAnyModalOpen = Boolean(isSwapModalOpen || isLoadModalOpen || isExporting || isLiveModalOpen);
+  useEffect(() => {
+    if (isAnyModalOpen) {
+      document.body.classList.add("modal-open", "dynamic-catalogue-modal-active");
+      if (typeof window !== "undefined" && window.hideCatalogueEditorOverlays) {
+        window.hideCatalogueEditorOverlays(true);
+      }
+    } else {
+      document.body.classList.remove("modal-open", "dynamic-catalogue-modal-active");
+      if (typeof window !== "undefined" && window.hideCatalogueEditorOverlays) {
+        window.hideCatalogueEditorOverlays(false);
+      }
+    }
+    return () => {
+      document.body.classList.remove("modal-open", "dynamic-catalogue-modal-active");
+      if (typeof window !== "undefined" && window.hideCatalogueEditorOverlays) {
+        window.hideCatalogueEditorOverlays(false);
+      }
+    };
+  }, [isAnyModalOpen]);
 
   // Compile on template, color, products, company, or QR toggle change
   useEffect(() => {
@@ -1754,18 +1913,14 @@ export default function DynamicCatalogueStudio({
       });
     }
 
-    // If parent provided onSelectCompany, check if DB has a matching company
-    if (onSelectCompany && companies && companies.length > 0) {
-      const matchComp = companies.find((c) => {
-        const text = `${c.name || ""} ${c.industry || ""} ${c.odopProduct || ""}`.toLowerCase();
-        if (tmpl.fam === "garlic") return text.includes("garlic");
-        if (tmpl.fam === "kotastone") return text.includes("kota stone") || (text.includes("stone") && !text.includes("sand"));
-        if (tmpl.fam === "sandstone") return text.includes("sand");
-        if (tmpl.fam === "kotadoria") return text.includes("doria") || text.includes("saree") || text.includes("handloom");
-        return false;
-      });
-      if (matchComp && matchComp._id !== company?._id) {
-        onSelectCompany(matchComp);
+    // If template belongs to another specialty family and parent provided onSelectCompany, synchronize company
+    if (tmpl.fam && onSelectCompany && companies && companies.length > 0) {
+      const curCompFam = detectCompanyFamily(company);
+      if (curCompFam !== tmpl.fam) {
+        const matchComp = companies.find((c) => detectCompanyFamily(c) === tmpl.fam);
+        if (matchComp && matchComp._id !== company?._id) {
+          onSelectCompany(matchComp);
+        }
       }
     }
   };
@@ -1947,9 +2102,6 @@ export default function DynamicCatalogueStudio({
       setIsSavingRecord(true);
       let edits = {};
       if (window.DesignEdits) {
-        if (window.DesignEdits['kotadoria:undefined']) {
-          edits = Object.assign({}, edits, window.DesignEdits['kotadoria:undefined']);
-        }
         if (selectedUid && window.DesignEdits[selectedUid]) {
           edits = Object.assign({}, edits, window.DesignEdits[selectedUid]);
         }
@@ -2019,6 +2171,158 @@ export default function DynamicCatalogueStudio({
       alert("Failed to save: " + err.message);
     } finally {
       setIsSavingRecord(false);
+    }
+  };
+
+  // Make Live on Public URL & Generate Share Link
+  const handleMakeLive = async () => {
+    try {
+      setIsPublishingLive(true);
+      let edits = {};
+      if (window.DesignEdits) {
+        if (selectedUid && window.DesignEdits[selectedUid]) {
+          edits = Object.assign({}, edits, window.DesignEdits[selectedUid]);
+        }
+        if (currentSel?.uid && window.DesignEdits[currentSel.uid]) {
+          edits = Object.assign({}, edits, window.DesignEdits[currentSel.uid]);
+        }
+      }
+      if (selectedUid && window.DesignEdits) {
+        window.DesignEdits[selectedUid] = edits;
+      }
+
+      // Extract current live HTML from DOM host so all in-place text edits, custom elements, and swapped photos are captured
+      let livePages = pagesHtml;
+      const host = previewHostRef.current;
+      if (host) {
+        const cards = Array.from(host.querySelectorAll(".pvpage"));
+        if (cards.length) {
+          livePages = cards.map(c => {
+            if (c.firstElementChild) {
+              const clone = c.firstElementChild.cloneNode(true);
+              clone.style.transform = "none";
+              clone.style.transformOrigin = "initial";
+              clone.style.position = "relative";
+              clone.style.left = "0";
+              clone.style.top = "0";
+              return clone.outerHTML;
+            }
+            return c.innerHTML;
+          });
+        }
+      }
+
+      const cName = (company?.name || "").toLowerCase();
+      const cInd = (company?.industry || "").toLowerCase();
+      const cProd = (company?.odopProduct || "").toLowerCase();
+      const cDist = (company?.district || "").toLowerCase();
+
+      const resolvedDist = (company?.district && company?.district !== "India") ? company.district : (
+        (cProd.includes("garlic") || cInd.includes("garlic") || cName.includes("garlic") || cDist.includes("baran")) ? "Baran, Rajasthan" :
+        (cProd.includes("kota stone") || cInd.includes("kota stone") || cName.includes("kota stone") || cDist.includes("jhalawar")) ? "Jhalawar, Rajasthan" :
+        (cProd.includes("sand") || cInd.includes("sand") || cName.includes("sand") || cDist.includes("bundi")) ? "Bundi, Rajasthan" :
+        "Kota, Rajasthan"
+      );
+      const resolvedProd = company?.odopProduct || (
+        (cProd.includes("garlic") || cInd.includes("garlic") || cName.includes("garlic") || cDist.includes("baran")) ? "Garlic" :
+        (cProd.includes("kota stone") || cInd.includes("kota stone") || cName.includes("kota stone") || cDist.includes("jhalawar")) ? "Kota Stone" :
+        (cProd.includes("sand") || cInd.includes("sand") || cName.includes("sand") || cDist.includes("bundi")) ? "Sandstone" :
+        "Kota Doria"
+      );
+
+      const activeColor = colorOverride || (company?.brandColors && (company.brandColors.primary || company.brandColors.accent)) || "";
+      const entName = activeCompany?.name || company?.name || "Supreme Granite & Stones";
+      const cleanSlug = entName
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/(^-|-$)/g, "");
+
+      const payload = {
+        ent_name: entName,
+        companyId: activeCompany?._id || company?._id || null,
+        district: activeCompany?.district || resolvedDist,
+        product: activeCompany?.odopProduct || resolvedProd,
+        template_uid: selectedUid,
+        color: activeColor,
+        status: "final",
+        isLive: true,
+        pagesHtml: livePages,
+        liveSlug: cleanSlug,
+        form_json: textOverrides,
+        variants_json: activeProducts,
+        design_edits_json: edits,
+        logo_file: company?.logoUrl || ""
+      };
+
+      try {
+        const draftKey = `catalogue_draft_${activeCompany?._id || company?._id || 'default'}`;
+        localStorage.setItem(draftKey, JSON.stringify(payload));
+        if (selectedUid) {
+          localStorage.setItem(`catalogue_edits_${selectedUid}`, JSON.stringify(edits));
+        }
+      } catch (_) {}
+
+      let recId = currentRecordId;
+      let res;
+      if (recId) {
+        res = await updateCatalogueRecord(recId, payload);
+      } else {
+        res = await createCatalogueRecord(payload);
+        if (res?.data?._id) {
+          recId = res.data._id;
+          setCurrentRecordId(recId);
+        }
+      }
+
+      const recordId = res?.data?._id || recId;
+      const targetSlug = res?.data?.liveSlug || recordId;
+
+      try {
+        await publishCatalogueRecordLive(recordId, {
+          pagesHtml: livePages,
+          liveUrl: `${window.location.origin}/c/${targetSlug}`,
+          liveSlug: targetSlug
+        });
+      } catch (_) {}
+
+      const liveUrl = `${window.location.origin}/c/${targetSlug}`;
+      setCurrentLiveUrl(liveUrl);
+
+      // Generate QR Code data URL for immediate mobile camera scanning
+      try {
+        const qr = await qrDataUrl(liveUrl);
+        setLiveQrCodeUrl(qr);
+      } catch (qrErr) {
+        console.warn("QR code generation error:", qrErr);
+      }
+
+      setIsLiveModalOpen(true);
+      setSaveSuccessMsg("🎉 Catalogue is LIVE on Web URL!");
+      setTimeout(() => setSaveSuccessMsg(""), 4500);
+      confetti({ particleCount: 90, spread: 80, origin: { y: 0.5 } });
+    } catch (err) {
+      console.error("Make Live error:", err);
+      alert("Failed to make catalogue live: " + (err.response?.data?.message || err.message));
+    } finally {
+      setIsPublishingLive(false);
+    }
+  };
+
+  const handleCopyLiveLink = async () => {
+    if (!currentLiveUrl) return;
+    try {
+      await navigator.clipboard.writeText(currentLiveUrl);
+      setCopiedLiveLink(true);
+      setTimeout(() => setCopiedLiveLink(false), 2500);
+    } catch (_) {
+      const ta = document.createElement("textarea");
+      ta.value = currentLiveUrl;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand("copy");
+      document.body.removeChild(ta);
+      setCopiedLiveLink(true);
+      setTimeout(() => setCopiedLiveLink(false), 2500);
     }
   };
 
@@ -2307,6 +2611,31 @@ export default function DynamicCatalogueStudio({
             <Save size={15} /> {isSavingRecord ? "Saving..." : (currentRecordId ? "Update" : "Save")}
           </button>
 
+          {/* MAKE LIVE ON URL BUTTON */}
+          <button
+            type="button"
+            className="btn btn-sm"
+            onClick={handleMakeLive}
+            disabled={isPublishingLive}
+            title="Publish this catalogue live online and generate a shareable web link & QR code"
+            style={{
+              background: "linear-gradient(135deg, #10b981 0%, #059669 100%)",
+              color: "#ffffff",
+              fontWeight: 800,
+              fontSize: "0.84rem",
+              padding: "7px 16px",
+              display: "flex",
+              alignItems: "center",
+              gap: "6px",
+              border: "none",
+              borderRadius: "8px",
+              boxShadow: "0 4px 14px rgba(16, 185, 129, 0.4)",
+              cursor: isPublishingLive ? "not-allowed" : "pointer"
+            }}
+          >
+            <Globe size={15} /> {isPublishingLive ? "Publishing Live..." : (currentLiveUrl ? "🌐 Live Link & Share" : "🌐 Make Live on URL")}
+          </button>
+
           {/* DOWNLOAD MULTI-PAGE PDF BUTTON */}
           <button
             type="button"
@@ -2502,7 +2831,30 @@ export default function DynamicCatalogueStudio({
               <ImageIcon size={12} /> Photos
             </button>
 
-            {/* TAB 5: 101 PHOTO BANK */}
+            {/* TAB 5: COMPANY DATA BANK */}
+            <button
+              type="button"
+              className={`btn btn-sm ${sidebarTab === "databank" ? "btn-primary" : "btn-outline"}`}
+              onClick={() => setSidebarTab("databank")}
+              style={{
+                fontSize: "0.75rem",
+                fontWeight: 800,
+                padding: "8px 4px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: "4px",
+                background: sidebarTab === "databank" ? "linear-gradient(135deg, #4f46e5, #4338ca)" : "rgba(79, 70, 229, 0.08)",
+                color: sidebarTab === "databank" ? "#ffffff" : "#818cf8",
+                borderColor: sidebarTab === "databank" ? "#4f46e5" : "rgba(79, 70, 229, 0.3)",
+                boxShadow: sidebarTab === "databank" ? "0 2px 8px rgba(79, 70, 229, 0.4)" : "none"
+              }}
+              title="Company Data Bank: Headings, Taglines, Stories & Sizing Specs"
+            >
+              <Database size={12} /> Data Bank
+            </button>
+
+            {/* TAB 6: 101 PHOTO BANK */}
             <button
               type="button"
               className={`btn btn-sm ${sidebarTab === "assets" ? "btn-primary" : "btn-outline"}`}
@@ -2521,10 +2873,10 @@ export default function DynamicCatalogueStudio({
               }}
               title="Browse 101 Real Images: Garlic, Kota Stone, Kota Doria & Sand Stone"
             >
-              <FolderOpen size={12} /> Bank
+              <FolderOpen size={12} /> Photo Bank
             </button>
 
-            {/* TAB 6: INSERT ELEMENTS */}
+            {/* TAB 7: INSERT ELEMENTS */}
             <button
               type="button"
               className={`btn btn-sm ${sidebarTab === "add-elements" ? "btn-primary" : "btn-outline"}`}
@@ -2546,7 +2898,7 @@ export default function DynamicCatalogueStudio({
               <PlusCircle size={12} /> + Add
             </button>
 
-            {/* TAB 7: REORDER PAGES */}
+            {/* TAB 8: REORDER PAGES */}
             <button
               type="button"
               className={`btn btn-sm ${sidebarTab === "drag-drop" ? "btn-primary" : "btn-outline"}`}
@@ -3220,6 +3572,434 @@ export default function DynamicCatalogueStudio({
                       </div>
                     </div>
                   ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* TAB 5: COMPANY DATA BANK */}
+          {sidebarTab === "databank" && (
+            <div className="card" style={{ padding: "1.1rem", background: "var(--bg-surface)", border: "1px solid var(--border-medium)", display: "flex", flexDirection: "column", gap: "0.9rem" }}>
+              {/* Header */}
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "0.5rem" }}>
+                <div>
+                  <div style={{ fontWeight: 800, fontSize: "0.96rem", color: "var(--text-primary)", display: "flex", alignItems: "center", gap: "6px" }}>
+                    <Database size={17} color="#4f46e5" />
+                    Company Data Bank
+                  </div>
+                  <div style={{ fontSize: "0.74rem", color: "var(--text-secondary)", marginTop: "2px" }}>
+                    {activeCompany?.name || company?.name || "Our Enterprise"} • {activeCompany?.odopProduct || company?.odopProduct || "Specialty"}
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  className="btn btn-primary btn-sm"
+                  onClick={() => setIsCompanyDataBankModalOpen(true)}
+                  style={{
+                    background: "linear-gradient(135deg, #4f46e5 0%, #4338ca 100%)",
+                    borderColor: "#4f46e5",
+                    fontSize: "0.74rem",
+                    fontWeight: 750,
+                    padding: "4px 8px",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "4px",
+                    whiteSpace: "nowrap"
+                  }}
+                  title="Open full Data Bank manager to add, edit or customize pre-filled data"
+                >
+                  <Sliders size={12} /> Manage Bank
+                </button>
+              </div>
+
+              {/* Target Page Helper Banner */}
+              <div
+                style={{
+                  background: "rgba(79, 70, 229, 0.08)",
+                  border: "1px solid rgba(79, 70, 229, 0.25)",
+                  borderRadius: "8px",
+                  padding: "8px 10px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  gap: "0.5rem"
+                }}
+              >
+                <div style={{ fontSize: "0.75rem", color: "var(--text-primary)", fontWeight: 650 }}>
+                  Target: <strong>Page {selectedInspectPage + 1}</strong> {selectedInspectPage === 0 ? "(Cover)" : ""}
+                </div>
+                <div style={{ display: "flex", gap: "3px", alignItems: "center" }}>
+                  <span style={{ fontSize: "0.7rem", color: "var(--text-secondary)" }}>Insert on:</span>
+                  <select
+                    value={selectedInspectPage}
+                    onChange={(e) => {
+                      const idx = Number(e.target.value);
+                      setSelectedInspectPage(idx);
+                      refreshInspectedElements(idx);
+                    }}
+                    className="input-field"
+                    style={{ fontSize: "0.72rem", padding: "2px 6px", height: "auto" }}
+                  >
+                    {pagesHtml.map((_, pIdx) => (
+                      <option key={pIdx} value={pIdx}>
+                        Pg {pIdx + 1} {pIdx === 0 ? "(Cover)" : ""}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              {/* Category Filter Pills */}
+              <div style={{ display: "flex", gap: "4px", flexWrap: "wrap" }}>
+                {[
+                  { id: "all", label: "All Items" },
+                  { id: "headings", label: `Headings (${effectiveDataBank.headings?.length || 0})` },
+                  { id: "taglines", label: `Taglines (${effectiveDataBank.taglines?.length || 0})` },
+                  { id: "stories", label: `Stories (${effectiveDataBank.paragraphs?.length || 0})` },
+                  { id: "specs", label: "Sizing & Specs" },
+                ].map((f) => (
+                  <button
+                    key={f.id}
+                    type="button"
+                    onClick={() => setDataBankFilter(f.id)}
+                    style={{
+                      background: dataBankFilter === f.id ? "#4f46e5" : "var(--bg-surface-elevated)",
+                      color: dataBankFilter === f.id ? "#ffffff" : "var(--text-secondary)",
+                      border: "1px solid",
+                      borderColor: dataBankFilter === f.id ? "#4f46e5" : "var(--border-subtle)",
+                      borderRadius: "6px",
+                      padding: "3px 8px",
+                      fontSize: "0.72rem",
+                      fontWeight: dataBankFilter === f.id ? 750 : 600,
+                      cursor: "pointer"
+                    }}
+                  >
+                    {f.label}
+                  </button>
+                ))}
+              </div>
+
+              {/* SECTION: HEADINGS */}
+              {(dataBankFilter === "all" || dataBankFilter === "headings") && effectiveDataBank.headings?.length > 0 && (
+                <div style={{ display: "flex", flexDirection: "column", gap: "0.45rem" }}>
+                  <div style={{ fontSize: "0.78rem", fontWeight: 800, color: "var(--text-primary)", display: "flex", alignItems: "center", gap: "5px" }}>
+                    📰 Pre-filled Headings &amp; Page Titles
+                  </div>
+                  {effectiveDataBank.headings.map((h, hIdx) => (
+                    <div
+                      key={h.id || hIdx}
+                      style={{
+                        background: "var(--bg-surface-elevated)",
+                        border: "1px solid var(--border-subtle)",
+                        borderRadius: "8px",
+                        padding: "7px 10px",
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: "4px"
+                      }}
+                    >
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                        <span style={{ fontSize: "0.68rem", fontWeight: 700, color: "#6366f1", background: "rgba(99, 102, 241, 0.1)", padding: "1px 6px", borderRadius: "4px" }}>
+                          {h.category || "Headline"}
+                        </span>
+                        <div style={{ display: "flex", gap: "4px" }}>
+                          <button
+                            type="button"
+                            className="btn btn-outline btn-sm"
+                            onClick={() => {
+                              navigator.clipboard.writeText(h.text);
+                              setDataBankCopiedId(`h_${hIdx}`);
+                              setTimeout(() => setDataBankCopiedId(null), 1600);
+                            }}
+                            style={{ fontSize: "0.68rem", padding: "2px 6px" }}
+                            title="Copy to clipboard"
+                          >
+                            {dataBankCopiedId === `h_${hIdx}` ? "✓ Copied" : "📋 Copy"}
+                          </button>
+                          <button
+                            type="button"
+                            className="btn btn-primary btn-sm"
+                            onClick={() => handleAddElement("heading", selectedInspectPage, h.text, true)}
+                            style={{ fontSize: "0.68rem", padding: "2px 7px", background: "#4f46e5", borderColor: "#4f46e5" }}
+                            title={`Insert this heading onto Page ${selectedInspectPage + 1}`}
+                          >
+                            + Insert
+                          </button>
+                        </div>
+                      </div>
+                      <div style={{ fontSize: "0.82rem", fontWeight: 700, color: "var(--text-primary)", lineHeight: "1.3" }}>
+                        {h.text}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* SECTION: TAGLINES */}
+              {(dataBankFilter === "all" || dataBankFilter === "taglines") && effectiveDataBank.taglines?.length > 0 && (
+                <div style={{ display: "flex", flexDirection: "column", gap: "0.45rem" }}>
+                  <div style={{ fontSize: "0.78rem", fontWeight: 800, color: "var(--text-primary)", display: "flex", alignItems: "center", gap: "5px" }}>
+                    💬 Brand Taglines &amp; Subheadings
+                  </div>
+                  {effectiveDataBank.taglines.map((t, tIdx) => (
+                    <div
+                      key={t.id || tIdx}
+                      style={{
+                        background: "var(--bg-surface-elevated)",
+                        border: "1px solid var(--border-subtle)",
+                        borderRadius: "8px",
+                        padding: "7px 10px",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        gap: "6px"
+                      }}
+                    >
+                      <div style={{ fontSize: "0.8rem", fontWeight: 600, color: "var(--text-secondary)", flex: 1, minWidth: 0 }}>
+                        “{t.text}”
+                      </div>
+                      <div style={{ display: "flex", gap: "4px", flexShrink: 0 }}>
+                        <button
+                          type="button"
+                          className="btn btn-outline btn-sm"
+                          onClick={() => {
+                            navigator.clipboard.writeText(t.text);
+                            setDataBankCopiedId(`t_${tIdx}`);
+                            setTimeout(() => setDataBankCopiedId(null), 1600);
+                          }}
+                          style={{ fontSize: "0.68rem", padding: "2px 6px" }}
+                        >
+                          {dataBankCopiedId === `t_${tIdx}` ? "✓" : "📋"}
+                        </button>
+                        <button
+                          type="button"
+                          className="btn btn-primary btn-sm"
+                          onClick={() => handleAddElement("subheading", selectedInspectPage, t.text, true)}
+                          style={{ fontSize: "0.68rem", padding: "2px 7px", background: "#4f46e5", borderColor: "#4f46e5" }}
+                        >
+                          + Insert
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* SECTION: BRAND STORIES & PARAGRAPHS */}
+              {(dataBankFilter === "all" || dataBankFilter === "stories") && effectiveDataBank.paragraphs?.length > 0 && (
+                <div style={{ display: "flex", flexDirection: "column", gap: "0.45rem" }}>
+                  <div style={{ fontSize: "0.78rem", fontWeight: 800, color: "var(--text-primary)", display: "flex", alignItems: "center", gap: "5px" }}>
+                    📖 Brand Stories &amp; Narrative Paragraphs
+                  </div>
+                  {effectiveDataBank.paragraphs.map((p, pIdx) => (
+                    <div
+                      key={p.id || pIdx}
+                      style={{
+                        background: "var(--bg-surface-elevated)",
+                        border: "1px solid var(--border-subtle)",
+                        borderRadius: "8px",
+                        padding: "8px 10px",
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: "5px"
+                      }}
+                    >
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                        <div style={{ fontSize: "0.76rem", fontWeight: 800, color: "var(--text-primary)" }}>
+                          {p.title || `Story #${pIdx + 1}`}
+                        </div>
+                        <div style={{ display: "flex", gap: "4px" }}>
+                          <button
+                            type="button"
+                            className="btn btn-outline btn-sm"
+                            onClick={() => {
+                              navigator.clipboard.writeText(p.text);
+                              setDataBankCopiedId(`p_${pIdx}`);
+                              setTimeout(() => setDataBankCopiedId(null), 1600);
+                            }}
+                            style={{ fontSize: "0.68rem", padding: "2px 6px" }}
+                          >
+                            {dataBankCopiedId === `p_${pIdx}` ? "✓ Copied" : "📋 Copy"}
+                          </button>
+                          <button
+                            type="button"
+                            className="btn btn-primary btn-sm"
+                            onClick={() => handleAddElement("paragraph", selectedInspectPage, p.text, true)}
+                            style={{ fontSize: "0.68rem", padding: "2px 7px", background: "#4f46e5", borderColor: "#4f46e5" }}
+                          >
+                            + Insert
+                          </button>
+                        </div>
+                      </div>
+                      <div style={{ fontSize: "0.75rem", color: "var(--text-secondary)", lineHeight: "1.45" }}>
+                        {p.text}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* SECTION: PRODUCT SPECIFICATIONS & THICKNESSES */}
+              {(dataBankFilter === "all" || dataBankFilter === "specs") && effectiveDataBank.specifications && (
+                <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+                  <div style={{ fontSize: "0.78rem", fontWeight: 800, color: "var(--text-primary)", display: "flex", alignItems: "center", gap: "5px" }}>
+                    {currentFam === "garlic"
+                      ? "🧄 Produce Sizing, Calibers & Mandi Bank"
+                      : currentFam === "kotadoria"
+                      ? "🧵 Fabric Lengths, Cuts & Weaver Bank"
+                      : currentFam === "sandstone" || currentFam === "kotastone"
+                      ? "📐 Stone Sizing, Thicknesses & Quarry Bank"
+                      : "📐 Sizing, Thicknesses & Pricing Bank"}
+                  </div>
+
+                  {/* Thicknesses / Grades with rates */}
+                  {effectiveDataBank.specifications.thicknesses?.length > 0 && (
+                    <div>
+                      <div style={{ fontSize: "0.72rem", fontWeight: 700, color: "var(--text-secondary)", marginBottom: "4px" }}>
+                        {currentFam === "garlic"
+                          ? "🧄 Bulb Calibers & Mandi Rates:"
+                          : currentFam === "kotadoria"
+                          ? "🧵 Fabric Lengths & Weaver Rates:"
+                          : currentFam === "sandstone" || currentFam === "kotastone"
+                          ? "📏 Stone Thicknesses & Quarry Rates:"
+                          : "📏 Sizes, Grades & Rates:"}
+                      </div>
+                      <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                        {effectiveDataBank.specifications.thicknesses.map((th, thIdx) => (
+                          <div
+                            key={thIdx}
+                            style={{
+                              background: "var(--bg-surface-elevated)",
+                              border: "1px solid var(--border-subtle)",
+                              borderRadius: "6px",
+                              padding: "5px 8px",
+                              display: "flex",
+                              justifyContent: "space-between",
+                              alignItems: "center",
+                              gap: "4px"
+                            }}
+                          >
+                            <div style={{ minWidth: 0, flex: 1 }}>
+                              <span style={{ fontSize: "0.76rem", fontWeight: 750, color: "var(--text-primary)" }}>
+                                {th.value}
+                              </span>
+                              {th.price && (
+                                <span style={{ marginLeft: "6px", fontSize: "0.72rem", color: "#16a34a", fontWeight: 800 }}>
+                                  ₹{th.price}{currentFam === "garlic" ? "/kg" : currentFam === "sandstone" || currentFam === "kotastone" ? "/sq.ft" : ""}
+                                </span>
+                              )}
+                            </div>
+                            <div style={{ display: "flex", gap: "3px" }}>
+                              <button
+                                type="button"
+                                className="btn btn-outline btn-sm"
+                                onClick={() => {
+                                  const specStr = `${th.value}${th.price ? ` — ₹${th.price}` : ""}`;
+                                  navigator.clipboard.writeText(specStr);
+                                  setDataBankCopiedId(`th_${thIdx}`);
+                                  setTimeout(() => setDataBankCopiedId(null), 1600);
+                                }}
+                                style={{ fontSize: "0.66rem", padding: "1px 5px" }}
+                              >
+                                {dataBankCopiedId === `th_${thIdx}` ? "✓" : "📋"}
+                              </button>
+                              <button
+                                type="button"
+                                className="btn btn-primary btn-sm"
+                                onClick={() => {
+                                  const unitLabel = currentFam === "garlic" ? "/kg" : currentFam === "sandstone" || currentFam === "kotastone" ? "/sq.ft" : "";
+                                  const specPrefix = currentFam === "garlic" ? "Caliber: " : currentFam === "kotadoria" ? "Length: " : "Thickness: ";
+                                  const specStr = `${specPrefix}${th.value}${th.price ? ` (₹${th.price}${unitLabel})` : ""}`;
+                                  handleAddElement("bullet", selectedInspectPage, specStr, true);
+                                }}
+                                style={{ fontSize: "0.66rem", padding: "1px 6px", background: "#4f46e5", borderColor: "#4f46e5" }}
+                              >
+                                + Insert
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Sizing / Dimensions */}
+                  {effectiveDataBank.specifications.sizes?.length > 0 && (
+                    <div>
+                      <div style={{ fontSize: "0.72rem", fontWeight: 700, color: "var(--text-secondary)", marginBottom: "4px" }}>
+                        {currentFam === "garlic"
+                          ? "📐 Sizing & Grading Calibers:"
+                          : currentFam === "kotadoria"
+                          ? "📐 Saree Lengths & Drape Cuts:"
+                          : "📐 Plan Dimensions / Sizes:"}
+                      </div>
+                      <div style={{ display: "flex", flexWrap: "wrap", gap: "4px" }}>
+                        {effectiveDataBank.specifications.sizes.map((sz, szIdx) => (
+                          <button
+                            key={szIdx}
+                            type="button"
+                            className="btn btn-outline btn-sm"
+                            onClick={() => handleAddElement("bullet", selectedInspectPage, `Size: ${sz.value}`, true)}
+                            style={{ fontSize: "0.7rem", padding: "3px 6px", display: "inline-flex", alignItems: "center", gap: "4px" }}
+                            title={`Click to insert "${sz.value}" onto Page ${selectedInspectPage + 1}`}
+                          >
+                            <span>+</span> {sz.chipLabel || sz.value}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Finishes */}
+                  {effectiveDataBank.specifications.finishes?.length > 0 && (
+                    <div>
+                      <div style={{ fontSize: "0.72rem", fontWeight: 700, color: "var(--text-secondary)", marginBottom: "4px" }}>
+                        {currentFam === "garlic"
+                          ? "✨ Curing & Skin Finishes:"
+                          : currentFam === "kotadoria"
+                          ? "✨ Zari & Weave Finishes:"
+                          : "✨ Surface Finishes & Textures:"}
+                      </div>
+                      <div style={{ display: "flex", flexWrap: "wrap", gap: "4px" }}>
+                        {effectiveDataBank.specifications.finishes.map((fn, fnIdx) => (
+                          <button
+                            key={fnIdx}
+                            type="button"
+                            className="btn btn-outline btn-sm"
+                            onClick={() => handleAddElement("bullet", selectedInspectPage, `Finish: ${fn.value}`, true)}
+                            style={{ fontSize: "0.7rem", padding: "3px 6px", display: "inline-flex", alignItems: "center", gap: "4px" }}
+                            title={`Click to insert "${fn.value}" onto Page ${selectedInspectPage + 1}`}
+                          >
+                            <span>+</span> {fn.chipLabel || fn.value}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* MOQs & Price Ranges */}
+                  {effectiveDataBank.specifications.priceRanges?.length > 0 && (
+                    <div>
+                      <div style={{ fontSize: "0.72rem", fontWeight: 700, color: "var(--text-secondary)", marginBottom: "4px" }}>
+                        💰 Price Ranges &amp; Wholesale Lots:
+                      </div>
+                      <div style={{ display: "flex", flexWrap: "wrap", gap: "4px" }}>
+                        {effectiveDataBank.specifications.priceRanges.map((pr, prIdx) => (
+                          <button
+                            key={prIdx}
+                            type="button"
+                            className="btn btn-outline btn-sm"
+                            onClick={() => handleAddElement("price", selectedInspectPage, pr.value, true)}
+                            style={{ fontSize: "0.7rem", padding: "3px 6px", display: "inline-flex", alignItems: "center", gap: "4px" }}
+                            title={`Click to insert price badge "${pr.value}" onto Page ${selectedInspectPage + 1}`}
+                          >
+                            <span>+</span> {pr.value}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -4500,13 +5280,18 @@ export default function DynamicCatalogueStudio({
 
       {/* LOAD SAVED DESIGN FROM MONGODB MODAL */}
       {isLoadModalOpen && (
-        <div className="drawer-backdrop" onClick={() => setIsLoadModalOpen(false)}>
+        <div
+          className="drawer-backdrop dynamic-catalogue-modal-backdrop"
+          onClick={() => setIsLoadModalOpen(false)}
+        >
           <div
             className="card"
             style={{
               width: "100%",
               maxWidth: "600px",
               margin: "auto",
+              position: "relative",
+              zIndex: 100000,
               background: "var(--bg-surface)",
               boxShadow: "var(--shadow-lg)",
               borderRadius: "14px",
@@ -4590,13 +5375,21 @@ export default function DynamicCatalogueStudio({
 
       {/* INTERACTIVE IMAGE SWAP MODAL */}
       {isSwapModalOpen && (
-        <div className="drawer-backdrop" onClick={() => setIsSwapModalOpen(false)}>
+        <div
+          className="drawer-backdrop dynamic-catalogue-modal-backdrop"
+          onClick={() => {
+            setIsSwapModalOpen(false);
+            setSwapModalTarget(null);
+          }}
+        >
           <div
             className="card"
             style={{
               width: "100%",
               maxWidth: "860px",
               margin: "auto",
+              position: "relative",
+              zIndex: 100000,
               background: "var(--bg-surface)",
               boxShadow: "0 25px 60px rgba(0,0,0,0.5)",
               borderRadius: "16px",
@@ -4825,6 +5618,272 @@ export default function DynamicCatalogueStudio({
           </div>
         </div>
       )}
+      {/* CATALOGUE IS LIVE & PUBLIC SHARE MODAL */}
+      {isLiveModalOpen && (
+        <div
+          className="drawer-backdrop dynamic-catalogue-modal-backdrop"
+          onClick={() => setIsLiveModalOpen(false)}
+        >
+          <div
+            className="card"
+            style={{
+              width: "100%",
+              maxWidth: "640px",
+              margin: "auto",
+              position: "relative",
+              zIndex: 100000,
+              background: "var(--bg-surface)",
+              boxShadow: "0 25px 65px rgba(0,0,0,0.55)",
+              borderRadius: "18px",
+              padding: "1.75rem",
+              border: "1.5px solid rgba(16, 185, 129, 0.4)"
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "1.25rem" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                <div
+                  style={{
+                    width: "46px",
+                    height: "46px",
+                    borderRadius: "12px",
+                    background: "linear-gradient(135deg, #10b981 0%, #059669 100%)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    color: "#ffffff",
+                    boxShadow: "0 6px 18px rgba(16, 185, 129, 0.45)",
+                    flexShrink: 0
+                  }}
+                >
+                  <Globe size={24} />
+                </div>
+                <div>
+                  <div style={{ fontWeight: 800, fontSize: "1.25rem", color: "var(--text-primary)", display: "flex", alignItems: "center", gap: "8px" }}>
+                    🎉 Catalogue is Live on Web!
+                    <span style={{ fontSize: "0.72rem", padding: "2px 8px", borderRadius: "12px", background: "rgba(16, 185, 129, 0.15)", color: "#10b981", border: "1px solid #10b981", fontWeight: 700 }}>
+                      PUBLIC ACCESS
+                    </span>
+                  </div>
+                  <div style={{ fontSize: "0.82rem", color: "var(--text-secondary)", marginTop: "2px" }}>
+                    Your digital catalogue is published and accessible worldwide on any smartphone, tablet, or desktop browser.
+                  </div>
+                </div>
+              </div>
+              <button
+                type="button"
+                className="btn btn-outline btn-sm"
+                onClick={() => setIsLiveModalOpen(false)}
+                style={{ padding: "4px 8px", borderRadius: "8px" }}
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Live URL Copy Box */}
+            <div style={{ marginBottom: "1.25rem" }}>
+              <label style={{ display: "block", fontSize: "0.78rem", fontWeight: 700, color: "var(--text-secondary)", marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.04em" }}>
+                🌐 Shareable Public Catalogue Link
+              </label>
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "8px",
+                  background: "var(--bg-surface-elevated)",
+                  padding: "6px 8px",
+                  borderRadius: "10px",
+                  border: "1.5px solid var(--border-medium)"
+                }}
+              >
+                <input
+                  type="text"
+                  readOnly
+                  value={currentLiveUrl}
+                  onClick={(e) => e.target.select()}
+                  style={{
+                    flex: 1,
+                    background: "transparent",
+                    border: "none",
+                    outline: "none",
+                    color: "var(--text-primary)",
+                    fontSize: "0.88rem",
+                    fontWeight: 600,
+                    padding: "6px 8px",
+                    fontFamily: "monospace"
+                  }}
+                />
+                <button
+                  type="button"
+                  className="btn btn-sm"
+                  onClick={handleCopyLiveLink}
+                  style={{
+                    background: copiedLiveLink ? "#10b981" : "var(--primary)",
+                    color: "#ffffff",
+                    fontWeight: 700,
+                    fontSize: "0.82rem",
+                    padding: "7px 14px",
+                    borderRadius: "8px",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "6px",
+                    border: "none",
+                    cursor: "pointer",
+                    transition: "all 0.2s ease"
+                  }}
+                >
+                  {copiedLiveLink ? <Check size={15} /> : <Copy size={15} />}
+                  {copiedLiveLink ? "Copied!" : "Copy Link"}
+                </button>
+              </div>
+            </div>
+
+            {/* Quick Share Action Row */}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px", marginBottom: "1.25rem" }}>
+              <button
+                type="button"
+                className="btn btn-primary"
+                onClick={() => window.open(currentLiveUrl, "_blank")}
+                style={{
+                  background: "linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)",
+                  fontWeight: 700,
+                  fontSize: "0.85rem",
+                  padding: "10px 14px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: "8px",
+                  borderRadius: "10px",
+                  boxShadow: "0 4px 12px rgba(37, 99, 235, 0.3)"
+                }}
+              >
+                <ExternalLink size={16} /> 👁️ Open Live Viewer
+              </button>
+
+              <button
+                type="button"
+                className="btn"
+                onClick={() => {
+                  const ent = activeCompany?.name || company?.name || "Our Enterprise";
+                  const msg = encodeURIComponent(`Explore our official digital product catalogue for ${ent}:\n${currentLiveUrl}`);
+                  window.open(`https://wa.me/?text=${msg}`, "_blank");
+                }}
+                style={{
+                  background: "linear-gradient(135deg, #25D366 0%, #128C7E 100%)",
+                  color: "#ffffff",
+                  fontWeight: 700,
+                  fontSize: "0.85rem",
+                  padding: "10px 14px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: "8px",
+                  borderRadius: "10px",
+                  border: "none",
+                  boxShadow: "0 4px 12px rgba(37, 211, 102, 0.3)",
+                  cursor: "pointer"
+                }}
+              >
+                <MessageCircle size={16} /> 📱 Share on WhatsApp
+              </button>
+            </div>
+
+            {/* QR Code and Highlights Banner */}
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "16px",
+                background: "var(--bg-surface-elevated)",
+                padding: "14px",
+                borderRadius: "12px",
+                border: "1px solid var(--border-subtle)"
+              }}
+            >
+              {liveQrCodeUrl ? (
+                <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "4px", flexShrink: 0 }}>
+                  <div style={{ background: "#ffffff", padding: "8px", borderRadius: "10px", boxShadow: "0 2px 8px rgba(0,0,0,0.1)" }}>
+                    <img src={liveQrCodeUrl} alt="Catalogue QR Code" style={{ width: "95px", height: "95px", display: "block" }} />
+                  </div>
+                  {currentLiveUrl && (
+                    <a
+                      href={currentLiveUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{
+                        fontSize: "0.76rem",
+                        color: "#10b981",
+                        fontWeight: 700,
+                        textDecoration: "underline",
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: "2px"
+                      }}
+                    >
+                      Click here ↗
+                    </a>
+                  )}
+                </div>
+              ) : (
+                <div style={{ width: "95px", height: "95px", background: "rgba(255,255,255,0.05)", borderRadius: "10px", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                  <QrCode size={36} color="var(--text-secondary)" />
+                </div>
+              )}
+
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontWeight: 800, fontSize: "0.88rem", color: "var(--text-primary)", display: "flex", alignItems: "center", gap: "6px" }}>
+                  <QrCode size={16} color="var(--primary)" /> Scan with Any Smartphone
+                </div>
+                <div style={{ fontSize: "0.76rem", color: "var(--text-secondary)", marginTop: "4px", lineHeight: "1.4" }}>
+                  Buyers can instantly point their phone camera at this QR code to view your full multi-page flipbook, zoom products, and download the high-DPI PDF.
+                </div>
+                {liveQrCodeUrl && (
+                  <a
+                    href={liveQrCodeUrl}
+                    download={`${(activeCompany?.name || company?.name || "catalogue").toLowerCase().replace(/[^a-z0-9]+/g, "_")}_live_qr.png`}
+                    className="btn btn-outline btn-sm"
+                    style={{ marginTop: "8px", fontSize: "0.75rem", padding: "3px 10px", display: "inline-flex", alignItems: "center", gap: "5px" }}
+                  >
+                    <Download size={13} /> Save QR Image
+                  </a>
+                )}
+              </div>
+            </div>
+
+            {/* Viewer Features Pill List */}
+            <div style={{ marginTop: "1rem", display: "flex", flexWrap: "wrap", gap: "8px", fontSize: "0.74rem", color: "var(--text-secondary)" }}>
+              <span style={{ padding: "4px 8px", background: "rgba(16, 185, 129, 0.1)", borderRadius: "6px", color: "#10b981", fontWeight: 600 }}>
+                ✓ No Login Needed for Buyers
+              </span>
+              <span style={{ padding: "4px 8px", background: "rgba(59, 130, 246, 0.1)", borderRadius: "6px", color: "#38bdf8", fontWeight: 600 }}>
+                ✓ Single Slide &amp; Continuous Scroll
+              </span>
+              <span style={{ padding: "4px 8px", background: "rgba(139, 92, 246, 0.1)", borderRadius: "6px", color: "#a78bfa", fontWeight: 600 }}>
+                ✓ In-Viewer PDF Download
+              </span>
+              <span style={{ padding: "4px 8px", background: "rgba(245, 158, 11, 0.1)", borderRadius: "6px", color: "#fbbf24", fontWeight: 600 }}>
+                ✓ 1-Click WhatsApp Inquiries
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Company Data Bank Modal */}
+      {isCompanyDataBankModalOpen && (
+        <CompanyDataBankModal
+          isOpen={isCompanyDataBankModalOpen}
+          onClose={() => setIsCompanyDataBankModalOpen(false)}
+          company={activeCompany || company}
+          onSave={(updatedDataBank) => {
+            setCompanyDataBank(updatedDataBank);
+            if (activeCompany) activeCompany.dataBank = updatedDataBank;
+            if (company) company.dataBank = updatedDataBank;
+          }}
+        />
+      )}
+
       {/* Smart Photo Upscaler & Enhancement Dialog */}
       <ImageUpscaleModal
         isOpen={isStudioUpscaleOpen}

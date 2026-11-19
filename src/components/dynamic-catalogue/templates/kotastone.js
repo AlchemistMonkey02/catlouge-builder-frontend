@@ -17,8 +17,15 @@ const fmtPrice = (p, unit, item) => formatProductPrice(p, unit, item);
 
 let uid = 0;
 const cut = (img, x, y, w, h, pts, extra) => {
-  const id = 'k' + (++uid), p = pts.map(q => `${q[0] * w / 100},${q[1] * h / 100}`).join(' ');
-  return `<svg style="position:absolute;left:${x}px;top:${y}px" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg"><defs><clipPath id="${id}"><polygon points="${p}"/></clipPath></defs><image href="${img}" x="0" y="0" width="${w}" height="${h}" preserveAspectRatio="xMidYMid slice" clip-path="url(#${id})"/>${extra || ''}</svg>`;
+  const polyStr = pts.map(q => `${q[0]}% ${q[1]}%`).join(', ');
+  const defaultFallback = '/assets/kota-stone/Blue-Kota-Stone-Tiles-1.jpg';
+  const safeImg = (img && typeof img === 'string' && img.trim()) ? img.replace(/'/g, '%27') : defaultFallback;
+  return `
+    <div class="ks1-cut-box" style="position:absolute;left:${x}px;top:${y}px;width:${w}px;height:${h}px;overflow:hidden;clip-path:polygon(${polyStr});-webkit-clip-path:polygon(${polyStr});background:#e5e7eb;">
+      <img src="${safeImg}" alt="Architectural Limestone Cover" class="ks1-cut-img-el" style="width:100%;height:100%;object-fit:cover;display:block;" onerror="this.onerror=null; this.src='${defaultFallback}';" />
+      ${extra || ''}
+    </div>
+  `;
 };
 
 const th = (name, bg, ink, muted, acc, dark, soft, line, onDark) => ({ name, bg, ink, muted, acc, dark, soft, line, onDark });
@@ -158,16 +165,23 @@ function contactPage(c, no) {
       <div class="ks-qr-section">
         <h3>Digital Access &amp; Instant Estimation</h3>
         <div class="ks-qr-row">
-          ${qrs.length ? qrs.map(q => `
+          ${qrs.length ? qrs.map(q => {
+            const qrUrl = q.url || q.link || (i.mobile ? `https://wa.me/${String(i.mobile).replace(/\D/g, '')}` : '#');
+            return `
             <div class="ks-qr-pill">
-              <img src="${q.img}" class="qrimg" alt="${q.label}" />
-              <b>${E(q.label)}</b>
-              <small>Scan with phone camera</small>
+              <a href="${E(qrUrl)}" target="_blank" rel="noopener noreferrer" data-qr-url="${E(qrUrl)}" style="text-decoration:none; color:inherit; display:flex; flex-direction:column; align-items:center;">
+                <img src="${q.img}" class="qrimg" alt="${q.label}" />
+                <b>${E(q.label)}</b>
+                <span class="qr-click-btn" style="display:inline-block; font-size:11px; font-weight:700; color:var(--acc, #2563eb); text-decoration:underline; margin:4px 0 2px;">Click here ↗</span>
+                <small>${E(q.note || 'Scan with phone camera')}</small>
+              </a>
             </div>
-          `).join('') : `
+            `;
+          }).join('') : `
             <div class="ks-qr-pill">
               <div class="ks-qr-placeholder">🏛️</div>
               <b>Direct WhatsApp Desk</b>
+              ${i.mobile ? `<a href="https://wa.me/${String(i.mobile).replace(/\D/g, '')}" target="_blank" rel="noopener noreferrer" class="qr-click-btn" style="display:inline-block; font-size:11px; font-weight:700; color:var(--acc, #2563eb); text-decoration:underline; margin:4px 0 2px;">Click here ↗</a>` : ''}
               <small>${E(i.mobile || 'Connect with quarry dispatch')}</small>
             </div>
           `}
@@ -182,7 +196,7 @@ function contactPage(c, no) {
    TEMPLATE 1: CLASSIC ARCHITECTURAL BROCHURE (Polygon Geometric Cut Cover)
    ========================================================================= */
 function t1_cover(c, t) {
-  const i = c.info, hero = c.hero || (c.items[0] && c.items[0].img) || '';
+  const i = c.info, hero = c.hero || (c.items[0] && c.items[0].img) || '/assets/kota-stone/Blue-Kota-Stone-Tiles-1.jpg';
   return `
     <div class="ks1-cover">
       <div class="ks-odop-gov-banner">
@@ -614,12 +628,30 @@ function pageCount(t, n) {
 
 function render(t, ctx) {
   const th = t.theme;
-  const items = (ctx.items || []).map((it, k) => Object.assign({ code: `#KS-${pn(k + 1)}` }, it));
+  const items = (ctx.items || []).map((it, k) => {
+    let img = it.img || it.image || '';
+    if (typeof img === 'string' && (img.includes('kota-doria') || img.includes('garlic') || !img)) {
+      const stoneFallbacks = [
+        '/assets/kota-stone/Blue-Kota-Stone-Tiles-1.jpg',
+        '/assets/kota-stone/Brown-Kota-Stone-Tiles-2.jpg',
+        '/assets/kota-stone/Kota-Stone-Tiles-3.jpg',
+        '/assets/kota-stone/blue kota stone 1.jpg',
+      ];
+      img = stoneFallbacks[k % stoneFallbacks.length];
+    }
+    return Object.assign({ code: `#KS-${pn(k + 1)}` }, it, { img });
+  });
+
+  let safeHero = ctx.heroImg || (items[0] && items[0].img) || '/assets/kota-stone/Blue-Kota-Stone-Tiles-1.jpg';
+  if (typeof safeHero === 'string' && (safeHero.includes('kota-doria') || safeHero.includes('garlic') || !safeHero)) {
+    safeHero = '/assets/kota-stone/Blue-Kota-Stone-Tiles-1.jpg';
+  }
+
   const c = Object.assign({}, ctx, {
     items,
     th,
     copy: ctx.copy || {},
-    hero: ctx.heroImg || (items[0] && items[0].img) || ''
+    hero: safeHero
   });
 
   const style = `

@@ -82,7 +82,13 @@ initTemplateRegistry();
 
 export function byUid(uid) {
   initTemplateRegistry();
-  return TEMPLATE_REGISTRY.find(r => r.uid === uid) || TEMPLATE_REGISTRY[0];
+  if (!uid) return TEMPLATE_REGISTRY[0];
+  const exact = TEMPLATE_REGISTRY.find(r => r.uid === uid);
+  if (exact) return exact;
+  const fam = uid.split(':')[0];
+  const sameFam = TEMPLATE_REGISTRY.find(r => r.fam === fam);
+  if (sameFam) return sameFam;
+  return TEMPLATE_REGISTRY[0];
 }
 
 /* ---------------- aspect ratio safe image fitting ---------------- */
@@ -194,7 +200,7 @@ if (typeof window !== 'undefined') {
   };
 }
 
-export async function prepareItems(products) {
+export async function prepareItems(products, fam = '') {
   const out = [];
   const list = products && products.length ? products : [];
 
@@ -224,6 +230,44 @@ export async function prepareItems(products) {
       }
     }
     if (typeof src !== 'string') src = '';
+
+    // Enforce strict category image alignment
+    const srcLower = src.toLowerCase();
+    if (fam === 'garlic') {
+      if (srcLower.includes('kota-doria') || srcLower.includes('stone') || !src) {
+        const garlicFallbacks = [
+          '/assets/garlic/garlic-01.jpeg',
+          '/assets/garlic/garlic-02.jpeg',
+          '/assets/garlic/garlic-03.jpeg',
+          '/assets/garlic/garlic-04.jpeg',
+        ];
+        src = garlicFallbacks[k % garlicFallbacks.length];
+      }
+    } else if (fam === 'kotastone') {
+      if (srcLower.includes('kota-doria') || srcLower.includes('garlic') || (srcLower.includes('sand-stone') && !srcLower.includes('kota')) || !src) {
+        const stoneFallbacks = [
+          '/assets/kota-stone/Blue-Kota-Stone-Tiles-1.jpg',
+          '/assets/kota-stone/Brown-Kota-Stone-Tiles-2.jpg',
+          '/assets/kota-stone/Kota-Stone-Tiles-3.jpg',
+          '/assets/kota-stone/blue kota stone 1.jpg',
+        ];
+        src = stoneFallbacks[k % stoneFallbacks.length];
+      }
+    } else if (fam === 'sandstone') {
+      if (srcLower.includes('kota-doria') || srcLower.includes('garlic') || srcLower.includes('kota-stone') || !src) {
+        const sandFallbacks = [
+          '/assets/sand-stone/Agra-Red-Sandstone-Sandblasted.jpg',
+          '/assets/sand-stone/Teakwood-Sandstone-Honed.jpg',
+          '/assets/sand-stone/Rainbow-Sandstone-Honed.jpg',
+          '/assets/sand-stone/Dholpur-Beige-Sandstone.jpg',
+        ];
+        src = sandFallbacks[k % sandFallbacks.length];
+      }
+    } else if (fam === 'kotadoria') {
+      if (srcLower.includes('garlic') || srcLower.includes('stone') || !src) {
+        src = '/assets/kota-doria/0X2A0389_db4c4b42-1d9b-405b-9ea0-664b5017af38.jpg';
+      }
+    }
 
     // d) Product name
     const rawName = (v.name || v.title || ('Product ' + (k + 1))).replace(/\s*\([^)]*Angle[^)]*\)/gi, '').trim();
@@ -548,49 +592,40 @@ export async function buildCatalogue({
   const sel = byUid(templateUid);
 
   // b) Name of district and ODOP product with Strict Government ODOP Alignment:
-  // Kota -> Kota Doria | Baran -> Garlic | Jhalawar -> Kota Stone | Bundi -> Sandstone
-  const fam = (templateUid?.split(':')[0] || '').toLowerCase();
-  const firstCat = (products && products[0] && (products[0].category || products[0].subcategory || ''))?.toLowerCase() || '';
+  // Strictly prioritize company's registered data over template default
   const compInd = (company?.industry || '').toLowerCase();
   const compProd = (company?.odopProduct || '').toLowerCase();
+  const compName = (company?.name || '').toLowerCase();
+  const compDist = (company?.district || '').toLowerCase();
+  const firstCat = (products && products[0] && (products[0].category || products[0].subcategory || ''))?.toLowerCase() || '';
+  const fam = (templateUid?.split(':')[0] || '').toLowerCase();
 
-  let matchedDistrict = 'Kota, Rajasthan';
-  let matchedOdop = 'Kota Doria';
+  let matchedDistrict = company?.district || 'Kota, Rajasthan';
+  let matchedOdop = company?.odopProduct || 'Kota Doria';
 
-  if (fam.includes('kotadoria')) {
-    matchedDistrict = 'Kota, Rajasthan';
+  // 1. Explicit company category / name / products
+  if (compProd.includes('sand') || compInd.includes('sand') || compName.includes('sand') || compDist.includes('bundi') || firstCat.includes('sand')) {
+    matchedDistrict = company?.district || 'Bundi, Rajasthan';
+    matchedOdop = 'Sandstone';
+  } else if (compProd.includes('garlic') || compInd.includes('garlic') || compName.includes('garlic') || compDist.includes('baran') || firstCat.includes('garlic')) {
+    matchedDistrict = company?.district || 'Baran, Rajasthan';
+    matchedOdop = 'Garlic';
+  } else if (compProd.includes('kota stone') || compInd.includes('kota stone') || compName.includes('stone') || compDist.includes('jhalawar') || firstCat.includes('kota stone')) {
+    matchedDistrict = company?.district || 'Jhalawar, Rajasthan';
+    matchedOdop = 'Kota Stone';
+  } else if (compProd.includes('doria') || compInd.includes('doria') || compName.includes('threads') || compDist.includes('kota') || firstCat.includes('doria')) {
+    matchedDistrict = company?.district || 'Kota, Rajasthan';
     matchedOdop = 'Kota Doria';
+  } else if (fam.includes('sandstone')) {
+    matchedDistrict = 'Bundi, Rajasthan';
+    matchedOdop = 'Sandstone';
   } else if (fam.includes('garlic')) {
     matchedDistrict = 'Baran, Rajasthan';
     matchedOdop = 'Garlic';
   } else if (fam.includes('kotastone') || fam.includes('stonecat')) {
     matchedDistrict = 'Jhalawar, Rajasthan';
     matchedOdop = 'Kota Stone';
-  } else if (fam.includes('sandstone')) {
-    matchedDistrict = 'Bundi, Rajasthan';
-    matchedOdop = 'Sandstone';
-  } else if (firstCat.includes('doria') || firstCat.includes('saree')) {
-    matchedDistrict = 'Kota, Rajasthan';
-    matchedOdop = 'Kota Doria';
-  } else if (firstCat.includes('garlic')) {
-    matchedDistrict = 'Baran, Rajasthan';
-    matchedOdop = 'Garlic';
-  } else if (firstCat.includes('kota stone') || (firstCat.includes('stone') && !firstCat.includes('sand'))) {
-    matchedDistrict = 'Jhalawar, Rajasthan';
-    matchedOdop = 'Kota Stone';
-  } else if (firstCat.includes('sand')) {
-    matchedDistrict = 'Bundi, Rajasthan';
-    matchedOdop = 'Sandstone';
-  } else if (compInd.includes('garlic') || compProd.includes('garlic')) {
-    matchedDistrict = 'Baran, Rajasthan';
-    matchedOdop = 'Garlic';
-  } else if (compInd.includes('kota stone') || compProd.includes('kota stone') || (compInd.includes('stone') && !compInd.includes('sand'))) {
-    matchedDistrict = 'Jhalawar, Rajasthan';
-    matchedOdop = 'Kota Stone';
-  } else if (compInd.includes('sand') || compProd.includes('sand')) {
-    matchedDistrict = 'Bundi, Rajasthan';
-    matchedOdop = 'Sandstone';
-  } else if (compInd.includes('doria') || compProd.includes('doria') || compInd.includes('handloom')) {
+  } else if (fam.includes('kotadoria')) {
     matchedDistrict = 'Kota, Rajasthan';
     matchedOdop = 'Kota Doria';
   }
@@ -658,7 +693,17 @@ export async function buildCatalogue({
   const catDefaults = ODOP_DEFAULTS[matchedOdop] || ODOP_DEFAULTS['Kota Doria'];
 
   // a) Name of ODOP enterprise - Always prioritize user's actual registered company info
-  const ent = (company && (company.name || company.brandName)) || catDefaults.ent || 'Catalogue Studio';
+  let ent = (company && (company.name || company.brandName)) || catDefaults.ent || 'Catalogue Studio';
+  const entLower = ent.toLowerCase();
+  if (matchedOdop === 'Sandstone' && (entLower.includes('garlic') || entLower.includes('lahsun') || entLower.includes('saree') || entLower.includes('doria') || entLower.includes('handloom'))) {
+    ent = catDefaults.ent || 'Royal Heritage Sandstones';
+  } else if (matchedOdop === 'Garlic' && (entLower.includes('sandstone') || entLower.includes('stone') || entLower.includes('saree') || entLower.includes('doria') || entLower.includes('handloom'))) {
+    ent = catDefaults.ent || 'Malwa Agro Fresh & Garlic Exports';
+  } else if (matchedOdop === 'Kota Stone' && (entLower.includes('garlic') || entLower.includes('lahsun') || entLower.includes('saree') || entLower.includes('doria') || entLower.includes('handloom') || entLower.includes('sandstone'))) {
+    ent = catDefaults.ent || 'Supreme Granite & Stones';
+  } else if (matchedOdop === 'Kota Doria' && (entLower.includes('garlic') || entLower.includes('lahsun') || entLower.includes('stone') || entLower.includes('sand') || entLower.includes('granite'))) {
+    ent = catDefaults.ent || 'Parampara Threads';
+  }
 
   // District & ODOP Product - strictly preserve company registration fields
   const cName = (company?.name || '').toLowerCase();
@@ -707,9 +752,30 @@ export async function buildCatalogue({
   const giTag = company?.giTagNumber || (company?.legal && company.legal.giTagNumber) || catDefaults.giTag;
   const enterpriseType = company?.enterpriseType || catDefaults.enterpriseType || 'ODOP Certified Enterprise';
   const logo = (company?.branding && company.branding.logoUrl) || company?.logoUrl || '';
-  const desc = company?.description || company?.tagline || (products && products[0] && products[0].description) || catDefaults.desc;
+  let desc = company?.description || company?.tagline || (products && products[0] && products[0].description) || catDefaults.desc;
+  const descLower = (desc || '').toLowerCase();
+  if (matchedOdop === 'Sandstone' && (descLower.includes('garlic') || descLower.includes('allicin') || descLower.includes('handloom') || descLower.includes('saree'))) {
+    desc = catDefaults.desc;
+  } else if (matchedOdop === 'Garlic' && (descLower.includes('sandstone') || descLower.includes('limestone') || descLower.includes('handloom') || descLower.includes('saree'))) {
+    desc = catDefaults.desc;
+  } else if (matchedOdop === 'Kota Stone' && (descLower.includes('garlic') || descLower.includes('handloom') || descLower.includes('saree'))) {
+    desc = catDefaults.desc;
+  } else if (matchedOdop === 'Kota Doria' && (descLower.includes('garlic') || descLower.includes('stone') || descLower.includes('quarry'))) {
+    desc = catDefaults.desc;
+  }
+
   const use = company?.industry || company?.category || catDefaults.use;
-  const tagline = (textOverrides && textOverrides.tagline) || company?.tagline || catDefaults.tagline;
+  let tagline = (textOverrides && textOverrides.tagline) || company?.tagline || catDefaults.tagline;
+  const tagLower = (tagline || '').toLowerCase();
+  if (matchedOdop === 'Sandstone' && (tagLower.includes('garlic') || tagLower.includes('sun-cured') || tagLower.includes('handloom') || tagLower.includes('saree'))) {
+    tagline = catDefaults.tagline;
+  } else if (matchedOdop === 'Garlic' && (tagLower.includes('sandstone') || tagLower.includes('stone') || tagLower.includes('handloom') || tagLower.includes('saree'))) {
+    tagline = catDefaults.tagline;
+  } else if (matchedOdop === 'Kota Stone' && (tagLower.includes('garlic') || tagLower.includes('handloom') || tagLower.includes('saree'))) {
+    tagline = catDefaults.tagline;
+  } else if (matchedOdop === 'Kota Doria' && (tagLower.includes('garlic') || tagLower.includes('stone') || tagLower.includes('sand'))) {
+    tagline = catDefaults.tagline;
+  }
 
   // m) QR code linked directly to the new prescribed account/page/profile created under Part A
   const rawDigits = String(mobile || '').replace(/\D/g, '');
@@ -743,7 +809,7 @@ export async function buildCatalogue({
   };
 
   const copy = getCopy(info, textOverrides);
-  const items = await prepareItems(products);
+  const items = await prepareItems(products, fam);
 
   // Compile QR list
   const qrs = [];
@@ -795,6 +861,145 @@ export async function buildCatalogue({
   return { sel, pages: finalPages, items, info };
 }
 
+/**
+ * Ensures all visual elements (SVG images, CSS clip-path cuts, <img> tags, and background images)
+ * are fully preloaded, rasterized, and formatted so html2canvas renders them with 100% visibility.
+ */
+async function preparePdfHostForExport(container) {
+  if (!container) return;
+
+  // 1. Convert any legacy SVG <image> elements into HTML <img> elements
+  const svgImages = Array.from(container.querySelectorAll('svg image'));
+  svgImages.forEach(si => {
+    const href = si.getAttribute('href') || si.getAttribute('xlink:href');
+    if (!href) return;
+    const parentSvg = si.closest('svg');
+    if (parentSvg) {
+      const w = si.getAttribute('width') || parentSvg.getAttribute('width') || '794';
+      const h = si.getAttribute('height') || parentSvg.getAttribute('height') || '540';
+      const wrapper = document.createElement('div');
+      wrapper.style.cssText = parentSvg.style.cssText || `position:absolute;left:0;top:0;width:${w}px;height:${h}px;overflow:hidden;`;
+      wrapper.innerHTML = `<img src="${href}" alt="Cover Image" style="width:100%;height:100%;object-fit:cover;display:block;" />`;
+      if (parentSvg.parentNode) {
+        parentSvg.parentNode.replaceChild(wrapper, parentSvg);
+      }
+    }
+  });
+
+  // 2. Pre-render geometric cuts (e.g. diagonal/polygon clip-paths) to canvas so html2canvas renders exact angled edges
+  const cutBoxes = Array.from(container.querySelectorAll('.ks1-cut-box, [style*="clip-path"]'));
+  for (const box of cutBoxes) {
+    try {
+      const img = box.querySelector('img');
+      if (!img) continue;
+      const rawClip = box.style.clipPath || box.style.webkitClipPath || '';
+      const m = /polygon\(([^)]+)\)/i.exec(rawClip);
+      if (!m) continue;
+
+      const w = parseFloat(box.style.width) || box.offsetWidth || 706;
+      const h = parseFloat(box.style.height) || box.offsetHeight || 540;
+      if (!w || !h) continue;
+
+      // Ensure img is loaded
+      if (!img.complete || img.naturalWidth === 0) {
+        await new Promise(res => {
+          img.onload = res;
+          img.onerror = res;
+          setTimeout(res, 1200);
+        });
+      }
+
+      // Parse polygon points
+      const pairs = m[1].split(',').map(s => s.trim().split(/\s+/));
+      const pts = pairs.map(([pxStr, pyStr]) => {
+        let px = parseFloat(pxStr);
+        let py = parseFloat(pyStr);
+        if (pxStr.includes('%')) px = (px / 100) * w;
+        if (pyStr.includes('%')) py = (py / 100) * h;
+        return [px, py];
+      });
+
+      if (pts.length >= 3 && img.naturalWidth > 0) {
+        const dpr = 2;
+        const cvs = document.createElement('canvas');
+        cvs.width = Math.round(w * dpr);
+        cvs.height = Math.round(h * dpr);
+        const ctx = cvs.getContext('2d');
+        ctx.scale(dpr, dpr);
+
+        ctx.beginPath();
+        ctx.moveTo(pts[0][0], pts[0][1]);
+        for (let k = 1; k < pts.length; k++) {
+          ctx.lineTo(pts[k][0], pts[k][1]);
+        }
+        ctx.closePath();
+        ctx.clip();
+
+        // Aspect-ratio safe object-fit: cover
+        const imgRatio = (img.naturalWidth || w) / (img.naturalHeight || h);
+        const boxRatio = w / h;
+        let dw = w, dh = h, dx = 0, dy = 0;
+        if (imgRatio > boxRatio) {
+          dw = h * imgRatio;
+          dx = (w - dw) / 2;
+        } else {
+          dh = w / imgRatio;
+          dy = (h - dh) / 2;
+        }
+
+        ctx.drawImage(img, dx, dy, dw, dh);
+
+        try {
+          const dataUrl = cvs.toDataURL('image/png');
+          img.src = dataUrl;
+          box.style.clipPath = 'none';
+          box.style.webkitClipPath = 'none';
+          box.style.background = 'transparent';
+        } catch (_) {
+          // Cross-origin taint fallback: retain original img
+        }
+      }
+    } catch (err) {
+      console.warn('Clip-path canvas pre-render skipped:', err);
+    }
+  }
+
+  // 3. Wait for all <img> tags to complete loading
+  const imgs = Array.from(container.querySelectorAll('img'));
+  if (imgs.length) {
+    await Promise.all(imgs.map(im => {
+      if (im.complete && im.naturalWidth > 0) return Promise.resolve();
+      return new Promise(res => {
+        im.onload = res;
+        im.onerror = res;
+        setTimeout(res, 2000);
+      });
+    }));
+  }
+
+  // 4. Preload any CSS background-images so html2canvas renders them without missing frames
+  const bgElements = Array.from(container.querySelectorAll('*')).filter(el => {
+    const bi = el.style && el.style.backgroundImage;
+    return bi && bi !== 'none' && /url\(/.test(bi);
+  });
+  if (bgElements.length) {
+    await Promise.all(bgElements.map(el => {
+      const bi = el.style.backgroundImage;
+      const m = /url\(["']?([^"')]+)["']?\)/i.exec(bi);
+      if (!m || !m[1]) return Promise.resolve();
+      const url = m[1];
+      return new Promise(res => {
+        const testImg = new Image();
+        testImg.crossOrigin = 'anonymous';
+        testImg.onload = res;
+        testImg.onerror = res;
+        setTimeout(res, 2000);
+        testImg.src = url;
+      });
+    }));
+  }
+}
+
 /* ---------------- High Definition PDF Generation ---------------- */
 export async function exportDynamicPdf({
   pages,
@@ -816,8 +1021,8 @@ export async function exportDynamicPdf({
   } else {
     off = document.createElement('div');
     off.id = 'dynamic-pdf-export-host';
-    // Position offscreen so it never renders at (0,0) or bleeds behind sidebars
-    off.style.cssText = 'position:fixed;left:-99999px;top:0;width:794px;height:1123px;overflow:hidden;background:#ffffff;visibility:hidden;opacity:0;pointer-events:none;z-index:-99999;';
+    // Position offscreen with visible rendering so html2canvas captures full fidelity
+    off.style.cssText = 'position:fixed;left:-99999px;top:0;width:794px;height:1123px;overflow:hidden;background:#ffffff;visibility:visible;opacity:1;pointer-events:none;z-index:-99999;';
     off.innerHTML = pages.join('');
     document.body.appendChild(off);
   }
@@ -832,18 +1037,8 @@ export async function exportDynamicPdf({
       await applyAll(off, sel.uid, items);
     }
 
-    // Wait for all images inside the export container to load
-    const imgs = [...off.querySelectorAll('img')];
-    if (imgs.length) {
-      await Promise.all(imgs.map(im => {
-        if (im.complete) return Promise.resolve();
-        return new Promise(res => {
-          im.onload = res;
-          im.onerror = res;
-          setTimeout(res, 2000);
-        });
-      }));
-    }
+    // Preload, polyfill, and rasterize all cover photos, cut shapes, and images
+    await preparePdfHostForExport(off);
 
     let els = [...off.querySelectorAll('.pg')];
     if (!els.length) {
@@ -879,7 +1074,7 @@ export async function exportDynamicPdf({
       const canvas = await html2canvas(el, {
         scale: 2.0,
         useCORS: true,
-        allowTaint: true,
+        allowTaint: false,
         backgroundColor: '#ffffff',
         logging: false,
         scrollX: 0,
@@ -908,7 +1103,15 @@ export async function exportDynamicPdf({
         pdf.link((r.left - pr.left) * K, (r.top - pr.top) * K, r.width * K, r.height * K, { url });
       };
 
-      el.querySelectorAll('.qrimg').forEach(q => link(q, info && (info.link || info.website)));
+      el.querySelectorAll('.qr-click-btn, .qr-click-link, a[data-qr-url], a.qr-link-wrapper').forEach(q => {
+        const url = q.getAttribute('data-qr-url') || q.getAttribute('href') || (info && (info.link || info.website));
+        if (url && url !== '#') link(q, url);
+      });
+      el.querySelectorAll('.qrimg').forEach(q => {
+        const parentLink = q.closest('a');
+        const url = (parentLink && (parentLink.getAttribute('data-qr-url') || parentLink.getAttribute('href'))) || (info && (info.link || info.website));
+        if (url && url !== '#') link(q, url);
+      });
       el.querySelectorAll('.soc').forEach(s => {
         if (s.dataset.url) link(s, s.dataset.url);
       });

@@ -82,7 +82,7 @@ const closing = (c, no) => `${run(c, 'CONTACT', no)}<div class="t-endwrap"><div 
   <div class="t-endtag">${E(c.tagline)}</div>
   <div class="t-endrow"><div class="t-endinfo">${[c.info.person && `<b>${E(c.info.person)}</b>`, c.info.mobile && `☎ ${E(c.info.mobile)}`, c.info.wa && c.info.wa !== c.info.mobile ? `WhatsApp ${E(c.info.wa)}` : (c.info.mobile ? 'WhatsApp on same number' : ''), c.info.email && `✉ ${E(c.info.email)}`, c.info.addr && `⌂ ${E(c.info.addr)}`, c.info.gst && `GSTIN ${E(c.info.gst)}`].filter(Boolean).map(x => `<div>${x}</div>`).join('')}
     ${(c.info.socials || []).length ? `<div class="t-endsoc">${c.info.socials.map(s => `<span class="soc" data-url="${E(s[1])}"><b>${s[0]}</b> ${E(c.socialLabel ? c.socialLabel(s[1]) : s[1])}</span>`).join('')}</div>` : ''}</div>
-    ${c.qr ? `<div class="t-endqr"><img class="qrimg" src="${c.qr}"><div>Scan to connect<br>${E(c.pf || 'with us')}</div></div>` : ''}</div>
+    ${c.qr ? `<div class="t-endqr"><a href="${E(c.info?.link || c.info?.website || (c.info?.mobile ? `https://wa.me/${String(c.info.mobile).replace(/\D/g, '')}` : '#'))}" target="_blank" rel="noopener noreferrer" data-qr-url="${E(c.info?.link || c.info?.website || '')}" style="text-decoration:none; color:inherit; display:flex; flex-direction:column; align-items:center;"><img class="qrimg" src="${c.qr}"><div>Scan to connect<br>${E(c.pf || 'with us')}</div><span class="qr-click-btn" style="display:inline-block; font-size:11px; font-weight:700; color:#2563eb; text-decoration:underline; margin-top:4px;">Click here ↗</span></a></div>` : ''}</div>
   <div class="t-endnote">Prices are indicative and subject to change. ${c.year}.</div></div>`;
 
 /* ---------------- themes ---------------- */

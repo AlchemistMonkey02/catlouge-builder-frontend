@@ -152,16 +152,23 @@ function contactPage(c, no) {
       <div class="ss-qr-section">
         <h3>Digital Architectural Catalogue &amp; 3D Textures</h3>
         <div class="ss-qr-row">
-          ${qrs.length ? qrs.map(q => `
+          ${qrs.length ? qrs.map(q => {
+            const qrUrl = q.url || q.link || (i.mobile ? `https://wa.me/${String(i.mobile).replace(/\D/g, '')}` : '#');
+            return `
             <div class="ss-qr-pill">
-              <img src="${q.img}" class="qrimg" alt="${q.label}" />
-              <b>${E(q.label)}</b>
-              <small>Scan to download drawings</small>
+              <a href="${E(qrUrl)}" target="_blank" rel="noopener noreferrer" data-qr-url="${E(qrUrl)}" style="text-decoration:none; color:inherit; display:flex; flex-direction:column; align-items:center;">
+                <img src="${q.img}" class="qrimg" alt="${q.label}" />
+                <b>${E(q.label)}</b>
+                <span class="qr-click-btn" style="display:inline-block; font-size:11px; font-weight:700; color:var(--acc, #b45309); text-decoration:underline; margin:4px 0 2px;">Click here ↗</span>
+                <small>${E(q.note || 'Scan to download drawings')}</small>
+              </a>
             </div>
-          `).join('') : `
+            `;
+          }).join('') : `
             <div class="ss-qr-pill">
               <div class="ss-qr-placeholder">🏛️</div>
               <b>Direct WhatsApp Desk</b>
+              ${i.mobile ? `<a href="https://wa.me/${String(i.mobile).replace(/\D/g, '')}" target="_blank" rel="noopener noreferrer" class="qr-click-btn" style="display:inline-block; font-size:11px; font-weight:700; color:var(--acc, #b45309); text-decoration:underline; margin:4px 0 2px;">Click here ↗</a>` : ''}
               <small>${E(i.mobile || 'Connect for BOQ estimation')}</small>
             </div>
           `}
@@ -604,12 +611,30 @@ function pageCount(t, n) {
 
 function render(t, ctx) {
   const th = t.theme;
-  const items = (ctx.items || []).map((it, k) => Object.assign({ code: `#SS-${pn(k + 1)}` }, it));
+  const items = (ctx.items || []).map((it, k) => {
+    let img = it.img || it.image || '';
+    if (typeof img === 'string' && (img.includes('kota-doria') || img.includes('garlic') || !img)) {
+      const sandFallbacks = [
+        '/assets/sand-stone/Agra-Red-Sandstone-Sandblasted.jpg',
+        '/assets/sand-stone/Teakwood-Sandstone-Honed.jpg',
+        '/assets/sand-stone/Rainbow-Sandstone-Honed.jpg',
+        '/assets/sand-stone/Dholpur-Beige-Sandstone.jpg',
+      ];
+      img = sandFallbacks[k % sandFallbacks.length];
+    }
+    return Object.assign({ code: `#SS-${pn(k + 1)}` }, it, { img });
+  });
+
+  let safeHero = ctx.heroImg || (items[0] && items[0].img) || '/assets/sand-stone/Agra-Red-Sandstone-Sandblasted.jpg';
+  if (typeof safeHero === 'string' && (safeHero.includes('kota-doria') || safeHero.includes('garlic') || !safeHero)) {
+    safeHero = '/assets/sand-stone/Agra-Red-Sandstone-Sandblasted.jpg';
+  }
+
   const c = Object.assign({}, ctx, {
     items,
     th,
     copy: ctx.copy || {},
-    hero: ctx.heroImg || (items[0] && items[0].img) || ''
+    hero: safeHero
   });
 
   const style = `

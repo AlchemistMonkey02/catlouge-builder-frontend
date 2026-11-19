@@ -7,8 +7,8 @@
  * - Helper function to build dynamic / absolute URLs
  */
 
-// Direct backend API endpoint across all environments (production & local dev)
-export const API_BASE_URL = "https://catlougeapi.geoplanetsolution.com/api";
+// Local backend API endpoint
+export const API_BASE_URL = "http://localhost:5012/api";
 
 export const API_TIMEOUT = 45000;
 
@@ -39,6 +39,8 @@ export const API_ENDPOINTS = {
   COMPANIES: {
     BASE: "/companies",
     BY_ID: (id) => `/companies/${id}`,
+    DATA_BANK: (id) => `/companies/${id}/databank`,
+    DATA_BANK_RESET: (id) => `/companies/${id}/databank/reset`,
   },
 
   // Legacy Store Products

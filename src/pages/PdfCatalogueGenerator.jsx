@@ -54,7 +54,11 @@ import TemplateDesignStudio, {
   PRESET_CONFIG_MAP,
 } from "../components/TemplateDesignStudio";
 import DynamicCatalogueRenderer from "../components/DynamicCatalogueRenderer";
-import DynamicCatalogueStudio from "../components/dynamic-catalogue/DynamicCatalogueStudio";
+import DynamicCatalogueStudio, {
+  detectCompanyFamily,
+  isProductCompatibleWithFamily,
+  SPECIALTY_DEMO_PRODUCTS
+} from "../components/dynamic-catalogue/DynamicCatalogueStudio";
 import { resolveCompanyLocationAndProduct } from "./CompanyManager";
 
 const CANVA_TEMPLATES = [
@@ -453,7 +457,16 @@ export default function PdfCatalogueGenerator() {
           return 0;
         });
         setCompanies(sorted);
+
+        let savedCompanyId = null;
+        try {
+          savedCompanyId = localStorage.getItem("last_selected_company_id");
+        } catch (_) {}
+
         let match = urlCompanyId ? sorted.find((c) => c._id === urlCompanyId) : null;
+        if (!match && savedCompanyId) {
+          match = sorted.find((c) => c._id === savedCompanyId);
+        }
         if (!match) {
           match = sorted[0];
         }
@@ -471,12 +484,17 @@ export default function PdfCatalogueGenerator() {
         } catch (_) {}
         setAllProducts(prods);
 
-        // Filter products for chosen company
+        // Filter products for chosen company with strict category compatibility
+        const chosenComp = compRes.data?.find((c) => String(c._id) === String(chosenCompanyId));
+        const chosenFam = detectCompanyFamily(chosenComp);
         const compProds = prods.filter(
-          (p) => String(p.companyId) === String(chosenCompanyId) || (chosenCompanyId && p.brand?.toLowerCase() === compRes.data?.find((c) => String(c._id) === String(chosenCompanyId))?.name?.toLowerCase())
+          (p) =>
+            (String(p.companyId) === String(chosenCompanyId) ||
+              (chosenCompanyId && p.brand?.toLowerCase() === chosenComp?.name?.toLowerCase())) &&
+            isProductCompatibleWithFamily(p, chosenFam)
         );
-
-        setSelectedProductIds(compProds.map((p) => p._id));
+        const initialSelected = compProds.length > 0 ? compProds : (SPECIALTY_DEMO_PRODUCTS[chosenFam] || []);
+        setSelectedProductIds(initialSelected.map((p) => p._id));
       }
     } catch (err) {
       console.error("Error loading catalogue data:", err);
@@ -499,57 +517,31 @@ export default function PdfCatalogueGenerator() {
   const primaryColor = currentCompany.brandColors?.primary || "#4E5C43";
   const secondaryColor = currentCompany.brandColors?.secondary || "#1C1917";
 
-  // Products belonging to the current company, with specialty product matching
+  // Products belonging to the current company, with strict category isolation
   const companyProducts = useMemo(() => {
-    const cName = (currentCompany.name || "").toLowerCase();
-    const cInd = (currentCompany.industry || "").toLowerCase();
-    const cProd = (currentCompany.odopProduct || "").toLowerCase();
-    const cDist = (currentCompany.district || "").toLowerCase();
+    const targetFam = detectCompanyFamily(currentCompany);
 
-    // 1. Direct match by companyId
-    const byId = allProducts.filter((p) => p.companyId === selectedCompanyId);
+    // 1. Direct match by companyId, but strictly check category compatibility
+    const byId = allProducts.filter(
+      (p) => p.companyId === selectedCompanyId && isProductCompatibleWithFamily(p, targetFam)
+    );
     if (byId.length > 0) return byId;
 
-    // 2. Direct match by brand name
+    // 2. Direct match by brand name, but strictly check category compatibility
+    const cName = (currentCompany.name || "").toLowerCase();
     if (selectedCompanyId && cName) {
-      const byBrand = allProducts.filter((p) => p.brand?.toLowerCase() === cName);
+      const byBrand = allProducts.filter(
+        (p) => p.brand?.toLowerCase() === cName && isProductCompatibleWithFamily(p, targetFam)
+      );
       if (byBrand.length > 0) return byBrand;
     }
 
-    // 3. Match by category / specialty keywords prioritizing ODOP Product selection
-    const specialtyFiltered = allProducts.filter((p) => {
-      const pText = `${p.name || ""} ${p.category || ""} ${p.subcategory || ""} ${p.brand || ""}`.toLowerCase();
-      if (cProd.includes("doria") || cProd.includes("handloom") || cProd.includes("saree") || cDist.includes("kota")) {
-        return pText.includes("doria") || pText.includes("saree") || pText.includes("handloom") || pText.includes("chikankari") || pText.includes("dupatta");
-      }
-      if (cProd.includes("garlic") || cProd.includes("lahsun") || cDist.includes("baran")) {
-        return pText.includes("garlic") || pText.includes("clove") || pText.includes("lahsun");
-      }
-      if (cProd.includes("stone") || cDist.includes("jhalawar")) {
-        return pText.includes("kota") || pText.includes("limestone");
-      }
-      if (cProd.includes("sand") || cDist.includes("bundi")) {
-        return pText.includes("sand") || pText.includes("sandstone");
-      }
-      const fullText = `${cName} ${cInd}`.toLowerCase();
-      if (fullText.includes("doria") || fullText.includes("handloom")) {
-        return pText.includes("doria") || pText.includes("saree") || pText.includes("handloom") || pText.includes("chikankari");
-      }
-      if (fullText.includes("garlic")) {
-        return pText.includes("garlic") || pText.includes("clove");
-      }
-      if (fullText.includes("stone")) {
-        return pText.includes("kota") || pText.includes("limestone");
-      }
-      if (fullText.includes("sand")) {
-        return pText.includes("sand") || pText.includes("sandstone");
-      }
-      return false;
-    });
+    // 3. Match from allProducts that are strictly compatible with targetFam
+    const compatibleProds = allProducts.filter((p) => isProductCompatibleWithFamily(p, targetFam));
+    if (compatibleProds.length > 0) return compatibleProds;
 
-    if (specialtyFiltered.length > 0) return specialtyFiltered;
-
-    return allProducts;
+    // 4. Default to authentic specialty demo products for that family
+    return SPECIALTY_DEMO_PRODUCTS[targetFam] || SPECIALTY_DEMO_PRODUCTS.garlic;
   }, [allProducts, selectedCompanyId, currentCompany]);
 
   // Initialize and synchronize selectedProductIds when companyProducts changes
@@ -572,54 +564,37 @@ export default function PdfCatalogueGenerator() {
 
   // When clicking a different company
   const handleSelectCompany = (comp) => {
+    if (!comp) return;
     setSelectedCompanyId(comp._id);
-    const cName = (comp.name || "").toLowerCase();
-    const cInd = (comp.industry || "").toLowerCase();
-    const cProd = (comp.odopProduct || "").toLowerCase();
-    const cDist = (comp.district || "").toLowerCase();
+    try {
+      localStorage.setItem("last_selected_company_id", comp._id);
+    } catch (_) {}
 
-    // 1. Direct match by companyId
-    let compProds = allProducts.filter((p) => p.companyId === comp._id);
+    const cName = (comp.name || "").toLowerCase();
+    const targetFam = detectCompanyFamily(comp);
+
+    // 1. Direct match by companyId, strictly checking category compatibility
+    let compProds = allProducts.filter(
+      (p) => p.companyId === comp._id && isProductCompatibleWithFamily(p, targetFam)
+    );
 
     // 2. Direct match by brand name
     if (compProds.length === 0 && cName) {
-      compProds = allProducts.filter((p) => p.brand?.toLowerCase() === cName);
+      compProds = allProducts.filter(
+        (p) => p.brand?.toLowerCase() === cName && isProductCompatibleWithFamily(p, targetFam)
+      );
     }
 
-    // 3. Match by category / specialty keywords prioritizing ODOP Product
+    // 3. Match from allProducts compatible with targetFam
     if (compProds.length === 0) {
-      compProds = allProducts.filter((p) => {
-        const pText = `${p.name || ""} ${p.category || ""} ${p.subcategory || ""} ${p.brand || ""}`.toLowerCase();
-        if (cProd.includes("doria") || cProd.includes("handloom") || cProd.includes("saree") || cDist.includes("kota")) {
-          return pText.includes("doria") || pText.includes("saree") || pText.includes("handloom") || pText.includes("chikankari") || pText.includes("dupatta");
-        }
-        if (cProd.includes("garlic") || cProd.includes("lahsun") || cDist.includes("baran")) {
-          return pText.includes("garlic") || pText.includes("clove") || pText.includes("lahsun");
-        }
-        if (cProd.includes("stone") || cDist.includes("jhalawar")) {
-          return pText.includes("kota") || pText.includes("limestone");
-        }
-        if (cProd.includes("sand") || cDist.includes("bundi")) {
-          return pText.includes("sand") || pText.includes("sandstone");
-        }
-        const fullText = `${cName} ${cInd}`.toLowerCase();
-        if (fullText.includes("doria") || fullText.includes("handloom")) {
-          return pText.includes("doria") || pText.includes("saree") || pText.includes("handloom") || pText.includes("chikankari");
-        }
-        if (fullText.includes("garlic")) {
-          return pText.includes("garlic") || pText.includes("clove");
-        }
-        if (fullText.includes("stone")) {
-          return pText.includes("kota") || pText.includes("limestone");
-        }
-        if (fullText.includes("sand")) {
-          return pText.includes("sand") || pText.includes("sandstone");
-        }
-        return false;
-      });
+      compProds = allProducts.filter((p) => isProductCompatibleWithFamily(p, targetFam));
     }
 
-    if (compProds.length === 0) compProds = allProducts;
+    // 4. Default to authentic demo products for this family (NEVER bleed into other categories)
+    if (compProds.length === 0) {
+      compProds = SPECIALTY_DEMO_PRODUCTS[targetFam] || [];
+    }
+
     setSelectedProductIds(compProds.map((p) => p._id));
     syncAndGenerateQrs(comp);
   };
@@ -1501,6 +1476,25 @@ export default function PdfCatalogueGenerator() {
                             <span style={{ fontSize: "0.7rem", color: "var(--text-muted)", fontWeight: 600 }}>Generating...</span>
                           )}
                         </div>
+                        {qrLinks[item.key] && (
+                          <a
+                            href={qrLinks[item.key]}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            style={{
+                              fontSize: "0.75rem",
+                              color: item.accentColor,
+                              fontWeight: 700,
+                              textDecoration: "underline",
+                              margin: "4px 0 2px",
+                              display: "inline-flex",
+                              alignItems: "center",
+                              gap: "3px",
+                            }}
+                          >
+                            Click here ↗
+                          </a>
+                        )}
                         <button
                           type="button"
                           onClick={() => handleDownloadQr(item.downloadName, qrDataUrls[item.key])}
@@ -2345,6 +2339,9 @@ export default function PdfCatalogueGenerator() {
                             <div style={{ fontWeight: 800, fontSize: "0.95rem", color: "#111111", letterSpacing: "0.08em", marginTop: "8px" }}>
                               {box.title}
                             </div>
+                            <a href={box.link || "#"} target="_blank" rel="noopener noreferrer" style={{ fontSize: "0.80rem", color: "var(--primary, #2563eb)", textDecoration: "underline", fontWeight: 700, margin: "3px 0 2px" }}>
+                              Click here ↗
+                            </a>
                             <a href={box.link || "#"} target="_blank" rel="noopener noreferrer" style={{ fontSize: "0.72rem", color: "#333333", textDecoration: "underline", fontWeight: 600 }}>
                               {box.subtitle}
                             </a>

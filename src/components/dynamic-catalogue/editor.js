@@ -25,6 +25,18 @@ const SHAPES = {
 };
 let uid = null, on = false, sel = null, editingEl = null, undo = [], cyc = { x: -99, y: -99, i: 0 }, drag = null;
 let box = null, hov = null, bar = null, layers = [], base = null;
+let editorCompanyId = null;
+
+export function setEditorCompanyId(cId) {
+  editorCompanyId = cId ? String(cId) : null;
+}
+
+export function clearAllEditorEdits() {
+  if (typeof window !== 'undefined') {
+    window.DesignEdits = {};
+  }
+  Object.keys(EDITS).forEach(k => delete EDITS[k]);
+}
 
 /* ---------------- helpers ---------------- */
 const pathOf = (el, pg) => {
@@ -398,9 +410,9 @@ export function applyEdit(el, ed, photoUrl) {
 // Called by page builder to apply all stored edits of this template onto pages
 export async function applyAll(host, templateId, items) {
   let edits = (window.DesignEdits && window.DesignEdits[templateId]) || EDITS[templateId];
-  if (!edits && typeof window !== 'undefined') {
+  if (!edits && typeof window !== 'undefined' && editorCompanyId) {
     try {
-      const cached = localStorage.getItem('catalogue_edits_' + templateId);
+      const cached = localStorage.getItem('catalogue_edits_' + editorCompanyId + '_' + templateId);
       if (cached) edits = JSON.parse(cached);
     } catch (_) {}
   }
@@ -437,7 +449,8 @@ export function setEdit(patch, live = true, quiet = false) {
   const all = rec(), ed = Object.assign({}, all[sel.key] || {}, patch);
   if (isEmpty(ed)) delete all[sel.key]; else all[sel.key] = ed;
   if (uid && typeof window !== 'undefined') {
-    try { localStorage.setItem('catalogue_edits_' + uid, JSON.stringify(all)); } catch (_) {}
+    const sKey = editorCompanyId ? ('catalogue_edits_' + editorCompanyId + '_' + uid) : ('catalogue_edits_' + uid);
+    try { localStorage.setItem(sKey, JSON.stringify(all)); } catch (_) {}
   }
   if (live) {
     applyEdit(sel.el, ed, patch.photo != null || ed.photo != null ? currentPhotoUrl(ed) : null);
@@ -502,6 +515,12 @@ function killBox() {
 
 function place() {
   if (!sel || !box) return;
+  const isModalOpen = typeof document !== 'undefined' && document.body && (document.body.classList.contains('modal-open') || document.body.classList.contains('dynamic-catalogue-modal-active'));
+  if (isModalOpen) {
+    box.style.display = 'none';
+    if (bar) bar.style.display = 'none';
+    return;
+  }
   const pv = pageOf(sel.el);
   if (!pv) return;
   const r = sel.el.getBoundingClientRect(), p = pv.getBoundingClientRect();
@@ -603,8 +622,10 @@ function onDown(e) {
   if (swapEl && sel) {
     e.preventDefault();
     e.stopPropagation();
+    const curSel = sel;
+    hideOverlays(true);
     if (window.onTriggerPhotoSwap) {
-      window.onTriggerPhotoSwap(sel);
+      window.onTriggerPhotoSwap(curSel);
     }
     return;
   }
@@ -844,6 +865,12 @@ const safe = t => String(t || '').replace(/</g, '&lt;');
 function drawPanel() {
   const p = panel();
   if (!p) return;
+  const isModalOpen = typeof document !== 'undefined' && document.body && (document.body.classList.contains('modal-open') || document.body.classList.contains('dynamic-catalogue-modal-active'));
+  if (isModalOpen) {
+    p.style.display = 'none';
+    drawBar();
+    return;
+  }
   p.classList.toggle('hidden', !on);
   p.style.display = on ? 'block' : 'none';
   if (!on) { drawBar(); return; }
@@ -970,7 +997,8 @@ const SHP = [
 
 function drawBar() {
   ensureBar();
-  if (!on || !sel) { bar.style.display = 'none'; return; }
+  const isModalOpen = typeof document !== 'undefined' && document.body && (document.body.classList.contains('modal-open') || document.body.classList.contains('dynamic-catalogue-modal-active'));
+  if (!on || !sel || isModalOpen) { bar.style.display = 'none'; return; }
   const ed = cur() || {}, items = (window.ODOP_FIT && window.ODOP_FIT.items && window.ODOP_FIT.items()) || [], photo = sel.photo;
   const curScale = (ed.w && base && base.w) ? Math.round((ed.w / base.w) * 100) : 100;
   let h = '';
@@ -1143,8 +1171,10 @@ function onBar(ev) {
     return;
   }
   if (d.act === 'openswapmodal') {
-    if (window.onTriggerPhotoSwap && sel) {
-      window.onTriggerPhotoSwap(sel);
+    const curSel = sel;
+    hideOverlays(true);
+    if (window.onTriggerPhotoSwap && curSel) {
+      window.onTriggerPhotoSwap(curSel);
     }
     return;
   }
@@ -1647,21 +1677,14 @@ export function onRendered(selTemplate) {
   if (typeof window !== 'undefined') {
     window.DesignEdits = window.DesignEdits || {};
     if (uid) {
-      // Migrate any edits saved under undefined template IDs
-      if (window.DesignEdits['kotadoria:undefined']) {
-        window.DesignEdits[uid] = Object.assign({}, window.DesignEdits['kotadoria:undefined'], window.DesignEdits[uid] || {});
-        delete window.DesignEdits['kotadoria:undefined'];
-      }
-      if (EDITS['kotadoria:undefined']) {
-        EDITS[uid] = Object.assign({}, EDITS['kotadoria:undefined'], EDITS[uid] || {});
-        delete EDITS['kotadoria:undefined'];
-      }
-      // Restore from localStorage if memory is empty
+      // Restore from localStorage if memory is empty and company is set
       if (!window.DesignEdits[uid] || Object.keys(window.DesignEdits[uid]).length === 0) {
-        try {
-          const cached = localStorage.getItem('catalogue_edits_' + uid);
-          if (cached) window.DesignEdits[uid] = JSON.parse(cached);
-        } catch (_) {}
+        if (editorCompanyId) {
+          try {
+            const cached = localStorage.getItem('catalogue_edits_' + editorCompanyId + '_' + uid);
+            if (cached) window.DesignEdits[uid] = JSON.parse(cached);
+          } catch (_) {}
+        }
       }
       window.DesignEdits[uid] = window.DesignEdits[uid] || EDITS[uid] || {};
       EDITS[uid] = window.DesignEdits[uid];
@@ -1702,13 +1725,28 @@ export function onRendered(selTemplate) {
   }
 }
 
+export function hideOverlays(hide = true) {
+  if (bar) {
+    bar.style.display = hide ? 'none' : (sel ? 'block' : 'none');
+  }
+  if (box) {
+    box.style.display = hide ? 'none' : (sel ? 'block' : 'none');
+  }
+  const ep = $('editPanel');
+  if (ep) {
+    ep.style.display = (hide || !on) ? 'none' : 'block';
+  }
+}
+
 if (typeof window !== 'undefined') {
+  window.hideCatalogueEditorOverlays = hideOverlays;
   window.DesignEditor = {
     applyAll,
     applyEdit,
     setMode,
     isEditing,
-    select
+    select,
+    hideOverlays
   };
 }
 

@@ -503,11 +503,15 @@ function paramparaWholesaleEnquiry(c, pageNum) {
           </div>
           <div class="trade-qr-holder">
             ${qrs[0] ? `
-              <img src="${qrs[0].img}" class="trade-qr-img" alt="QR" />
-              <b>Scan for WhatsApp</b>
+              <a href="${E(qrs[0].url || qrs[0].link || (mobile ? `https://wa.me/${String(mobile).replace(/\D/g, '')}` : '#'))}" target="_blank" rel="noopener noreferrer" data-qr-url="${E(qrs[0].url || qrs[0].link || '')}" style="text-decoration:none; color:inherit; display:flex; flex-direction:column; align-items:center;">
+                <img src="${qrs[0].img}" class="trade-qr-img qrimg" alt="QR" />
+                <b>Scan for WhatsApp</b>
+                <span class="qr-click-btn" style="display:inline-block; font-size:11.5px; font-weight:700; color:#b45309; text-decoration:underline; margin-top:4px;">Click here ↗</span>
+              </a>
             ` : `
               <div class="trade-qr-box">🥻</div>
               <b>Direct WhatsApp Desk</b>
+              ${mobile ? `<a href="https://wa.me/${String(mobile).replace(/\D/g, '')}" target="_blank" rel="noopener noreferrer" class="qr-click-btn" style="display:inline-block; font-size:11px; font-weight:700; color:#b45309; text-decoration:underline; margin-top:4px;">Click here ↗</a>` : ''}
             `}
           </div>
         </div>
@@ -1037,11 +1041,14 @@ function kd1_cover(c, t) {
           <div class="kd1-cover-odop-connect">
             ${qrImg ? `
             <div class="kd1-cover-qr-card">
-              <img src="${qrImg}" alt="Part A Direct Profile QR" class="kd1-cov-qr" />
-              <div class="kd1-cov-qr-meta">
-                <b>SCAN FOR PRESCRIBED PART A PROFILE</b>
-                <small>Direct access to artisan credentials, verified price book &amp; orders</small>
-              </div>
+              <a href="${E(c.info?.link || c.info?.website || (c.info?.mobile ? `https://wa.me/${String(c.info.mobile).replace(/\D/g, '')}` : '#'))}" target="_blank" rel="noopener noreferrer" data-qr-url="${E(c.info?.link || c.info?.website || '')}" style="text-decoration:none; color:inherit; display:flex; align-items:center; gap:12px;">
+                <img src="${qrImg}" alt="Part A Direct Profile QR" class="kd1-cov-qr qrimg" />
+                <div class="kd1-cov-qr-meta">
+                  <b>SCAN FOR PRESCRIBED PART A PROFILE</b>
+                  <span class="qr-click-btn" style="display:inline-block; font-size:11px; font-weight:700; color:var(--gold, #d97706); text-decoration:underline; margin:2px 0;">Click here ↗</span>
+                  <small>Direct access to artisan credentials, verified price book &amp; orders</small>
+                </div>
+              </a>
             </div>
             ` : ''}
             <div class="kd1-cover-wa-pill">
@@ -1341,10 +1348,13 @@ function kd1_closing(c, no) {
 
           ${qrImg ? `
           <div class="kd1-closing-qr-card">
-            <img src="${qrImg}" alt="Part A Direct Profile QR" class="kd1-big-qr" />
-            <div class="kd1-qr-title">SCAN TO CONNECT DIRECTLY</div>
-            <div class="kd1-qr-desc">Prescribed Part A Profile &bull; Digital Storefront</div>
-            <div class="kd1-qr-chip">✓ Verified Authentic Link</div>
+            <a href="${E(c.info?.link || c.info?.website || (qrs[0] && (qrs[0].url || qrs[0].link)) || (i.mobile ? `https://wa.me/${String(i.mobile).replace(/\D/g, '')}` : '#'))}" target="_blank" rel="noopener noreferrer" data-qr-url="${E(c.info?.link || c.info?.website || (qrs[0] && (qrs[0].url || qrs[0].link)) || '')}" style="text-decoration:none; color:inherit; display:flex; flex-direction:column; align-items:center;">
+              <img src="${qrImg}" alt="Part A Direct Profile QR" class="kd1-big-qr qrimg" />
+              <div class="kd1-qr-title">SCAN TO CONNECT DIRECTLY</div>
+              <span class="qr-click-btn" style="display:inline-block; font-size:12px; font-weight:800; color:var(--gold, #d97706); text-decoration:underline; margin:4px 0 2px;">Click here ↗</span>
+              <div class="kd1-qr-desc">Prescribed Part A Profile &bull; Digital Storefront</div>
+              <div class="kd1-qr-chip">✓ Verified Authentic Link</div>
+            </a>
           </div>
           ` : ''}
         </div>
@@ -2361,18 +2371,25 @@ function pageCount(t, n) {
 function render(t, ctx) {
   const defaultHero = '/assets/kota-doria/0X2A0389_db4c4b42-1d9b-405b-9ea0-664b5017af38.jpg';
   const items = (ctx.items || []).map((it, k) => {
-    const rawUrl = getImgUrl(it) || defaultHero;
+    let rawUrl = getImgUrl(it);
+    if (!rawUrl || rawUrl.includes('garlic') || rawUrl.includes('stone')) {
+      rawUrl = defaultHero;
+    }
     return Object.assign({}, it, {
       code: it.sku || it.code || `#KD-${pn(k + 1)}`,
-      img: it.img || rawUrl,
-      image: it.image || rawUrl
+      img: rawUrl,
+      image: rawUrl
     });
   });
+  let safeHero = getImgUrl(ctx.heroImg) || (items[0] && (items[0].img || items[0].image)) || defaultHero;
+  if (!safeHero || safeHero.includes('garlic') || safeHero.includes('stone')) {
+    safeHero = defaultHero;
+  }
   const c = Object.assign({}, ctx, {
     items,
     th: t.theme,
     copy: ctx.copy || {},
-    hero: getImgUrl(ctx.heroImg) || (items[0] && (items[0].img || items[0].image)) || ctx.info?.logo || defaultHero
+    hero: safeHero
   });
 
   // Dedicated Parampara Wholesale Monograph Suite

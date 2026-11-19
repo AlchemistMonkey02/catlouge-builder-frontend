@@ -846,13 +846,16 @@ export default function DynamicCatalogueRenderer({
                 >
                   {activeQrList.map((box, bIdx) => (
                     <div key={bIdx} style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
-                      <div style={{ background: "#ffffff", padding: "8px", borderRadius: "10px", border: `1.5px solid ${accentColor}`, boxShadow: "0 4px 15px rgba(0,0,0,0.08)" }}>
+                      <a href={box.link || "#"} target="_blank" rel="noopener noreferrer" style={{ background: "#ffffff", padding: "8px", borderRadius: "10px", border: `1.5px solid ${accentColor}`, boxShadow: "0 4px 15px rgba(0,0,0,0.08)", display: "inline-block", textDecoration: "none" }}>
                         <img src={box.qr} alt={box.title} style={{ width: "105px", height: "105px", display: "block" }} />
-                      </div>
+                      </a>
                       <div style={{ fontWeight: 800, fontSize: "0.88rem", color: primaryColor, marginTop: "8px", letterSpacing: "0.06em" }}>
                         {box.title}
                       </div>
-                      <div style={{ fontSize: "0.72rem", color: textColor, opacity: 0.7, marginTop: "2px" }}>
+                      <a href={box.link || "#"} target="_blank" rel="noopener noreferrer" style={{ fontSize: "0.80rem", color: accentColor || "#2563eb", fontWeight: 700, textDecoration: "underline", margin: "3px 0 2px" }}>
+                        Click here ↗
+                      </a>
+                      <div style={{ fontSize: "0.72rem", color: textColor, opacity: 0.7 }}>
                         {box.subtitle}
                       </div>
                     </div>

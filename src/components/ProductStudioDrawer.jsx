@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   X,
@@ -18,12 +18,14 @@ import {
   Layers,
   Copy,
   MapPin,
+  Building2,
   Upload,
   Zap,
   Palette,
   ExternalLink,
 } from "lucide-react";
 import ImageUpscaleModal from "./ImageUpscaleModal";
+import { SmartPresetInput, ODOP_CATEGORY_PRESETS } from "../pages/CompanyCatalogueManager";
 
 const ODOP_PRESETS = {
   "Kota Doria": {
@@ -75,6 +77,12 @@ const ODOP_PRESETS = {
     unit: "sq.ft",
   },
 };
+
+import { resolveCompanyCategory } from "../utils/defaultDataBank";
+
+export function getCategoryFamily(item) {
+  return resolveCompanyCategory(item);
+}
 // AI features commented out:
 // import {
 //   generateAiContent,
@@ -103,6 +111,7 @@ export default function ProductStudioDrawer({ product, onClose, onSave }) {
   const [isGeneratingAi, setIsGeneratingAi] = useState(false);
   const [selectedRewriteTone, setSelectedRewriteTone] = useState("professional");
   const [channelAudit, setChannelAudit] = useState(null);
+  const [priceNotice, setPriceNotice] = useState(null);
 
   // Image Studio State
   const [bgMode, setBgMode] = useState("white");
@@ -119,6 +128,21 @@ export default function ProductStudioDrawer({ product, onClose, onSave }) {
       setChannelAudit(product.validationResults);
     }
   }, [product]);
+
+  const categoryFamily = useMemo(() => {
+    return getCategoryFamily(formData);
+  }, [formData?.odopProduct, formData?.category, formData?.district, formData?.name]);
+
+  const handleSave = () => {
+    const specs = Array.isArray(formData.technicalSpecifications) ? [...formData.technicalSpecifications] : [];
+    if (formData.thickness && !specs.some((s) => s.key?.toLowerCase().includes("thickness"))) {
+      specs.unshift({ key: "Thickness", value: formData.thickness, verified: true });
+    }
+    if (formData.fabricWeight && !specs.some((s) => s.key?.toLowerCase().includes("weight"))) {
+      specs.unshift({ key: "Fabric Weight", value: formData.fabricWeight, verified: true });
+    }
+    onSave({ ...formData, technicalSpecifications: specs });
+  };
 
   // Handle direct input change
   const handleChange = (field, value) => {
@@ -326,104 +350,85 @@ export default function ProductStudioDrawer({ product, onClose, onSave }) {
           {/* TAB 1: CORE PIM ATTRIBUTES */}
           {activeTab === "pim" && (
             <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
-              {/* UNDER WHICH ODOP CATEGORY DOES THIS PRODUCT BELONG? */}
+              {/* REGISTERED COMPANY ODOP CORRIDOR (Inherited from Company Profile - Never prompts repeatedly) */}
               <div
                 style={{
-                  background: "var(--bg-surface-elevated)",
-                  padding: "1rem",
-                  borderRadius: "var(--radius-md)",
-                  border: "1.5px solid var(--primary-light, #818cf8)",
+                  background: "linear-gradient(135deg, rgba(99, 102, 241, 0.08) 0%, rgba(139, 92, 246, 0.05) 100%)",
+                  padding: "0.85rem 1.1rem",
+                  borderRadius: "10px",
+                  border: "1.5px solid rgba(99, 102, 241, 0.25)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  flexWrap: "wrap",
+                  gap: "10px",
                 }}
               >
-                <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "4px" }}>
-                  <MapPin size={17} style={{ color: "var(--primary)" }} />
-                  <label style={{ fontSize: "0.88rem", fontWeight: 800, color: "var(--text-primary)" }}>
-                    Under Which ODOP Category Does This Product Belong? *
-                  </label>
-                </div>
-                <p style={{ fontSize: "0.76rem", color: "var(--text-muted)", margin: "0 0 10px 0" }}>
-                  Select the official Rajasthan ODOP corridor to bind the correct district and 4-point specifications:
-                </p>
-
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "0.6rem", marginBottom: "0.75rem" }}>
-                  {[
-                    { product: "Kota Doria", district: "Kota, Rajasthan", label: "🥻 Kota Doria", loc: "District: Kota", cat: "Kota Doria Specialty" },
-                    { product: "Garlic", district: "Baran, Rajasthan", label: "🧄 Garlic", loc: "District: Baran", cat: "Garlic Specialty" },
-                    { product: "Kota Stone", district: "Jhalawar, Rajasthan", label: "🏛️ Kota Stone", loc: "District: Jhalawar", cat: "Kota Stone Specialty" },
-                    { product: "Sandstone", district: "Bundi, Rajasthan", label: "🧱 Sandstone", loc: "District: Bundi", cat: "Sand Stone Specialty" },
-                  ].map((od) => {
-                    const isSelected =
-                      formData.odopProduct === od.product ||
-                      formData.category === od.cat ||
-                      (od.product === "Garlic" && (formData.category || "").toLowerCase().includes("garlic")) ||
-                      (od.product === "Kota Stone" && (formData.category || "").toLowerCase().includes("stone") && !(formData.category || "").toLowerCase().includes("sand")) ||
-                      (od.product === "Sandstone" && (formData.category || "").toLowerCase().includes("sand")) ||
-                      (od.product === "Kota Doria" && (formData.category || "").toLowerCase().includes("doria"));
-
-                    return (
-                      <button
-                        key={od.product}
-                        type="button"
-                        onClick={() => {
-                          const preset = ODOP_PRESETS[od.product];
-                          setFormData((prev) => ({
-                            ...prev,
-                            category: preset.category,
-                            odopProduct: preset.odopProduct,
-                            district: preset.district,
-                            size: preset.size,
-                            material: preset.material,
-                            materialComposition: preset.material,
-                            finish: preset.finish,
-                            application: preset.application,
-                            useApplication: preset.application,
-                            moq: preset.moq,
-                            priceRange: preset.priceRange,
-                            unit: preset.unit !== undefined ? preset.unit : prev.unit,
-                          }));
-                        }}
-                        style={{
-                          padding: "8px 12px",
-                          borderRadius: "8px",
-                          border: isSelected ? "2px solid var(--primary)" : "1px solid var(--border-subtle)",
-                          background: isSelected ? "var(--primary-light, rgba(99, 102, 241, 0.12))" : "var(--bg-surface)",
-                          cursor: "pointer",
-                          textAlign: "left",
-                        }}
-                      >
-                        <div style={{ fontWeight: 800, fontSize: "0.85rem", color: isSelected ? "var(--primary)" : "var(--text-primary)" }}>
-                          {od.label}
-                        </div>
-                        <div style={{ fontSize: "0.72rem", color: isSelected ? "var(--primary)" : "var(--text-muted)", marginTop: "2px", fontWeight: isSelected ? 700 : 500 }}>
-                          📍 {od.loc}
-                        </div>
-                      </button>
-                    );
-                  })}
+                <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                  <div
+                    style={{
+                      width: "36px",
+                      height: "36px",
+                      borderRadius: "8px",
+                      background: "var(--primary)",
+                      color: "#ffffff",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      boxShadow: "0 2px 8px rgba(99, 102, 241, 0.35)",
+                      flexShrink: 0
+                    }}
+                  >
+                    <Building2 size={18} />
+                  </div>
+                  <div>
+                    <div style={{ fontSize: "0.72rem", color: "var(--text-muted)", textTransform: "uppercase", fontWeight: 700, letterSpacing: "0.04em" }}>
+                      Registered Company ODOP Category
+                    </div>
+                    <div style={{ fontSize: "0.95rem", fontWeight: 800, color: "var(--text-primary)" }}>
+                      {categoryFamily === "garlic" ? "🧄 Garlic Specialty" :
+                       categoryFamily === "sandstone" ? "🧱 Sand Stone Specialty" :
+                       categoryFamily === "kotastone" ? "🏛️ Kota Stone Specialty" :
+                       categoryFamily === "kotadoria" ? "🥻 Kota Doria Handloom" :
+                       (formData.category || "General Specialty")}
+                      <span style={{ fontWeight: 600, color: "var(--text-secondary)", fontSize: "0.82rem", marginLeft: "6px" }}>
+                        ({formData.brand || "Registered Enterprise"})
+                      </span>
+                    </div>
+                  </div>
                 </div>
 
-                <div
-                  style={{
-                    background: "rgba(16, 185, 129, 0.1)",
-                    border: "1px solid rgba(16, 185, 129, 0.3)",
-                    padding: "6px 12px",
-                    borderRadius: "6px",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    fontSize: "0.78rem",
-                  }}
-                >
-                  <span style={{ fontWeight: 750, color: "#15803d" }}>
-                    📍 Catalogue District: <strong>{formData.district || "Baran / Kota / Jhalawar / Bundi, Rajasthan"}</strong>
+                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                  <span
+                    style={{
+                      fontSize: "0.78rem",
+                      fontWeight: 750,
+                      color: "#15803d",
+                      background: "rgba(16, 185, 129, 0.12)",
+                      border: "1px solid rgba(16, 185, 129, 0.3)",
+                      padding: "4px 10px",
+                      borderRadius: "6px"
+                    }}
+                  >
+                    📍 Registered District: <strong>{formData.district || "Rajasthan"}</strong>
                   </span>
-                  <span style={{ fontWeight: 700, color: "var(--primary)" }}>
-                    🏷️ ODOP: {formData.odopProduct || "Verified Product"}
+                  <span
+                    style={{
+                      fontSize: "0.74rem",
+                      fontWeight: 700,
+                      color: "var(--primary)",
+                      background: "rgba(99, 102, 241, 0.1)",
+                      border: "1px solid rgba(99, 102, 241, 0.25)",
+                      padding: "4px 8px",
+                      borderRadius: "6px"
+                    }}
+                  >
+                    ✓ Linked at Company Registration
                   </span>
                 </div>
               </div>
 
-              {/* FOUR MANDATORY ODOP SPECIFICATION POINTS */}
+              {/* CATEGORY-SPECIFIC MANDATORY SPECIFICATION POINTS */}
               <div
                 style={{
                   background: "var(--bg-surface)",
@@ -434,77 +439,343 @@ export default function ProductStudioDrawer({ product, onClose, onSave }) {
               >
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
                   <label style={{ fontSize: "0.85rem", fontWeight: 750, color: "var(--text-primary)" }}>
-                    Four Mandatory ODOP Product Specification Points
+                    {categoryFamily === "garlic"
+                      ? "🧄 Garlic Agro Specifications & Grading Standards"
+                      : (categoryFamily === "sandstone" || categoryFamily === "kotastone")
+                      ? "🧱 Stone Architectural Specifications & Calibration (Thickness & Surface)"
+                      : categoryFamily === "kotadoria"
+                      ? "🥻 Kota Doria Artisan Handloom Specifications (Length & Weight)"
+                      : "Four Mandatory Product Specification Points"}
                   </label>
                   <span style={{ fontSize: "0.75rem", color: "#166534", background: "#dcfce7", padding: "2px 8px", borderRadius: "4px", fontWeight: 700 }}>
                     ✓ Auto-Formatted for Catalogue
                   </span>
                 </div>
 
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.75rem", marginBottom: "0.75rem" }}>
-                  <div>
-                    <label style={{ fontSize: "0.8rem", fontWeight: 650, color: "var(--text-secondary)", display: "block", marginBottom: "4px" }}>
-                      📏 1. Size / Specification *
-                    </label>
-                    <input
-                      type="text"
-                      className="input-field"
-                      style={{ paddingLeft: "0.85rem" }}
-                      placeholder="e.g. 6.5m with blouse / 50-65 mm / 600x600 mm"
-                      value={formData.size || ""}
-                      onChange={(e) => handleChange("size", e.target.value)}
-                    />
+                {/* Dynamic Price Notice Pill inside Specifications */}
+                {priceNotice && (
+                  <div style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    background: "rgba(16, 185, 129, 0.12)",
+                    border: "1.5px solid rgba(16, 185, 129, 0.4)",
+                    padding: "6px 12px",
+                    borderRadius: "8px",
+                    color: "#059669",
+                    fontSize: "0.8rem",
+                    fontWeight: 700,
+                    marginBottom: "0.75rem",
+                  }}>
+                    <span>⚡ {priceNotice}</span>
+                    <button
+                      type="button"
+                      onClick={() => setPriceNotice(null)}
+                      style={{ background: "transparent", border: "none", color: "#059669", cursor: "pointer", fontWeight: 800, fontSize: "0.85rem" }}
+                    >
+                      ✕
+                    </button>
                   </div>
-                  <div>
-                    <label style={{ fontSize: "0.8rem", fontWeight: 650, color: "var(--text-secondary)", display: "block", marginBottom: "4px" }}>
-                      🧵 2. Material Composition *
-                    </label>
-                    <input
-                      type="text"
-                      className="input-field"
-                      style={{ paddingLeft: "0.85rem" }}
-                      placeholder="e.g. Pure Mulberry Silk & Cotton / Indurated Limestone"
-                      value={formData.material || formData.materialComposition || ""}
-                      onChange={(e) => {
-                        handleChange("material", e.target.value);
-                        handleChange("materialComposition", e.target.value);
-                      }}
-                    />
-                  </div>
-                </div>
+                )}
 
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.75rem", marginBottom: "0.75rem" }}>
-                  <div>
-                    <label style={{ fontSize: "0.8rem", fontWeight: 650, color: "var(--text-secondary)", display: "block", marginBottom: "4px" }}>
-                      ✨ 3. Surface Finish *
-                    </label>
-                    <input
-                      type="text"
-                      className="input-field"
-                      style={{ paddingLeft: "0.85rem" }}
-                      placeholder="e.g. Tested Gold Zari / Sun-Cured White Skin / Mirror Polish"
-                      value={formData.finish || ""}
-                      onChange={(e) => handleChange("finish", e.target.value)}
-                    />
-                  </div>
-                  <div>
-                    <label style={{ fontSize: "0.8rem", fontWeight: 650, color: "var(--text-secondary)", display: "block", marginBottom: "4px" }}>
-                      🎯 4. Use / Application *
-                    </label>
-                    <input
-                      type="text"
-                      className="input-field"
-                      style={{ paddingLeft: "0.85rem" }}
-                      placeholder="e.g. Bridal Ensembles / Commercial Culinary / High Footfall Flooring"
-                      value={formData.application || formData.useApplication || ""}
-                      onChange={(e) => {
-                        handleChange("application", e.target.value);
-                        handleChange("useApplication", e.target.value);
-                      }}
-                    />
-                  </div>
-                </div>
+                {/* Conditional Fields: GARLIC */}
+                {categoryFamily === "garlic" && (
+                  <>
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.85rem", marginBottom: "0.85rem" }}>
+                      <div>
+                        <SmartPresetInput
+                          label="1. Bulb Caliber / Sizing Diameter *"
+                          icon={<span style={{ fontSize: "0.9rem" }}>🧄</span>}
+                          placeholder="e.g. 50 - 65 mm (Grade A+ Large) / 40-50 mm (Medium)"
+                          value={formData.size || ""}
+                          onChange={(val) => handleChange("size", val)}
+                          presets={ODOP_CATEGORY_PRESETS.garlic.thickness}
+                          onSelectPreset={(preset) => {
+                            if (preset.price !== undefined) {
+                              setFormData((prev) => ({
+                                ...prev,
+                                size: preset.value,
+                                price: preset.price,
+                                mrp: preset.mrp || Math.round(preset.price * 1.35),
+                                priceRange: preset.priceRange || prev.priceRange,
+                              }));
+                              setPriceNotice(`Price auto-adjusted to ₹${preset.price}/kg based on ${preset.chipLabel || preset.value}`);
+                            }
+                          }}
+                          customHelpText="⚡ Select grade to auto-calculate price, or type custom."
+                        />
+                      </div>
+                      <div>
+                        <SmartPresetInput
+                          label="2. Moisture Content & Quality Standard *"
+                          icon={<span style={{ fontSize: "0.9rem" }}>💧</span>}
+                          placeholder="e.g. Moisture < 65%, Sun-Cured Clean White"
+                          value={formData.material || formData.materialComposition || ""}
+                          onChange={(val) => {
+                            handleChange("material", val);
+                            handleChange("materialComposition", val);
+                          }}
+                          presets={[
+                            { value: "Moisture < 65%, Sun-Cured Clean White (Export Ready)", chipLabel: "<65% Export", label: "Moisture < 65%, Sun-Cured Clean White (Export Ready)" },
+                            { value: "Moisture < 70%, Well-Dried Organically Grown", chipLabel: "<70% Organic", label: "Moisture < 70%, Well-Dried Organically Grown" },
+                            { value: "Standard Mandi Sun-Cured, High Allicin", chipLabel: "Standard Mandi", label: "Standard Mandi Sun-Cured, High Allicin" },
+                          ]}
+                          customHelpText="💡 Pick quality standard or type custom."
+                        />
+                      </div>
+                    </div>
 
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.85rem", marginBottom: "0.85rem" }}>
+                      <div>
+                        <SmartPresetInput
+                          label="3. Curing & Skin Finish *"
+                          icon={<span style={{ fontSize: "0.9rem" }}>✨</span>}
+                          placeholder="e.g. Sun-Cured Export Clean White Skin"
+                          value={formData.finish || ""}
+                          onChange={(val) => handleChange("finish", val)}
+                          presets={ODOP_CATEGORY_PRESETS.garlic.finishes}
+                          customHelpText="💡 Pick curing finish or type custom."
+                        />
+                      </div>
+                      <div>
+                        <SmartPresetInput
+                          label="4. Variety, Packaging & Commercial Use *"
+                          icon={<span style={{ fontSize: "0.9rem" }}>🎯</span>}
+                          placeholder="e.g. Malwa Desi in 25kg Aerated Red Mesh Bags"
+                          value={formData.application || formData.useApplication || ""}
+                          onChange={(val) => {
+                            handleChange("application", val);
+                            handleChange("useApplication", val);
+                          }}
+                          presets={ODOP_CATEGORY_PRESETS.garlic.applications}
+                          customHelpText="💡 Pick packaging or type custom."
+                        />
+                      </div>
+                    </div>
+                  </>
+                )}
+
+                {/* Conditional Fields: SANDSTONE / KOTA STONE */}
+                {(categoryFamily === "sandstone" || categoryFamily === "kotastone") && (
+                  <>
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.85rem", marginBottom: "0.85rem" }}>
+                      <div>
+                        <SmartPresetInput
+                          label="1. Plan Dimensions / Tile Size (L × W) *"
+                          icon={<span style={{ fontSize: "0.9rem" }}>📐</span>}
+                          placeholder="e.g. 2×2 ft (600×600 mm) / Custom Size"
+                          value={formData.size || ""}
+                          onChange={(val) => handleChange("size", val)}
+                          presets={ODOP_CATEGORY_PRESETS[categoryFamily]?.sizes || ODOP_CATEGORY_PRESETS.kotastone.sizes}
+                          customHelpText="💡 Pick standard tile dimensions or type custom size."
+                        />
+                      </div>
+                      <div>
+                        <SmartPresetInput
+                          label="2. Stone Thickness & Gauging Calibration *"
+                          icon={<span style={{ fontSize: "0.9rem" }}>📏</span>}
+                          placeholder="e.g. 20 - 25 mm Gauged / Custom Thickness"
+                          value={formData.thickness || ""}
+                          onChange={(val) => handleChange("thickness", val)}
+                          presets={ODOP_CATEGORY_PRESETS[categoryFamily]?.thickness || ODOP_CATEGORY_PRESETS.kotastone.thickness}
+                          onSelectPreset={(preset) => {
+                            if (preset.price !== undefined) {
+                              setFormData((prev) => ({
+                                ...prev,
+                                thickness: preset.value,
+                                price: preset.price,
+                                mrp: preset.mrp || Math.round(preset.price * 1.4),
+                                priceRange: preset.priceRange || prev.priceRange,
+                              }));
+                              setPriceNotice(`Rate auto-adjusted to ₹${preset.price}/sq.ft based on ${preset.chipLabel || preset.value}`);
+                            }
+                          }}
+                          customHelpText="⚡ Select thickness to auto-update rate, or type custom thickness."
+                        />
+                      </div>
+                    </div>
+
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.85rem", marginBottom: "0.85rem" }}>
+                      <div>
+                        <SmartPresetInput
+                          label="3. Surface Finish & Edge Treatment *"
+                          icon={<span style={{ fontSize: "0.9rem" }}>✨</span>}
+                          placeholder="e.g. Mirror Polish / Honed Satin / Hand-Chiseled"
+                          value={formData.finish || ""}
+                          onChange={(val) => handleChange("finish", val)}
+                          presets={ODOP_CATEGORY_PRESETS[categoryFamily]?.finishes || ODOP_CATEGORY_PRESETS.kotastone.finishes}
+                          customHelpText="💡 Pick texture finish or type custom."
+                        />
+                      </div>
+                      <div>
+                        <SmartPresetInput
+                          label="4. Rock Material & Commercial Application *"
+                          icon={<span style={{ fontSize: "0.9rem" }}>🎯</span>}
+                          placeholder="e.g. Natural Limestone / Heavy Traffic Flooring"
+                          value={formData.material || formData.materialComposition || formData.application || ""}
+                          onChange={(val) => {
+                            handleChange("material", val);
+                            handleChange("materialComposition", val);
+                            handleChange("application", val);
+                            handleChange("useApplication", val);
+                          }}
+                          presets={ODOP_CATEGORY_PRESETS[categoryFamily]?.applications || ODOP_CATEGORY_PRESETS.kotastone.applications}
+                          customHelpText="💡 Pick stone application or type custom."
+                        />
+                      </div>
+                    </div>
+                  </>
+                )}
+
+                {/* Conditional Fields: KOTA DORIA */}
+                {categoryFamily === "kotadoria" && (
+                  <>
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.85rem", marginBottom: "0.85rem" }}>
+                      <div>
+                        <SmartPresetInput
+                          label="1. Fabric Length & Cut Dimensions *"
+                          icon={<span style={{ fontSize: "0.9rem" }}>📏</span>}
+                          placeholder="e.g. 6.5 Metres with 80cm Running Blouse"
+                          value={formData.size || ""}
+                          onChange={(val) => handleChange("size", val)}
+                          presets={ODOP_CATEGORY_PRESETS.kotadoria.thickness}
+                          onSelectPreset={(preset) => {
+                            if (preset.price !== undefined) {
+                              setFormData((prev) => ({
+                                ...prev,
+                                size: preset.value,
+                                price: preset.price,
+                                mrp: preset.mrp || Math.round(preset.price * 1.5),
+                                priceRange: preset.priceRange || prev.priceRange,
+                              }));
+                              setPriceNotice(`Price auto-adjusted to ₹${preset.price} based on ${preset.chipLabel || preset.value}`);
+                            }
+                          }}
+                          customHelpText="⚡ Select cut length to auto-set price, or type custom."
+                        />
+                      </div>
+                      <div>
+                        <SmartPresetInput
+                          label="2. Fabric Weight & Yarn Count *"
+                          icon={<span style={{ fontSize: "0.9rem" }}>⚖️</span>}
+                          placeholder="e.g. Lightweight 280-320 grams / 80s × 100s Count"
+                          value={formData.fabricWeight || ""}
+                          onChange={(val) => handleChange("fabricWeight", val)}
+                          presets={[
+                            { value: "Lightweight 280-320 grams (80s Cotton × 100s Silk)", chipLabel: "280-320g Silk/Cotton", label: "Lightweight 280-320 grams (80s Cotton × 100s Silk)" },
+                            { value: "Featherlight 240-270 grams (Pure Silk Warp & Weft)", chipLabel: "240-270g Pure Silk", label: "Featherlight 240-270 grams (Pure Silk Warp & Weft)" },
+                            { value: "Medium 350-380 grams (Pure Cotton Handloom)", chipLabel: "350-380g Pure Cotton", label: "Medium 350-380 grams (Pure Cotton Handloom)" },
+                          ]}
+                          customHelpText="💡 Pick yarn count weight or type custom."
+                        />
+                      </div>
+                    </div>
+
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.85rem", marginBottom: "0.85rem" }}>
+                      <div>
+                        <SmartPresetInput
+                          label="3. Weave Grid (Khat) & Zari Border *"
+                          icon={<span style={{ fontSize: "0.9rem" }}>✨</span>}
+                          placeholder="e.g. Traditional Square Khat Grid with Tested Gold Zari"
+                          value={formData.finish || ""}
+                          onChange={(val) => handleChange("finish", val)}
+                          presets={ODOP_CATEGORY_PRESETS.kotadoria.finishes}
+                          customHelpText="💡 Pick weave motif or type custom."
+                        />
+                      </div>
+                      <div>
+                        <SmartPresetInput
+                          label="4. Fiber Composition, Occasion & Care *"
+                          icon={<span style={{ fontSize: "0.9rem" }}>🎯</span>}
+                          placeholder="e.g. Pure Mulberry Silk & Cotton / Dry Clean Only"
+                          value={formData.material || formData.materialComposition || formData.application || ""}
+                          onChange={(val) => {
+                            handleChange("material", val);
+                            handleChange("materialComposition", val);
+                            handleChange("application", val);
+                            handleChange("useApplication", val);
+                          }}
+                          presets={ODOP_CATEGORY_PRESETS.kotadoria.applications}
+                          customHelpText="💡 Pick composition & care or type custom."
+                        />
+                      </div>
+                    </div>
+                  </>
+                )}
+
+                {/* Conditional Fields: GENERAL FALLBACK */}
+                {categoryFamily !== "garlic" && categoryFamily !== "sandstone" && categoryFamily !== "kotastone" && categoryFamily !== "kotadoria" && (
+                  <>
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.85rem", marginBottom: "0.85rem" }}>
+                      <div>
+                        <SmartPresetInput
+                          label="1. Size / Specification *"
+                          icon={<span style={{ fontSize: "0.9rem" }}>📏</span>}
+                          placeholder="e.g. Dimensions, Capacity, Size"
+                          value={formData.size || ""}
+                          onChange={(val) => handleChange("size", val)}
+                          presets={[
+                            { value: "Standard Regular Size", chipLabel: "Standard", label: "Standard Regular Size" },
+                            { value: "Large Format / Heavy Duty", chipLabel: "Large", label: "Large Format / Heavy Duty" },
+                            { value: "Compact / Portable Size", chipLabel: "Compact", label: "Compact / Portable Size" },
+                          ]}
+                          customHelpText="💡 Pick standard size or type custom."
+                        />
+                      </div>
+                      <div>
+                        <SmartPresetInput
+                          label="2. Material Composition *"
+                          icon={<span style={{ fontSize: "0.9rem" }}>🧵</span>}
+                          placeholder="e.g. Material, Fabric, Metal"
+                          value={formData.material || formData.materialComposition || ""}
+                          onChange={(val) => {
+                            handleChange("material", val);
+                            handleChange("materialComposition", val);
+                          }}
+                          presets={[
+                            { value: "High Grade Natural Composition", chipLabel: "Natural", label: "High Grade Natural Composition" },
+                            { value: "Premium Certified Organic Component", chipLabel: "Organic", label: "Premium Certified Organic Component" },
+                          ]}
+                          customHelpText="💡 Pick material or type custom."
+                        />
+                      </div>
+                    </div>
+
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.75rem", marginBottom: "0.75rem" }}>
+                      <div>
+                        <label style={{ fontSize: "0.8rem", fontWeight: 650, color: "var(--text-secondary)", display: "block", marginBottom: "4px" }}>
+                          ✨ 3. Surface Finish / Color *
+                        </label>
+                        <input
+                          type="text"
+                          className="input-field"
+                          style={{ paddingLeft: "0.85rem" }}
+                          placeholder="e.g. Matte, Polished, Color"
+                          value={formData.finish || ""}
+                          onChange={(e) => handleChange("finish", e.target.value)}
+                        />
+                      </div>
+                      <div>
+                        <label style={{ fontSize: "0.8rem", fontWeight: 650, color: "var(--text-secondary)", display: "block", marginBottom: "4px" }}>
+                          🎯 4. Use / Application *
+                        </label>
+                        <input
+                          type="text"
+                          className="input-field"
+                          style={{ paddingLeft: "0.85rem" }}
+                          placeholder="e.g. Commercial, Residential, Apparel"
+                          value={formData.application || formData.useApplication || ""}
+                          onChange={(e) => {
+                            handleChange("application", e.target.value);
+                            handleChange("useApplication", e.target.value);
+                          }}
+                        />
+                      </div>
+                    </div>
+                  </>
+                )}
+
+                {/* Common MOQ & Price Range */}
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.75rem" }}>
                   <div>
                     <label style={{ fontSize: "0.8rem", fontWeight: 650, color: "var(--text-secondary)", display: "block", marginBottom: "4px" }}>
@@ -514,20 +785,36 @@ export default function ProductStudioDrawer({ product, onClose, onSave }) {
                       type="text"
                       className="input-field"
                       style={{ paddingLeft: "0.85rem" }}
-                      placeholder="e.g. 10 Pieces / 500 kg / 500 sq.ft"
+                      placeholder={
+                        categoryFamily === "garlic"
+                          ? "e.g. 500 kg (Wholesale Lot) / 5 Quintals"
+                          : (categoryFamily === "sandstone" || categoryFamily === "kotastone")
+                          ? "e.g. 500 sq.ft (Quarry Lot) / 1 Truckload"
+                          : categoryFamily === "kotadoria"
+                          ? "e.g. 10 Sarees / 25 Pieces (Wholesale Pack)"
+                          : "e.g. 10 Pieces / 50 Units"
+                      }
                       value={formData.moq || ""}
                       onChange={(e) => handleChange("moq", e.target.value)}
                     />
                   </div>
                   <div>
                     <label style={{ fontSize: "0.8rem", fontWeight: 650, color: "var(--text-secondary)", display: "block", marginBottom: "4px" }}>
-                      💰 Price Range
+                      💰 Price Range (₹)
                     </label>
                     <input
                       type="text"
                       className="input-field"
                       style={{ paddingLeft: "0.85rem" }}
-                      placeholder="e.g. ₹2,450 – ₹6,500 / ₹180 – ₹240 / kg"
+                      placeholder={
+                        categoryFamily === "garlic"
+                          ? "e.g. ₹180 – ₹240 / kg"
+                          : (categoryFamily === "sandstone" || categoryFamily === "kotastone")
+                          ? "e.g. ₹85 – ₹140 / sq.ft"
+                          : categoryFamily === "kotadoria"
+                          ? "e.g. ₹2,450 – ₹6,500"
+                          : "e.g. ₹1,000 – ₹2,500"
+                      }
                       value={formData.priceRange || ""}
                       onChange={(e) => handleChange("priceRange", e.target.value)}
                     />
@@ -554,6 +841,31 @@ export default function ProductStudioDrawer({ product, onClose, onSave }) {
                 </div>
               </div>
 
+              {/* Dynamic Price Adjustment Notice */}
+              {priceNotice && (
+                <div style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  background: "rgba(16, 185, 129, 0.12)",
+                  border: "1.5px solid rgba(16, 185, 129, 0.4)",
+                  padding: "8px 14px",
+                  borderRadius: "8px",
+                  color: "#059669",
+                  fontSize: "0.82rem",
+                  fontWeight: 700
+                }}>
+                  <span>⚡ {priceNotice}</span>
+                  <button
+                    type="button"
+                    onClick={() => setPriceNotice(null)}
+                    style={{ background: "transparent", border: "none", color: "#059669", cursor: "pointer", fontWeight: 800, fontSize: "0.9rem" }}
+                  >
+                    ✕
+                  </button>
+                </div>
+              )}
+
               {/* Pricing, Stock, Unit */}
               <div style={{ display: "grid", gridTemplateColumns: "1.2fr 1.3fr 1fr 1fr", gap: "0.75rem" }}>
                 <div className="card">
@@ -578,22 +890,49 @@ export default function ProductStudioDrawer({ product, onClose, onSave }) {
                     value={formData.unit || ""}
                     onChange={(e) => handleChange("unit", e.target.value)}
                   >
-                    <option value="">No Unit (Clothes, Saree, Items)</option>
-                    <option value="sq.ft">sq.ft (Stone, Tiles, Granite)</option>
-                    <option value="sq.m">sq.m (Square Metre)</option>
-                    <option value="kg">kg (Garlic, Spices, Agro)</option>
-                    <option value="g">g (Gram)</option>
-                    <option value="tonne">tonne / MT</option>
-                    <option value="metre">metre (Textiles, Fabric)</option>
-                    <option value="m">m (Metre)</option>
-                    <option value="ml">ml (Oils, Liquids, Perfume)</option>
-                    <option value="litre">litre (Liquids, Dairy)</option>
-                    <option value="piece">piece (Individual Unit)</option>
-                    <option value="pair">pair (Shoes, Accessories)</option>
-                    <option value="set">set (Ensemble, Suite)</option>
-                    <option value="box">box (Pack, Carton)</option>
-                    <option value="roll">roll</option>
-                    <option value="bundle">bundle</option>
+                    {categoryFamily === "garlic" ? (
+                      <>
+                        <option value="kg">kg (Garlic, Produce - Standard)</option>
+                        <option value="g">g (Grams - Retail Packs)</option>
+                        <option value="quintal">quintal (100 kg - Mandi Wholesale)</option>
+                        <option value="tonne">tonne / MT (Bulk Export)</option>
+                        <option value="mesh bag">mesh bag (10kg/25kg)</option>
+                        <option value="box">box (Pack, Carton)</option>
+                        <option value="">No Unit</option>
+                      </>
+                    ) : (categoryFamily === "sandstone" || categoryFamily === "kotastone") ? (
+                      <>
+                        <option value="sq.ft">sq.ft (Stone, Tiles, Flooring - Standard)</option>
+                        <option value="sq.m">sq.m (Square Metre)</option>
+                        <option value="piece">piece (Pre-cut Paver, Tile, Jali)</option>
+                        <option value="slab">slab (Gangsaw Architectural Slab)</option>
+                        <option value="tonne">tonne / MT (Bulk Quarry Stone)</option>
+                        <option value="">No Unit</option>
+                      </>
+                    ) : categoryFamily === "kotadoria" ? (
+                      <>
+                        <option value="">No Unit (Clean Price like ₹3,200 — Recommended for Sarees)</option>
+                        <option value="saree">saree (Per Saree)</option>
+                        <option value="piece">piece (Individual Piece)</option>
+                        <option value="metre">metre (Running Handloom Fabric)</option>
+                        <option value="set">set (2-pc / 3-pc Suit Ensemble)</option>
+                        <option value="dupatta">dupatta (Per Dupatta)</option>
+                      </>
+                    ) : (
+                      <>
+                        <option value="">No Unit (Clothes, Saree, Items)</option>
+                        <option value="piece">piece (Individual Unit)</option>
+                        <option value="sq.ft">sq.ft (Stone, Tiles, Granite)</option>
+                        <option value="sq.m">sq.m (Square Metre)</option>
+                        <option value="kg">kg (Garlic, Spices, Agro)</option>
+                        <option value="g">g (Gram)</option>
+                        <option value="tonne">tonne / MT</option>
+                        <option value="metre">metre (Textiles, Fabric)</option>
+                        <option value="litre">litre (Liquids)</option>
+                        <option value="set">set (Ensemble, Suite)</option>
+                        <option value="box">box (Pack, Carton)</option>
+                      </>
+                    )}
                   </select>
                 </div>
                 <div className="card">
@@ -681,62 +1020,64 @@ export default function ProductStudioDrawer({ product, onClose, onSave }) {
                 </div>
               </div>
 
-              {/* Dimensions & Weight */}
-              <div className="card">
-                <div style={{ fontWeight: 600, fontSize: "0.85rem", marginBottom: "0.75rem", color: "var(--text-secondary)" }}>
-                  Packaging &amp; Dimensions
+              {/* Dimensions & Weight (Only for general items) */}
+              {categoryFamily === "general" && (
+                <div className="card">
+                  <div style={{ fontWeight: 600, fontSize: "0.85rem", marginBottom: "0.75rem", color: "var(--text-secondary)" }}>
+                    Packaging &amp; Dimensions
+                  </div>
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "0.75rem" }}>
+                    <div>
+                      <label style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>Length (cm)</label>
+                      <input
+                        type="number"
+                        className="input-field"
+                        style={{ paddingLeft: "0.75rem" }}
+                        value={formData.dimensions?.length || 0}
+                        onChange={(e) =>
+                          handleChange("dimensions", { ...(formData.dimensions || {}), length: Number(e.target.value) })
+                        }
+                      />
+                    </div>
+                    <div>
+                      <label style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>Width (cm)</label>
+                      <input
+                        type="number"
+                        className="input-field"
+                        style={{ paddingLeft: "0.75rem" }}
+                        value={formData.dimensions?.width || 0}
+                        onChange={(e) =>
+                          handleChange("dimensions", { ...(formData.dimensions || {}), width: Number(e.target.value) })
+                        }
+                      />
+                    </div>
+                    <div>
+                      <label style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>Height (cm)</label>
+                      <input
+                        type="number"
+                        className="input-field"
+                        style={{ paddingLeft: "0.75rem" }}
+                        value={formData.dimensions?.height || 0}
+                        onChange={(e) =>
+                          handleChange("dimensions", { ...(formData.dimensions || {}), height: Number(e.target.value) })
+                        }
+                      />
+                    </div>
+                    <div>
+                      <label style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>Weight (g)</label>
+                      <input
+                        type="number"
+                        className="input-field"
+                        style={{ paddingLeft: "0.75rem" }}
+                        value={formData.weight?.value || 0}
+                        onChange={(e) =>
+                          handleChange("weight", { ...(formData.weight || {}), value: Number(e.target.value) })
+                        }
+                      />
+                    </div>
+                  </div>
                 </div>
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "0.75rem" }}>
-                  <div>
-                    <label style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>Length (cm)</label>
-                    <input
-                      type="number"
-                      className="input-field"
-                      style={{ paddingLeft: "0.75rem" }}
-                      value={formData.dimensions?.length || 0}
-                      onChange={(e) =>
-                        handleChange("dimensions", { ...(formData.dimensions || {}), length: Number(e.target.value) })
-                      }
-                    />
-                  </div>
-                  <div>
-                    <label style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>Width (cm)</label>
-                    <input
-                      type="number"
-                      className="input-field"
-                      style={{ paddingLeft: "0.75rem" }}
-                      value={formData.dimensions?.width || 0}
-                      onChange={(e) =>
-                        handleChange("dimensions", { ...(formData.dimensions || {}), width: Number(e.target.value) })
-                      }
-                    />
-                  </div>
-                  <div>
-                    <label style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>Height (cm)</label>
-                    <input
-                      type="number"
-                      className="input-field"
-                      style={{ paddingLeft: "0.75rem" }}
-                      value={formData.dimensions?.height || 0}
-                      onChange={(e) =>
-                        handleChange("dimensions", { ...(formData.dimensions || {}), height: Number(e.target.value) })
-                      }
-                    />
-                  </div>
-                  <div>
-                    <label style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>Weight (g)</label>
-                    <input
-                      type="number"
-                      className="input-field"
-                      style={{ paddingLeft: "0.75rem" }}
-                      value={formData.weight?.value || 0}
-                      onChange={(e) =>
-                        handleChange("weight", { ...(formData.weight || {}), value: Number(e.target.value) })
-                      }
-                    />
-                  </div>
-                </div>
-              </div>
+              )}
 
               {/* Technical Specifications Key-Value Editor */}
               <div className="card">
@@ -1062,7 +1403,7 @@ export default function ProductStudioDrawer({ product, onClose, onSave }) {
           <button className="btn btn-outline" onClick={onClose}>
             Cancel
           </button>
-          <button className="btn btn-primary" onClick={() => onSave(formData)}>
+          <button className="btn btn-primary" onClick={handleSave}>
             <Save size={16} /> Save Changes
           </button>
         </div>

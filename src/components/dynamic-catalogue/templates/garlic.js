@@ -154,16 +154,23 @@ function contactPage(c, no) {
       <div class="g-qr-section">
         <h3>Digital Access &amp; Instant Catalogues</h3>
         <div class="g-qr-row">
-          ${qrs.length ? qrs.map(q => `
+          ${qrs.length ? qrs.map(q => {
+            const qrUrl = q.url || q.link || (i.mobile ? `https://wa.me/${String(i.mobile).replace(/\D/g, '')}` : '#');
+            return `
             <div class="g-qr-pill">
-              <img src="${q.img}" class="qrimg" alt="${q.label}" />
-              <b>${E(q.label)}</b>
-              <small>Scan with phone camera</small>
+              <a href="${E(qrUrl)}" target="_blank" rel="noopener noreferrer" data-qr-url="${E(qrUrl)}" style="text-decoration:none; color:inherit; display:flex; flex-direction:column; align-items:center;">
+                <img src="${q.img}" class="qrimg" alt="${q.label}" />
+                <b>${E(q.label)}</b>
+                <span class="qr-click-btn" style="display:inline-block; font-size:11px; font-weight:700; color:var(--acc, #2d6a4f); text-decoration:underline; margin:4px 0 2px;">Click here ↗</span>
+                <small>${E(q.note || 'Scan with phone camera')}</small>
+              </a>
             </div>
-          `).join('') : `
+            `;
+          }).join('') : `
             <div class="g-qr-pill">
               <div class="g-qr-placeholder">🧄</div>
               <b>Direct WhatsApp Ordering</b>
+              ${i.mobile ? `<a href="https://wa.me/${String(i.mobile).replace(/\D/g, '')}" target="_blank" rel="noopener noreferrer" class="qr-click-btn" style="display:inline-block; font-size:11px; font-weight:700; color:var(--acc, #2d6a4f); text-decoration:underline; margin:4px 0 2px;">Click here ↗</a>` : ''}
               <small>${E(i.mobile || 'Connect with procurement team')}</small>
             </div>
           `}
@@ -190,7 +197,7 @@ function t1_cover(c, t) {
       </div>
       <div class="t1-hero" style="${bg(hero)}">
         <div class="t1-hero-overlay"></div>
-        <div class="t1-seal">🌱 100% ORGANIC CERTIFIED</div>
+        <div class="t1-seal">${E(t.badge || i.badge || '🌱 100% ORGANIC CERTIFIED')}</div>
         <div class="t1-hero-text">
           <span class="t1-sub">DISTRICT: ${E(cap(i.district || 'Baran, Rajasthan'))} &bull; ODOP: ${E(cap(i.odopProduct || 'Garlic'))}</span>
           <h1 class="t1-h1">${E(i.ent || 'Fresh Garlic Harvest')}</h1>
@@ -198,7 +205,7 @@ function t1_cover(c, t) {
       </div>
       <div class="t1-body">
         <div class="t1-intro">
-          <h2>Sun-Cured White Bulbs &bull; Direct Farm Origin</h2>
+          <h2>${E(i.tagline || 'Sun-Cured White Bulbs • Direct Farm Origin')}</h2>
           <p>${E(i.desc || 'Direct farm procurement featuring high allicin pungency, pesticide-free soil cultivation, and strict multi-stage mechanical caliber sorting.')}</p>
         </div>
         <div class="t1-metrics">
@@ -296,8 +303,8 @@ function t1_products(c, no, slice, pageIdx, totalPages) {
   return `
     ${head(c, `ORGANIC HARVEST RANGE (PAGE ${pageIdx}/${totalPages})`, no)}
     <div class="t1-prod-header">
-      <h2>Naturally Sun-Cured Bulb Varieties</h2>
-      <p>Graded by diameter caliber, clove density, and skin layer tightness</p>
+      <h2>${E(i.productRangeTitle || 'Naturally Sun-Cured Bulb Varieties')}</h2>
+      <p>${E(i.productRangeSubtitle || 'Graded by diameter caliber, clove density, and skin layer tightness')}</p>
     </div>
     <div class="g-odop-grid">
       ${slice.map((it, idx) => renderGarlicProductCard(it, idx, c, 'org')).join('')}
@@ -615,12 +622,30 @@ function pageCount(t, n) {
 
 function render(t, ctx) {
   const th = t.theme;
-  const items = (ctx.items || []).map((it, k) => Object.assign({ code: `#GAR-${pn(k + 1)}` }, it));
+  const items = (ctx.items || []).map((it, k) => {
+    let img = it.img || it.image || '';
+    if (typeof img === 'string' && (img.includes('kota-doria') || img.includes('stone') || !img)) {
+      const garlicFallbacks = [
+        '/assets/garlic/garlic-01.jpeg',
+        '/assets/garlic/garlic-02.jpeg',
+        '/assets/garlic/garlic-03.jpeg',
+        '/assets/garlic/garlic-04.jpeg',
+      ];
+      img = garlicFallbacks[k % garlicFallbacks.length];
+    }
+    return Object.assign({ code: `#GAR-${pn(k + 1)}` }, it, { img });
+  });
+
+  let safeHero = ctx.heroImg || (items[0] && items[0].img) || '/assets/garlic/garlic-01.jpeg';
+  if (typeof safeHero === 'string' && (safeHero.includes('kota-doria') || safeHero.includes('stone') || !safeHero)) {
+    safeHero = '/assets/garlic/garlic-01.jpeg';
+  }
+
   const c = Object.assign({}, ctx, {
     items,
     th,
     copy: ctx.copy || {},
-    hero: ctx.heroImg || (items[0] && items[0].img) || ''
+    hero: safeHero
   });
 
   const style = `
