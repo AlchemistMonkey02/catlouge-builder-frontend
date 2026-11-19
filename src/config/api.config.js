@@ -3,16 +3,43 @@
  * 
  * Provides:
  * - Environment-driven Base URL resolution (zero hardcoding)
- * - Complete, structured API Endpoint definitions
- * - Helper function to build dynamic / absolute URLs
+ * - Complete, structured API Endpoint definitions for all backend services
+ * - Absolute and dynamic URL builder helpers
+ * - Asset / image CDN path resolution
  */
 
-// Local backend API endpoint
-export const API_BASE_URL = "http://localhost:5012/api";
+// Environment-driven Base URL resolution:
+// Reads from Vite environment variable (VITE_API_URL / VITE_API_BASE_URL / VITE_BACKEND_URL)
+// with a safe fallback to local development server.
+const resolveApiBaseUrl = () => {
+  if (typeof import.meta !== "undefined" && import.meta.env) {
+    if (import.meta.env.VITE_API_URL) {
+      return import.meta.env.VITE_API_URL.replace(/\/+$/, "");
+    }
+    if (import.meta.env.VITE_API_BASE_URL) {
+      return import.meta.env.VITE_API_BASE_URL.replace(/\/+$/, "");
+    }
+    if (import.meta.env.VITE_BACKEND_URL) {
+      const clean = import.meta.env.VITE_BACKEND_URL.replace(/\/+$/, "");
+      return clean.endsWith("/api") ? clean : `${clean}/api`;
+    }
+  }
+  return "http://localhost:5012/api";
+};
+
+export const API_BASE_URL = resolveApiBaseUrl();
+
+// Assets origin (for static assets, uploads and asset catalog previews)
+export const ASSETS_BASE_URL =
+  (typeof import.meta !== "undefined" && import.meta.env && import.meta.env.VITE_ASSETS_URL) ||
+  API_BASE_URL.replace(/\/api\/?$/, "");
 
 export const API_TIMEOUT = 45000;
 
 export const API_ENDPOINTS = {
+  // System Health
+  HEALTH: "/health",
+
   // Authentication
   AUTH: {
     REGISTER: "/auth/register",
@@ -20,7 +47,7 @@ export const API_ENDPOINTS = {
     ME: "/auth/me",
   },
 
-  // Catalogue Products
+  // Catalogue Products (Multi-Company Catalogues)
   CATALOGUE_PRODUCTS: {
     BASE: "/catalogue-products",
     BY_ID: (id) => `/catalogue-products/${id}`,
@@ -29,13 +56,14 @@ export const API_ENDPOINTS = {
     TOGGLE_LOCK: (id) => `/catalogue-products/${id}/toggle-lock`,
   },
 
-  // Dynamic Catalogue Records (ODOP / Studio Database)
+  // Dynamic Catalogue Records (ODOP / Studio Database / Published Live Links)
   CATALOGUE_RECORDS: {
     BASE: "/catalogue-records",
     BY_ID: (id) => `/catalogue-records/${id}`,
+    PUBLISH_LIVE: (id) => `/catalogue-records/${id}/publish-live`,
   },
 
-  // Multi-Company Brand Profiles
+  // Multi-Company Brand Profiles & Enterprise Data Bank
   COMPANIES: {
     BASE: "/companies",
     BY_ID: (id) => `/companies/${id}`,
@@ -47,6 +75,7 @@ export const API_ENDPOINTS = {
   PRODUCTS: {
     BASE: "/products",
     BY_ID: (id) => `/products/${id}`,
+    CATEGORIES: "/products/categories",
   },
 
   // Bulk Import & Export Spreadsheets
@@ -103,10 +132,23 @@ export const getAbsoluteApiUrl = (endpointPath = "") => {
   return `${base}${cleanPath}`;
 };
 
+/**
+ * Resolve an asset or media URL to absolute URL if needed
+ * @param {string} assetPath Path to asset (e.g. "/assets/garlic/garlic-01.jpeg")
+ * @returns {string} Fully qualified or untouched URL
+ */
+export const getAssetUrl = (assetPath = "") => {
+  if (!assetPath) return "";
+  if (/^(https?:|data:|blob:|\/\/)/i.test(assetPath)) return assetPath;
+  const cleanPath = assetPath.startsWith("/") ? assetPath : `/${assetPath}`;
+  return `${ASSETS_BASE_URL}${cleanPath}`;
+};
+
 export default {
   BASE_URL: API_BASE_URL,
+  ASSETS_BASE_URL,
   TIMEOUT: API_TIMEOUT,
   ENDPOINTS: API_ENDPOINTS,
   getAbsoluteApiUrl,
+  getAssetUrl,
 };
-

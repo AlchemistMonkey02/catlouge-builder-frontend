@@ -1,13 +1,22 @@
 import axios from "axios";
 import {
   API_BASE_URL,
+  ASSETS_BASE_URL,
   API_TIMEOUT,
   API_ENDPOINTS,
   getAbsoluteApiUrl,
+  getAssetUrl,
 } from "../config/api.config";
 
 // Re-export config and endpoints for direct access from any consumer
-export { API_BASE_URL, API_TIMEOUT, API_ENDPOINTS, getAbsoluteApiUrl };
+export {
+  API_BASE_URL,
+  ASSETS_BASE_URL,
+  API_TIMEOUT,
+  API_ENDPOINTS,
+  getAbsoluteApiUrl,
+  getAssetUrl,
+};
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -348,6 +357,16 @@ export const fetchProductById = async (id) => {
   return data;
 };
 
+export const fetchCategories = async () => {
+  const { data } = await api.get(API_ENDPOINTS.PRODUCTS.CATEGORIES);
+  return data;
+};
+
+export const checkHealth = async () => {
+  const { data } = await api.get(API_ENDPOINTS.HEALTH);
+  return data;
+};
+
 // --- MONGO DB DYNAMIC CATALOGUE RECORDS (ODOP ENGINE) ---
 export const fetchCatalogueRecords = async (params = {}) => {
   const cleanParams = Object.fromEntries(
@@ -378,7 +397,7 @@ export const deleteCatalogueRecord = async (id) => {
 };
 
 export const publishCatalogueRecordLive = async (id, payload) => {
-  const { data } = await api.post(`/catalogue-records/${id}/publish-live`, payload);
+  const { data } = await api.post(API_ENDPOINTS.CATALOGUE_RECORDS.PUBLISH_LIVE(id), payload);
   return data;
 };
 
