@@ -1067,7 +1067,6 @@ export default function DynamicCatalogueStudio({
         finishes: [],
         materials: [],
         applications: [],
-        moqs: [],
         priceRanges: [],
         ...(bank?.specifications || {})
       }
@@ -3978,7 +3977,7 @@ export default function DynamicCatalogueStudio({
                     </div>
                   )}
 
-                  {/* MOQs & Price Ranges */}
+                  {/* Price Ranges & Wholesale Lots */}
                   {effectiveDataBank.specifications.priceRanges?.length > 0 && (
                     <div>
                       <div style={{ fontSize: "0.72rem", fontWeight: 700, color: "var(--text-secondary)", marginBottom: "4px" }}>

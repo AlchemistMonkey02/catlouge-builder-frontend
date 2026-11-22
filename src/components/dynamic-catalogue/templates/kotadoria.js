@@ -1115,7 +1115,6 @@ function renderKdProductCard(it, idx, c, prefix = 'kd') {
   const specFinish = it.finish || 'Tested Lurex Gold Zari';
   const specApp = it.application || it.useApplication || 'Bridal & Festive Drapes';
   const specPriceRange = formatProductPriceRange(it.priceRange, it.price || 3200, 6500, it.unit, it);
-  const specMoq = it.moq || '10 Pieces (Wholesale)';
 
   const safeImg = cardImg.replace(/'/g, '%27');
 
@@ -1129,7 +1128,6 @@ function renderKdProductCard(it, idx, c, prefix = 'kd') {
       <div class="kd1-details">
         <div class="kd1-card-meta-row">
           <span class="kd1-sku-chip">SKU: ${E(cardSku)}</span>
-          <span class="kd1-moq-chip">MOQ: ${E(specMoq)}</span>
         </div>
         <h3>${E(cardName)}</h3>
         <div class="kd1-desc-row">
@@ -1201,7 +1199,6 @@ function kd1_products(c, no, slice, pageIdx, totalPages) {
         const specFinish = it.finish || 'Tested Lurex Gold Zari';
         const specApp = it.application || it.useApplication || 'Bridal & Festive Drapes';
         const specPriceRange = formatProductPriceRange(it.priceRange, it.price || 4200, 6500, it.unit, it);
-        const specMoq = it.moq || '10 Pieces (Wholesale)';
 
         const safeImg = cardImg.replace(/'/g, '%27');
 
@@ -1215,7 +1212,6 @@ function kd1_products(c, no, slice, pageIdx, totalPages) {
           <div class="kd1-details">
             <div class="kd1-card-meta-row">
               <span class="kd1-sku-chip">SKU: ${E(cardSku)}</span>
-              <span class="kd1-moq-chip">MOQ: ${E(specMoq)}</span>
             </div>
             <h3>${E(cardName)}</h3>
             <div class="kd1-desc-row">
@@ -2571,7 +2567,7 @@ const CSS = `
   margin-bottom: 2px;
 }
 .kd1-sku-chip { font-size: 8px; font-weight: 800; color: var(--acc); }
-.kd1-moq-chip {
+.kd1-rate-chip {
   font-size: 7.5px;
   font-weight: 700;
   color: var(--ink);
@@ -3167,7 +3163,6 @@ const CSS = `
 .kd5-specs { display: flex; gap: 8px; font-size: 8.5px; color: var(--muted); margin-bottom: 4px; }
 .kd5-foot { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--line); padding-top: 5px; margin-top: auto; }
 .kd5-price { font-size: 14px; font-weight: 800; color: var(--acc); line-height: 1; }
-.kd5-moq { font-size: 8.5px; color: var(--muted); font-weight: 700; }
 
 .kd5-tech-wrap { height: 860px; }
 .kd5-tech-wrap h3 { font-family: var(--hf); font-size: 24px; margin: 0 0 20px; }

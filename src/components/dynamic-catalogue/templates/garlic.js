@@ -244,7 +244,6 @@ function renderGarlicProductCard(it, idx, c, prefix = 'grl') {
   const specFinish = it.finish || 'Sun-Cured Export Clean White Skin';
   const specApp = it.application || it.useApplication || 'Commercial Culinary, Dehydration & Export';
   const specPriceRange = formatProductPriceRange(it.priceRange, it.price, null, it.unit, it);
-  const specMoq = it.moq || '500 kg (Wholesale Lot)';
 
   const safeImg = typeof cardImg === 'string' ? cardImg.replace(/'/g, '%27') : '/assets/garlic/garlic-01.jpeg';
 
@@ -258,7 +257,6 @@ function renderGarlicProductCard(it, idx, c, prefix = 'grl') {
       <div class="g-odop-details">
         <div class="g-odop-meta-row">
           <span class="g-odop-sku-chip">SKU: ${E(cardSku)}</span>
-          <span class="g-odop-moq-chip">MOQ: ${E(specMoq)}</span>
         </div>
         <h3>${E(cardName)}</h3>
         <div class="g-odop-desc-row">
@@ -818,7 +816,7 @@ const CSS = `
   font-weight: 700;
   color: var(--acc, #15803d);
 }
-.g-odop-moq-chip {
+.g-odop-rate-chip {
   font-size: 8px;
   background: rgba(22, 101, 52, 0.08);
   color: #166534;
@@ -1186,7 +1184,6 @@ const CSS = `
   border-top: 1px solid var(--line);
 }
 .g1-mode .t1-price { font-size: 15px; font-weight: 800; color: var(--acc); }
-.g1-mode .t1-moq { font-size: 10px; color: var(--muted); font-weight: 600; }
 
 /* =========================================================================
    STYLE SUITE 2: EXPORT-GRADE BULB DOSSIER (g2-mode Blueprint)
@@ -1285,7 +1282,6 @@ const CSS = `
 .g2-mode .t2-tbl td b { color: var(--ink); }
 .g2-mode .t2-foot { display: flex; justify-content: space-between; align-items: center; }
 .g2-mode .t2-rate { font-size: 15px; font-weight: 800; color: var(--acc); }
-.g2-mode .t2-moq { font-size: 10px; background: var(--soft); padding: 4px 8px; border-radius: 4px; font-weight: 700; }
 
 /* =========================================================================
    STYLE SUITE 3: PURE CLOVES & DEHYDRATED FLAKES (g3-mode Culinary)
@@ -1365,7 +1361,6 @@ const CSS = `
 .g3-mode .t3-spec-row { display: flex; justify-content: space-around; font-size: 10.5px; color: var(--ink); padding: 8px 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); margin-bottom: 12px; }
 .g3-mode .t3-bottom { display: flex; justify-content: space-between; align-items: center; }
 .g3-mode .t3-price { font-size: 15px; font-weight: 800; color: var(--acc); }
-.g3-mode .t3-moq { font-size: 10px; color: var(--muted); font-weight: 600; }
 
 /* =========================================================================
    STYLE SUITE 4: B2B COMMODITY WHOLESALE (g4-mode Tabular Matrix)

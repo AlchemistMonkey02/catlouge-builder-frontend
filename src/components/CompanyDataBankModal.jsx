@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import {
   X,
   Database,
@@ -19,6 +19,13 @@ import {
   Boxes,
   HelpCircle,
   FolderPlus,
+  FileSpreadsheet,
+  Upload,
+  Download,
+  CheckCircle,
+  AlertCircle,
+  ArrowRight,
+  Table,
 } from "lucide-react";
 import { updateCompanyDataBank, resetCompanyDataBank } from "../services/api";
 import {
@@ -26,6 +33,12 @@ import {
   resolveCompanyCategory,
   resolveCompanyLocation,
 } from "../utils/defaultDataBank";
+import {
+  parseDataBankCsv,
+  generateCategoryDataBankTemplate,
+  exportCurrentDataBankToCsv,
+  downloadCsvFile,
+} from "../utils/csvSheetHelper";
 
 /**
  * Returns dynamic Data Bank labels, placeholders, and schemas
@@ -69,9 +82,9 @@ export function getCategoryDataBankConfig(company) {
       materialsSubtitle: "Organic provenance, allicin content standards, and certification",
       materialPlaceholder: "e.g. 100% Organically Grown Malwa Garlic (Moisture < 65%)",
 
-      moqsTitle: "📦 Packaging Lots & Minimum Mandi Orders (MOQ)",
-      moqsSubtitle: "Wholesale mesh bags, export cartons, and truckload consignments",
-      moqPlaceholder: "e.g. 500 kg (Wholesale Mandi Lot) or 25kg Mesh Bags",
+      priceRangesTitle: "💰 Mandi Rates & Reference Price Ranges",
+      priceRangesSubtitle: "Wholesale auction benchmarks, grading rates, and seasonal market price ranges",
+      priceRangePlaceholder: "e.g. ₹180 – ₹240 / kg (Grade A Cured)",
 
       headingsCategoryOptions: [
         "Cover / Title",
@@ -127,9 +140,9 @@ export function getCategoryDataBankConfig(company) {
       materialsSubtitle: "Indurated limestone beds, compressive strength, and high-traffic uses",
       materialPlaceholder: "e.g. Natural Indurated Limestone / Heavy Traffic Corridors",
 
-      moqsTitle: "📦 Quarry Order Lots & Minimum Quantities (MOQ)",
-      moqsSubtitle: "Crated project lots, truckload dispatch, and container loads",
-      moqPlaceholder: "e.g. 500 sq.ft (Quarry Lot) or 1 Truckload (12,000 sq.ft)",
+      priceRangesTitle: "💰 Quarry Rates & Reference Price Ranges",
+      priceRangesSubtitle: "Direct quarry rates, slab benchmarks, and calibrated tile price ranges",
+      priceRangePlaceholder: "e.g. ₹85 – ₹140 / sq.ft (Calibrated Heavy)",
 
       headingsCategoryOptions: [
         "Cover / Title",
@@ -187,9 +200,9 @@ export function getCategoryDataBankConfig(company) {
       materialPlaceholder:
         "e.g. Natural Quartzite Sandstone / Exterior Facades & Cladding",
 
-      moqsTitle: "📦 Project Lots & Minimum Order Quantities (MOQ)",
-      moqsSubtitle: "Sea container payloads, palleted crates, and architectural lots",
-      moqPlaceholder: "e.g. 400 sq.ft (Project Lot) or 20 Tonne Container",
+      priceRangesTitle: "💰 Sawn Slab Rates & Reference Price Ranges",
+      priceRangesSubtitle: "Architectural cladding rates, jali screens, and project lot prices",
+      priceRangePlaceholder: "e.g. ₹135 – ₹190 / sq.ft (Sandblasted Honed)",
 
       headingsCategoryOptions: [
         "Cover / Title",
@@ -249,9 +262,9 @@ export function getCategoryDataBankConfig(company) {
       materialPlaceholder:
         "e.g. Pure Mulberry Silk Warp, Fine Cotton Weft / Bridal Wear",
 
-      moqsTitle: "📦 Artisan Order Quantities & Boutique Lots (MOQ)",
-      moqsSubtitle: "Wholesale weaver sets, boutique consignments, and custom orders",
-      moqPlaceholder: "e.g. 10 Pieces (Wholesale Boutique Lot)",
+      priceRangesTitle: "💰 Loom Rates & Reference Price Ranges",
+      priceRangesSubtitle: "Handloom weaver rates, luxury bridal sarees, and boutique bundle prices",
+      priceRangePlaceholder: "e.g. ₹2,450 – ₹6,500 / Saree",
 
       headingsCategoryOptions: [
         "Cover / Title",
@@ -307,9 +320,9 @@ export function getCategoryDataBankConfig(company) {
       materialsSubtitle: "Material composition and primary usage applications",
       materialPlaceholder: "e.g. Commercial Grade Material",
 
-      moqsTitle: "📦 Minimum Order Quantities (MOQ)",
-      moqsSubtitle: "Trade order minimums and wholesale batch sizes",
-      moqPlaceholder: "e.g. 10 Units",
+      priceRangesTitle: "💰 Reference Price Ranges",
+      priceRangesSubtitle: "Commercial rates and trade price ranges",
+      priceRangePlaceholder: "e.g. ₹1,000 – ₹2,500",
 
       headingsCategoryOptions: [
         "Cover / Title",
@@ -340,12 +353,31 @@ export default function CompanyDataBankModal({
   company,
   onSave,
   initialTab = "specs",
+  onOpenProductSheetUpload = null,
 }) {
   const [activeTab, setActiveTab] = useState(initialTab);
   const [dataBank, setDataBank] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
   const [toastMessage, setToastMessage] = useState(null);
+
+  // Sheet Upload & Spreadsheet Template State
+  const [sheetFileName, setSheetFileName] = useState("");
+  const [sheetUploadRawText, setSheetUploadRawText] = useState("");
+  const [sheetParsedData, setSheetParsedData] = useState(null);
+  const [sheetImportMode, setSheetImportMode] = useState("merge"); // "merge" | "replace"
+  const [isParsingSheet, setIsParsingSheet] = useState(false);
+  const [sheetDragOver, setSheetDragOver] = useState(false);
+  const [sheetInputMethod, setSheetInputMethod] = useState("file"); // "file" | "paste"
+  const [showStructureGuide, setShowStructureGuide] = useState(false);
+  const sheetFileInputRef = useRef(null);
+
+  // Sync active tab if initialTab prop changes
+  useEffect(() => {
+    if (initialTab) {
+      setActiveTab(initialTab);
+    }
+  }, [initialTab]);
 
   // Dynamic configuration tailored to this company's product corridor
   const cfg = useMemo(() => getCategoryDataBankConfig(company), [company]);
@@ -368,7 +400,6 @@ export default function CompanyDataBankModal({
   const [newFinish, setNewFinish] = useState({ value: "", chipLabel: "", label: "" });
   const [newMaterial, setNewMaterial] = useState({ value: "", chipLabel: "", label: "" });
   const [newApplication, setNewApplication] = useState({ value: "", chipLabel: "", label: "" });
-  const [newMoq, setNewMoq] = useState({ value: "", chipLabel: "", label: "" });
   const [newPriceRange, setNewPriceRange] = useState({ value: "", chipLabel: "", label: "" });
 
   useEffect(() => {
@@ -448,6 +479,72 @@ export default function CompanyDataBankModal({
       alert("Failed to reset Data Bank: " + err.message);
     } finally {
       setIsResetting(false);
+    }
+  };
+
+  // --- SPREADSHEET (EXCEL/CSV) DATA BANK HANDLERS ---
+  const handleDownloadCategoryTemplate = () => {
+    const loc = resolveCompanyLocation(company);
+    const content = generateCategoryDataBankTemplate(cfg.family, loc.currencySymbol);
+    const safeCompName = (company?.name || "company").toLowerCase().replace(/[^a-z0-9]/g, "_");
+    downloadCsvFile(`${safeCompName}_${cfg.family}_databank_template.csv`, content);
+    showToast(`✓ Downloaded ${cfg.family.toUpperCase()} Data Bank template`);
+  };
+
+  const handleExportCurrentDataBank = () => {
+    if (!dataBank) return;
+    const content = exportCurrentDataBankToCsv(dataBank, cfg.family);
+    const safeCompName = (company?.name || "company").toLowerCase().replace(/[^a-z0-9]/g, "_");
+    downloadCsvFile(`${safeCompName}_${cfg.family}_databank_current.csv`, content);
+    showToast("✓ Exported current Data Bank to CSV");
+  };
+
+  const handleSheetFileSelected = (selectedFile) => {
+    if (!selectedFile) return;
+    setSheetFileName(selectedFile.name);
+    setIsParsingSheet(true);
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const text = e.target.result;
+        setSheetUploadRawText(text);
+        const parsed = parseDataBankCsv(text, dataBank, sheetImportMode);
+        setSheetParsedData(parsed);
+      } catch (err) {
+        alert("Failed to parse sheet: " + err.message);
+        setSheetParsedData(null);
+      } finally {
+        setIsParsingSheet(false);
+      }
+    };
+    reader.onerror = () => {
+      alert("Error reading file.");
+      setIsParsingSheet(false);
+    };
+    reader.readAsText(selectedFile);
+  };
+
+  const handleApplySheetToDataBank = async () => {
+    if (!sheetParsedData || !sheetParsedData.dataBank) return;
+    const newBank = {
+      ...sheetParsedData.dataBank,
+      family: cfg.family,
+      companyName: company.name,
+    };
+    setDataBank(newBank);
+    setIsSaving(true);
+    try {
+      const res = await updateCompanyDataBank(company._id, newBank);
+      showToast(`✓ Applied ${sheetParsedData.totalItems} specifications & presets from sheet and saved!`);
+      if (onSave) onSave(res.data);
+      setSheetParsedData(null);
+      setSheetFileName("");
+      setSheetUploadRawText("");
+    } catch (err) {
+      alert("Failed to save Data Bank: " + (err.response?.data?.message || err.message));
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -730,6 +827,26 @@ export default function CompanyDataBankModal({
             <button
               type="button"
               className="btn btn-outline btn-sm"
+              onClick={() => setActiveTab("sheet")}
+              title="Upload / Download Category Data Bank as Excel or CSV spreadsheet"
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "5px",
+                fontSize: "0.78rem",
+                color: "#059669",
+                borderColor: "rgba(16, 185, 129, 0.4)",
+                background: "rgba(16, 185, 129, 0.08)",
+                fontWeight: 700,
+              }}
+            >
+              <FileSpreadsheet size={14} />
+              <span>Sheet Upload</span>
+            </button>
+
+            <button
+              type="button"
+              className="btn btn-outline btn-sm"
               onClick={handleResetToDefaults}
               disabled={isResetting}
               title={`Reset Data Bank back to verified ${cfg.family} industry standards`}
@@ -866,6 +983,37 @@ export default function CompanyDataBankModal({
               {(dataBank?.headings?.length || 0) +
                 (dataBank?.paragraphs?.length || 0)}{" "}
               texts
+            </span>
+          </button>
+
+          <button
+            type="button"
+            className={`studio-tab-btn ${activeTab === "sheet" ? "active" : ""}`}
+            onClick={() => setActiveTab("sheet")}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "6px",
+              padding: "0.8rem 1rem",
+              fontSize: "0.85rem",
+              fontWeight: 700,
+              color: activeTab === "sheet" ? "#059669" : undefined,
+              borderColor: activeTab === "sheet" ? "#059669" : undefined,
+            }}
+          >
+            <FileSpreadsheet size={16} />
+            <span>Excel / CSV Sheet Upload</span>
+            <span
+              style={{
+                fontSize: "0.7rem",
+                background: "rgba(16, 185, 129, 0.15)",
+                color: "#059669",
+                padding: "1px 6px",
+                borderRadius: "10px",
+                fontWeight: 800,
+              }}
+            >
+              Upload &amp; Export
             </span>
           </button>
 
@@ -1360,7 +1508,7 @@ export default function CompanyDataBankModal({
                 </div>
               </div>
 
-              {/* GRID: MATERIALS / APPLICATIONS & MOQS */}
+              {/* GRID: MATERIALS / APPLICATIONS & PRICE RANGES */}
               <div
                 style={{
                   display: "grid",
@@ -1486,7 +1634,7 @@ export default function CompanyDataBankModal({
                   </div>
                 </div>
 
-                {/* MOQs & Price Ranges */}
+                {/* Price Ranges */}
                 <div
                   className="card"
                   style={{
@@ -1510,12 +1658,10 @@ export default function CompanyDataBankModal({
                         color: "var(--text-primary)",
                       }}
                     >
-                      {cfg.moqsTitle}
+                      {cfg.priceRangesTitle}
                     </h4>
                     <span style={{ fontSize: "0.72rem", color: "var(--text-muted)" }}>
-                      {(specs.moqs?.length || 0) +
-                        (specs.priceRanges?.length || 0)}{" "}
-                      items
+                      {specs.priceRanges?.length || 0} items
                     </span>
                   </div>
 
@@ -1529,62 +1675,51 @@ export default function CompanyDataBankModal({
                       overflowY: "auto",
                     }}
                   >
-                    {(specs.moqs || [])
-                      .concat(specs.priceRanges || [])
-                      .map((q, idx) => (
-                        <span
-                          key={idx}
+                    {(specs.priceRanges || []).map((q, idx) => (
+                      <span
+                        key={idx}
+                        style={{
+                          fontSize: "0.73rem",
+                          padding: "3px 8px",
+                          borderRadius: "12px",
+                          background: "rgba(16, 185, 129, 0.1)",
+                          color: "#059669",
+                          border: "1px solid rgba(16, 185, 129, 0.25)",
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: "5px",
+                          fontWeight: 650,
+                        }}
+                      >
+                        <span>{q.chipLabel || q.value}</span>
+                        <button
+                          type="button"
+                          onClick={() => removeSpecItem("priceRanges", idx)}
                           style={{
-                            fontSize: "0.73rem",
-                            padding: "3px 8px",
-                            borderRadius: "12px",
-                            background: "rgba(16, 185, 129, 0.1)",
-                            color: "#059669",
-                            border: "1px solid rgba(16, 185, 129, 0.25)",
-                            display: "inline-flex",
-                            alignItems: "center",
-                            gap: "5px",
-                            fontWeight: 650,
+                            background: "none",
+                            border: "none",
+                            color: "var(--danger)",
+                            cursor: "pointer",
+                            padding: 0,
                           }}
                         >
-                          <span>{q.chipLabel || q.value}</span>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              if (idx < (specs.moqs || []).length) {
-                                removeSpecItem("moqs", idx);
-                              } else {
-                                removeSpecItem(
-                                  "priceRanges",
-                                  idx - (specs.moqs || []).length
-                                );
-                              }
-                            }}
-                            style={{
-                              background: "none",
-                              border: "none",
-                              color: "var(--danger)",
-                              cursor: "pointer",
-                              padding: 0,
-                            }}
-                          >
-                            ×
-                          </button>
-                        </span>
-                      ))}
+                          ×
+                        </button>
+                      </span>
+                    ))}
                   </div>
 
                   <div style={{ display: "flex", gap: "5px" }}>
                     <input
                       type="text"
                       className="input-field"
-                      placeholder={cfg.moqPlaceholder}
-                      value={newMoq.value}
+                      placeholder={cfg.priceRangePlaceholder}
+                      value={newPriceRange.value}
                       onChange={(e) =>
-                        setNewMoq({
-                          ...newMoq,
+                        setNewPriceRange({
+                          ...newPriceRange,
                           value: e.target.value,
-                          chipLabel: e.target.value.slice(0, 14),
+                          chipLabel: e.target.value.slice(0, 16),
                         })
                       }
                       style={{ paddingLeft: "0.6rem", fontSize: "0.76rem", flex: 1 }}
@@ -1592,7 +1727,14 @@ export default function CompanyDataBankModal({
                     <button
                       type="button"
                       className="btn btn-outline btn-sm"
-                      onClick={() => addSpecItem("moqs", newMoq, setNewMoq, "MOQ")}
+                      onClick={() =>
+                        addSpecItem(
+                          "priceRanges",
+                          newPriceRange,
+                          setNewPriceRange,
+                          "Price Range"
+                        )
+                      }
                     >
                       <Plus size={13} />
                     </button>
@@ -2295,6 +2437,503 @@ export default function CompanyDataBankModal({
                     </div>
                   </div>
                 </div>
+              </div>
+            </div>
+          )}
+
+          {/* TAB 4: EXCEL / CSV SHEET UPLOAD & SPECIFICATION PRESETS */}
+          {activeTab === "sheet" && (
+            <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
+              {/* Category Status & Instructions Banner */}
+              <div
+                style={{
+                  background: "linear-gradient(135deg, rgba(16, 185, 129, 0.08) 0%, rgba(99, 102, 241, 0.06) 100%)",
+                  padding: "1.2rem 1.4rem",
+                  borderRadius: "12px",
+                  border: "1.5px solid rgba(16, 185, 129, 0.25)",
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  flexWrap: "wrap",
+                  gap: "1rem",
+                }}
+              >
+                <div style={{ maxWidth: "680px" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "4px" }}>
+                    <span style={{ fontSize: "1.2rem" }}>{cfg.icon}</span>
+                    <h4 style={{ margin: 0, fontSize: "1.05rem", fontWeight: 800, color: "var(--text-primary)" }}>
+                      {company.name} — {cfg.family.toUpperCase()} Category Data Bank Spreadsheet
+                    </h4>
+                  </div>
+                  <p style={{ margin: 0, fontSize: "0.82rem", color: "var(--text-secondary)", lineHeight: 1.45 }}>
+                    Instead of repeatedly typing product specifications, sizing dimensions, and rate presets, you can download the <strong>{cfg.family.toUpperCase()}</strong> spreadsheet template, update it in Microsoft Excel or Google Sheets, and upload it back. All specifications and copy presets will automatically populate into your product listing forms!
+                  </p>
+                </div>
+
+                <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+                  <button
+                    type="button"
+                    className="btn btn-primary btn-sm"
+                    onClick={handleDownloadCategoryTemplate}
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: "6px",
+                      fontWeight: 750,
+                      background: "linear-gradient(135deg, #10b981 0%, #059669 100%)",
+                      color: "#ffffff",
+                    }}
+                    title="Download pre-configured template with authentic ODOP category columns"
+                  >
+                    <Download size={15} /> Download Category Template (.csv)
+                  </button>
+
+                  <button
+                    type="button"
+                    className="btn btn-outline btn-sm"
+                    onClick={() => {
+                      const loc = resolveCompanyLocation(company);
+                      const csvText = generateCategoryDataBankTemplate(cfg.family, loc.currencySymbol);
+                      navigator.clipboard.writeText(csvText);
+                      showToast("✓ Copied organized sheet to clipboard! You can paste directly into Excel or below.");
+                    }}
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: "6px",
+                      fontWeight: 700,
+                      color: "#059669",
+                      borderColor: "#10b981",
+                      background: "rgba(16, 185, 129, 0.08)",
+                    }}
+                    title="Copy formatted sheet to clipboard to paste straight into Excel"
+                  >
+                    <Copy size={15} /> Copy Formatted Sheet
+                  </button>
+
+                  <button
+                    type="button"
+                    className="btn btn-outline btn-sm"
+                    onClick={handleExportCurrentDataBank}
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: "6px",
+                      fontWeight: 700,
+                      color: "var(--primary)",
+                      borderColor: "var(--primary)",
+                      background: "rgba(99, 102, 241, 0.08)",
+                    }}
+                    title="Export your current presets to Excel/CSV to edit them"
+                  >
+                    <FileSpreadsheet size={15} /> Export Current Data Bank
+                  </button>
+                </div>
+              </div>
+
+              {/* Method Switcher & Guide Toggle */}
+              <div style={{ display: "flex", gap: "8px", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap" }}>
+                <div style={{ display: "flex", gap: "6px", background: "var(--bg-surface-elevated)", padding: "4px", borderRadius: "8px", border: "1px solid var(--border-subtle)" }}>
+                  <button
+                    type="button"
+                    onClick={() => setSheetInputMethod("file")}
+                    style={{
+                      padding: "6px 14px",
+                      borderRadius: "6px",
+                      border: "none",
+                      fontSize: "0.82rem",
+                      fontWeight: 700,
+                      cursor: "pointer",
+                      background: sheetInputMethod === "file" ? "#10b981" : "transparent",
+                      color: sheetInputMethod === "file" ? "#ffffff" : "var(--text-secondary)",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "6px",
+                      transition: "all 0.15s ease",
+                    }}
+                  >
+                    <Upload size={14} /> Upload File (.csv, .tsv)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setSheetInputMethod("paste")}
+                    style={{
+                      padding: "6px 14px",
+                      borderRadius: "6px",
+                      border: "none",
+                      fontSize: "0.82rem",
+                      fontWeight: 700,
+                      cursor: "pointer",
+                      background: sheetInputMethod === "paste" ? "#10b981" : "transparent",
+                      color: sheetInputMethod === "paste" ? "#ffffff" : "var(--text-secondary)",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "6px",
+                      transition: "all 0.15s ease",
+                    }}
+                  >
+                    <FileText size={14} /> Paste Sheet Text Directly
+                  </button>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setShowStructureGuide(!showStructureGuide)}
+                  style={{
+                    fontSize: "0.8rem",
+                    fontWeight: 700,
+                    color: "var(--primary)",
+                    background: "none",
+                    border: "none",
+                    cursor: "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "5px",
+                  }}
+                >
+                  <Info size={14} /> {showStructureGuide ? "Hide Column Structure Guide" : "View Column & Section Guide"}
+                </button>
+              </div>
+
+              {/* Collapsible Structure Guide */}
+              {showStructureGuide && (
+                <div
+                  style={{
+                    background: "var(--bg-surface-elevated, #f8fafc)",
+                    border: "1px solid var(--border-medium, #cbd5e1)",
+                    borderRadius: "10px",
+                    padding: "1rem 1.25rem",
+                    fontSize: "0.8rem",
+                    lineHeight: 1.5,
+                  }}
+                >
+                  <div style={{ fontWeight: 800, color: "var(--text-primary)", marginBottom: "6px" }}>
+                    📊 Spreadsheet Structure &amp; Column Definitions:
+                  </div>
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "10px" }}>
+                    <div>
+                      <strong>1. Category Section:</strong> Rate Preset, Size, Finish, Material, Application, Heading, Tagline, Story, Highlight.<br />
+                      <strong>2. Specification / Item Title:</strong> Full grade or produce title (e.g. <em>50 - 65 mm (Grade A+ Large)</em>).<br />
+                      <strong>3. Short Tag (Button):</strong> Short chip text for quick product form buttons (e.g. <em>50-65mm A+</em>).<br />
+                      <strong>4. Selling Rate (₹):</strong> Wholesale selling price per kg / sq.ft.
+                    </div>
+                    <div>
+                      <strong>5. MRP (₹):</strong> List / retail catalogue price.<br />
+                      <strong>6. Price Range:</strong> Optional display text (e.g. <em>₹200 – ₹260 / kg</em>).<br />
+                      <strong>7. Sub-Group / Type:</strong> Grading Preset, Sizing, Surface Finish, Cultivar, etc.<br />
+                      <strong>8. Detailed Description &amp; Marketing Notes:</strong> Marketing bullet, farm heritage story, or curing notes.
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {sheetInputMethod === "paste" ? (
+                <div className="card" style={{ padding: "1.2rem", background: "var(--bg-surface-elevated)" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+                    <label style={{ fontSize: "0.85rem", fontWeight: 750, color: "var(--text-primary)" }}>
+                      📋 Paste Raw Spreadsheet Rows (CSV or Tab-Delimited from Excel)
+                    </label>
+                    {sheetUploadRawText && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSheetUploadRawText("");
+                          setSheetParsedData(null);
+                        }}
+                        style={{ fontSize: "0.75rem", color: "#dc2626", background: "none", border: "none", cursor: "pointer", fontWeight: 600 }}
+                      >
+                        Clear Text
+                      </button>
+                    )}
+                  </div>
+                  <textarea
+                    rows={7}
+                    placeholder="Paste rows directly from Excel or Google Sheets (e.g. Rate Preset, 50 - 65 mm, 50-65mm A+, 220, 280...)"
+                    value={sheetUploadRawText}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setSheetUploadRawText(val);
+                      if (!val.trim()) {
+                        setSheetParsedData(null);
+                        return;
+                      }
+                      try {
+                        const parsed = parseDataBankCsv(val, dataBank, sheetImportMode);
+                        setSheetParsedData(parsed);
+                        setSheetFileName("Pasted Spreadsheet Text");
+                      } catch (err) {
+                        setSheetParsedData(null);
+                      }
+                    }}
+                    style={{
+                      width: "100%",
+                      fontFamily: "monospace",
+                      fontSize: "0.8rem",
+                      padding: "0.75rem",
+                      borderRadius: "8px",
+                      border: "1px solid var(--border-medium)",
+                      background: "var(--bg-surface)",
+                      color: "var(--text-primary)",
+                      resize: "vertical",
+                    }}
+                  />
+                  <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", marginTop: "4px" }}>
+                    Tip: You can copy cells directly from Microsoft Excel or Google Sheets and press Ctrl+V here.
+                  </div>
+                </div>
+              ) : (
+                /* Upload Dropzone */
+                <div
+                  className="card"
+                  onDragOver={(e) => {
+                  e.preventDefault();
+                  setSheetDragOver(true);
+                }}
+                onDragLeave={() => setSheetDragOver(false)}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  setSheetDragOver(false);
+                  if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+                    handleSheetFileSelected(e.dataTransfer.files[0]);
+                  }
+                }}
+                onClick={() => sheetFileInputRef.current?.click()}
+                style={{
+                  padding: "2rem",
+                  border: `2px dashed ${sheetDragOver ? "#10b981" : "var(--border-medium, #cbd5e1)"}`,
+                  borderRadius: "12px",
+                  textAlign: "center",
+                  cursor: "pointer",
+                  background: sheetDragOver ? "rgba(16, 185, 129, 0.05)" : "var(--bg-surface-elevated, #f8fafc)",
+                  transition: "all 0.15s ease",
+                }}
+              >
+                <input
+                  ref={sheetFileInputRef}
+                  type="file"
+                  accept=".csv,.tsv,.txt"
+                  style={{ display: "none" }}
+                  onChange={(e) => {
+                    if (e.target.files && e.target.files[0]) {
+                      handleSheetFileSelected(e.target.files[0]);
+                    }
+                  }}
+                />
+                <div
+                  style={{
+                    width: "52px",
+                    height: "52px",
+                    borderRadius: "50%",
+                    background: "rgba(16, 185, 129, 0.12)",
+                    color: "#059669",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    margin: "0 auto 12px auto",
+                  }}
+                >
+                  <Upload size={24} />
+                </div>
+                <div style={{ fontSize: "1rem", fontWeight: 750, color: "var(--text-primary)" }}>
+                  {sheetFileName ? `Selected: ${sheetFileName}` : "Click to select or drag & drop updated Excel / CSV Sheet"}
+                </div>
+                <div style={{ fontSize: "0.8rem", color: "var(--text-muted)", marginTop: "4px" }}>
+                  Upload .csv exported from Microsoft Excel, Google Sheets, or Apple Numbers
+                </div>
+              </div>
+
+              )}
+
+              {/* Parsed Summary & Preview */}
+              {sheetParsedData && (
+                <div className="card" style={{ padding: "1.25rem", background: "var(--bg-surface)" }}>
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      marginBottom: "1rem",
+                      flexWrap: "wrap",
+                      gap: "0.75rem",
+                    }}
+                  >
+                    <div>
+                      <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                        <span style={{ fontSize: "1.05rem", fontWeight: 800, color: "var(--text-primary)" }}>
+                          Parsed Spreadsheet Preview
+                        </span>
+                        <span
+                          style={{
+                            fontSize: "0.75rem",
+                            fontWeight: 750,
+                            padding: "2px 8px",
+                            borderRadius: "6px",
+                            background: "#dcfce7",
+                            color: "#166534",
+                          }}
+                        >
+                          ✓ {sheetParsedData.totalItems} Items Detected
+                        </span>
+                      </div>
+                      <div style={{ fontSize: "0.78rem", color: "var(--text-secondary)", marginTop: "2px" }}>
+                        Review detected specifications before applying to the category repository.
+                      </div>
+                    </div>
+
+                    {/* Mode Toggle */}
+                    <div style={{ display: "flex", alignItems: "center", gap: "12px", background: "var(--bg-surface-elevated)", padding: "4px 10px", borderRadius: "8px", border: "1px solid var(--border-subtle)" }}>
+                      <label style={{ fontSize: "0.78rem", fontWeight: 650, display: "flex", alignItems: "center", gap: "5px", cursor: "pointer", color: sheetImportMode === "merge" ? "#059669" : "var(--text-secondary)" }}>
+                        <input
+                          type="radio"
+                          name="sheetImportMode"
+                          value="merge"
+                          checked={sheetImportMode === "merge"}
+                          onChange={() => {
+                            setSheetImportMode("merge");
+                            if (sheetUploadRawText) {
+                              setSheetParsedData(parseDataBankCsv(sheetUploadRawText, dataBank, "merge"));
+                            }
+                          }}
+                        />
+                        Merge (Add new &amp; keep existing)
+                      </label>
+                      <label style={{ fontSize: "0.78rem", fontWeight: 650, display: "flex", alignItems: "center", gap: "5px", cursor: "pointer", color: sheetImportMode === "replace" ? "#dc2626" : "var(--text-secondary)" }}>
+                        <input
+                          type="radio"
+                          name="sheetImportMode"
+                          value="replace"
+                          checked={sheetImportMode === "replace"}
+                          onChange={() => {
+                            setSheetImportMode("replace");
+                            if (sheetUploadRawText) {
+                              setSheetParsedData(parseDataBankCsv(sheetUploadRawText, dataBank, "replace"));
+                            }
+                          }}
+                        />
+                        Replace (Overwrite presets)
+                      </label>
+                    </div>
+                  </div>
+
+                  {/* Detected Breakdown Badges */}
+                  <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", marginBottom: "1rem" }}>
+                    {sheetParsedData.counts.thicknesses > 0 && (
+                      <span style={{ fontSize: "0.75rem", fontWeight: 700, padding: "3px 8px", borderRadius: "6px", background: "rgba(16, 185, 129, 0.12)", color: "#059669" }}>
+                        ⚡ {sheetParsedData.counts.thicknesses} Rate &amp; Grading Presets
+                      </span>
+                    )}
+                    {sheetParsedData.counts.sizes > 0 && (
+                      <span style={{ fontSize: "0.75rem", fontWeight: 700, padding: "3px 8px", borderRadius: "6px", background: "rgba(99, 102, 241, 0.12)", color: "var(--primary)" }}>
+                        📐 {sheetParsedData.counts.sizes} Sizing Dimensions
+                      </span>
+                    )}
+                    {sheetParsedData.counts.finishes > 0 && (
+                      <span style={{ fontSize: "0.75rem", fontWeight: 700, padding: "3px 8px", borderRadius: "6px", background: "rgba(245, 158, 11, 0.12)", color: "#b45309" }}>
+                        ✨ {sheetParsedData.counts.finishes} Surface Finishes
+                      </span>
+                    )}
+                    {sheetParsedData.counts.materials > 0 && (
+                      <span style={{ fontSize: "0.75rem", fontWeight: 700, padding: "3px 8px", borderRadius: "6px", background: "rgba(59, 130, 246, 0.12)", color: "#2563eb" }}>
+                        🎯 {sheetParsedData.counts.materials} Materials &amp; Standards
+                      </span>
+                    )}
+                    {sheetParsedData.counts.applications > 0 && (
+                      <span style={{ fontSize: "0.75rem", fontWeight: 700, padding: "3px 8px", borderRadius: "6px", background: "rgba(139, 92, 246, 0.12)", color: "#7c3aed" }}>
+                        📦 {sheetParsedData.counts.applications} Applications
+                      </span>
+                    )}
+                    {sheetParsedData.counts.headings > 0 && (
+                      <span style={{ fontSize: "0.75rem", fontWeight: 700, padding: "3px 8px", borderRadius: "6px", background: "rgba(236, 72, 153, 0.12)", color: "#db2777" }}>
+                        📰 {sheetParsedData.counts.headings} Headings
+                      </span>
+                    )}
+                    {sheetParsedData.counts.paragraphs > 0 && (
+                      <span style={{ fontSize: "0.75rem", fontWeight: 700, padding: "3px 8px", borderRadius: "6px", background: "rgba(20, 184, 166, 0.12)", color: "#0f766e" }}>
+                        📖 {sheetParsedData.counts.paragraphs} Stories / Paragraphs
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Apply Action Bar */}
+                  <div style={{ display: "flex", justifyContent: "flex-end", gap: "8px", borderTop: "1px solid var(--border-subtle)", paddingTop: "1rem" }}>
+                    <button
+                      type="button"
+                      className="btn btn-outline btn-sm"
+                      onClick={() => {
+                        setSheetParsedData(null);
+                        setSheetFileName("");
+                        setSheetUploadRawText("");
+                      }}
+                    >
+                      Clear Selection
+                    </button>
+                    <button
+                      type="button"
+                      className="btn btn-primary"
+                      onClick={handleApplySheetToDataBank}
+                      disabled={isSaving}
+                      style={{
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: "6px",
+                        fontWeight: 750,
+                        background: "linear-gradient(135deg, #10b981 0%, #059669 100%)",
+                        color: "#ffffff",
+                        padding: "8px 16px",
+                      }}
+                    >
+                      <CheckCircle size={16} />
+                      <span>{isSaving ? "Saving..." : "Apply Sheet & Save Data Bank"}</span>
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Direct Products Batch Upload Card */}
+              <div
+                style={{
+                  background: "var(--bg-surface-elevated, #f8fafc)",
+                  padding: "1.2rem 1.4rem",
+                  borderRadius: "12px",
+                  border: "1px solid var(--border-subtle, #e2e8f0)",
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  flexWrap: "wrap",
+                  gap: "1rem",
+                }}
+              >
+                <div>
+                  <div style={{ fontSize: "0.95rem", fontWeight: 750, color: "var(--text-primary)" }}>
+                    📦 Want to Batch Upload Products Directly into Catalogue?
+                  </div>
+                  <div style={{ fontSize: "0.8rem", color: "var(--text-secondary)", marginTop: "2px" }}>
+                    If you have a spreadsheet with complete products (SKU, title, price, size, finish, image), use the Product Sheet Uploader to import them all in seconds.
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  className="btn btn-outline"
+                  onClick={() => {
+                    onClose();
+                    if (onOpenProductSheetUpload) {
+                      onOpenProductSheetUpload();
+                    }
+                  }}
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "6px",
+                    fontWeight: 750,
+                    fontSize: "0.82rem",
+                    color: "#2563eb",
+                    borderColor: "#3b82f6",
+                    background: "rgba(59, 130, 246, 0.08)",
+                  }}
+                >
+                  <Upload size={14} /> Open Product Sheet Uploader ➔
+                </button>
               </div>
             </div>
           )}

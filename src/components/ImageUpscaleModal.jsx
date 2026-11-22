@@ -36,6 +36,7 @@ export default function ImageUpscaleModal({
   const navigate = useNavigate();
 
   const [scaleFactor, setScaleFactor] = useState(2); // 2 = 2x HD, 4 = 4x Ultra 4K, 1 = Natural Enhance, 0 = Raw Original
+  const [engine, setEngine] = useState("auto"); // "auto" (Hybrid), "super-image" (Neural), "opencv" (OpenCV Lanczos4), "qirias" (Progressive)
   const [naturalEnhance, setNaturalEnhance] = useState(true);
   const [edgeSharpness, setEdgeSharpness] = useState(true);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -88,6 +89,7 @@ export default function ImageUpscaleModal({
         sharpness: sharpnessVal,
         contrast: contrastVal,
         saturation: satVal,
+        engine: engine,
       });
 
       const finalImage = res.image || res.upscaled || imageSrc;
@@ -417,7 +419,106 @@ export default function ImageUpscaleModal({
               </div>
             </div>
 
-            {/* 2. NATURAL POLISH & TEXTURE TOGGLES */}
+            {/* 2. SUPER-RESOLUTION ENGINE SELECTOR */}
+            {scaleFactor > 0 && (
+              <div>
+                <label
+                  style={{
+                    fontSize: "0.86rem",
+                    fontWeight: 750,
+                    color: "var(--text-primary, #0f172a)",
+                    display: "block",
+                    marginBottom: "8px",
+                  }}
+                >
+                  2. Select Upscaling &amp; Clarity Engine:
+                </label>
+
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.5rem" }}>
+                  {/* AUTO / HYBRID */}
+                  <div
+                    onClick={() => setEngine("auto")}
+                    style={{
+                      padding: "8px 10px",
+                      borderRadius: "8px",
+                      cursor: "pointer",
+                      border: engine === "auto" ? "2px solid #3b82f6" : "1px solid var(--border-medium, #cbd5e1)",
+                      background: engine === "auto" ? "rgba(59, 130, 246, 0.08)" : "var(--bg-surface, #ffffff)",
+                      transition: "all 0.15s ease",
+                    }}
+                  >
+                    <div style={{ fontWeight: 800, fontSize: "0.8rem", color: engine === "auto" ? "#2563eb" : "var(--text-primary)" }}>
+                      ✨ Studio Ultra-Hybrid
+                    </div>
+                    <div style={{ fontSize: "0.68rem", color: "var(--text-secondary, #64748b)" }}>
+                      Neural (super-image) + OpenCV CLAHE
+                    </div>
+                  </div>
+
+                  {/* SUPER-IMAGE */}
+                  <div
+                    onClick={() => setEngine("super-image")}
+                    style={{
+                      padding: "8px 10px",
+                      borderRadius: "8px",
+                      cursor: "pointer",
+                      border: engine === "super-image" ? "2px solid #8b5cf6" : "1px solid var(--border-medium, #cbd5e1)",
+                      background: engine === "super-image" ? "rgba(139, 92, 246, 0.08)" : "var(--bg-surface, #ffffff)",
+                      transition: "all 0.15s ease",
+                    }}
+                  >
+                    <div style={{ fontWeight: 800, fontSize: "0.8rem", color: engine === "super-image" ? "#7c3aed" : "var(--text-primary)" }}>
+                      ⚡ AI super-image
+                    </div>
+                    <div style={{ fontSize: "0.68rem", color: "var(--text-secondary, #64748b)" }}>
+                      PyTorch EDSR / PAN deep learning
+                    </div>
+                  </div>
+
+                  {/* OPENCV */}
+                  <div
+                    onClick={() => setEngine("opencv")}
+                    style={{
+                      padding: "8px 10px",
+                      borderRadius: "8px",
+                      cursor: "pointer",
+                      border: engine === "opencv" ? "2px solid #10b981" : "1px solid var(--border-medium, #cbd5e1)",
+                      background: engine === "opencv" ? "rgba(16, 185, 129, 0.08)" : "var(--bg-surface, #ffffff)",
+                      transition: "all 0.15s ease",
+                    }}
+                  >
+                    <div style={{ fontWeight: 800, fontSize: "0.8rem", color: engine === "opencv" ? "#059669" : "var(--text-primary)" }}>
+                      🔬 OpenCV Precision
+                    </div>
+                    <div style={{ fontSize: "0.68rem", color: "var(--text-secondary, #64748b)" }}>
+                      cv2.resize (Lanczos4) + CLAHE
+                    </div>
+                  </div>
+
+                  {/* QIRIAS */}
+                  <div
+                    onClick={() => setEngine("qirias")}
+                    style={{
+                      padding: "8px 10px",
+                      borderRadius: "8px",
+                      cursor: "pointer",
+                      border: engine === "qirias" ? "2px solid #f59e0b" : "1px solid var(--border-medium, #cbd5e1)",
+                      background: engine === "qirias" ? "rgba(245, 158, 11, 0.08)" : "var(--bg-surface, #ffffff)",
+                      transition: "all 0.15s ease",
+                    }}
+                  >
+                    <div style={{ fontWeight: 800, fontSize: "0.8rem", color: engine === "qirias" ? "#d97706" : "var(--text-primary)" }}>
+                      📐 Qirias Multi-Step
+                    </div>
+                    <div style={{ fontSize: "0.68rem", color: "var(--text-secondary, #64748b)" }}>
+                      Progressive resizing + Laplacian
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* 3. NATURAL POLISH & TEXTURE TOGGLES */}
             <div>
               <label
                 style={{
@@ -428,7 +529,7 @@ export default function ImageUpscaleModal({
                   marginBottom: "8px",
                 }}
               >
-                2. Organic Finishing Options:
+                3. Organic Finishing Options:
               </label>
 
               <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>

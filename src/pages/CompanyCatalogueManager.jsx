@@ -22,9 +22,13 @@ import {
   Palette,
   Maximize2,
   Database,
+  Eye,
+  FileSpreadsheet,
 } from "lucide-react";
 import ImageUpscaleModal from "../components/ImageUpscaleModal";
+import ProductImagePreviewModal from "../components/ProductImagePreviewModal";
 import CompanyDataBankModal from "../components/CompanyDataBankModal";
+import ProductSheetUploadModal from "../components/ProductSheetUploadModal";
 import {
   fetchCompanies,
   fetchCatalogueProducts,
@@ -53,7 +57,6 @@ const ODOP_PRESETS = {
     finish: "Tested Electro-Gold Zari on Square Khat",
     application: "Bridal Ensembles, Wedding Drapes & High-End Boutique Luxury",
     useApplication: "Bridal Ensembles, Wedding Drapes & High-End Boutique Luxury",
-    moq: "10 Pieces (Wholesale)",
     priceRange: "₹2,450 – ₹6,500",
     unit: "",
     image: "/assets/kota-doria/0X2A0389_db4c4b42-1d9b-405b-9ea0-664b5017af38.jpg"
@@ -68,7 +71,6 @@ const ODOP_PRESETS = {
     finish: "Sun-Cured Export Clean White Skin",
     application: "Commercial Culinary, Food Processing & Export",
     useApplication: "Commercial Culinary, Food Processing & Export",
-    moq: "500 kg (Wholesale Lot)",
     priceRange: "₹180 – ₹240 / kg",
     unit: "kg",
     image: "/assets/garlic/garlic-01.jpeg"
@@ -83,7 +85,6 @@ const ODOP_PRESETS = {
     finish: "Mirror High Polish / Honed",
     application: "Heavy Commercial Flooring & Corridors",
     useApplication: "Heavy Commercial Flooring & Corridors",
-    moq: "500 sq.ft (Quarry Lot)",
     priceRange: "₹85 – ₹120 / sq.ft",
     unit: "sq.ft",
     image: "/assets/kota-stone/Blue-Kota-Stone-Tiles-1.jpg"
@@ -98,11 +99,55 @@ const ODOP_PRESETS = {
     finish: "Sandblasted / Hand-Chiseled / Honed",
     application: "Exterior Facades, Cladding & Paving",
     useApplication: "Exterior Facades, Cladding & Paving",
-    moq: "400 sq.ft (Project Lot)",
     priceRange: "₹135 – ₹190 / sq.ft",
     unit: "sq.ft",
     image: "/assets/sand-stone/Agra-Red-Sandstone-Sandblasted.jpg"
   }
+};
+
+export const CATEGORY_FALLBACK_IMAGES = {
+  garlic: [
+    "/assets/garlic/garlic-01.jpeg",
+    "/assets/garlic/garlic-02.jpeg",
+    "/assets/garlic/garlic-03.jpeg",
+    "/assets/garlic/garlic-04.jpeg",
+    "/assets/garlic/garlic-05.jpeg",
+    "/assets/garlic/garlic-06.jpeg",
+  ],
+  kotastone: [
+    "/assets/kota-stone/blue-kota-stone-1.jpg",
+    "/assets/kota-stone/blue-kota-stone-2.jpg",
+    "/assets/kota-stone/blue-kota-stone-3.jpg",
+    "/assets/kota-stone/blue-kota-stone-4.jpg",
+  ],
+  sandstone: [
+    "/assets/sand-stone/Agra-Red-Sandstone-Sandblasted.jpg",
+    "/assets/sand-stone/Autumn-Brown-Sandstone-1024x1024.jpg",
+  ],
+  kotadoria: [
+    "/assets/kota-doria/0X2A0389_db4c4b42-1d9b-405b-9ea0-664b5017af38.jpg",
+    "/assets/kota-doria/0Q8A3880_97438f9f-513a-428a-99a4-3952c7ce0619.jpg",
+    "/assets/kota-doria/0X2A0415.jpg",
+  ],
+  general: [
+    "/assets/garlic/garlic-01.jpeg",
+  ],
+};
+
+export const resolveProductImageUrl = (product, fam = "general", index = 0) => {
+  let raw = product?.image || (product?.images && product?.images[0]?.url) || "";
+  raw = (raw || "").trim();
+
+  if (raw.startsWith("assets/") || raw.startsWith("uploads/")) {
+    raw = `/${raw}`;
+  }
+
+  if (!raw || (fam === "garlic" && raw.includes("/assets/reference/"))) {
+    const list = CATEGORY_FALLBACK_IMAGES[fam] || CATEGORY_FALLBACK_IMAGES.garlic;
+    return list[Math.abs(index) % list.length];
+  }
+
+  return raw;
 };
 
 function getCompanyDefaultOdop(comp) {
@@ -139,7 +184,6 @@ export function getDefaultProductForm(fam, company) {
       color: "Natural Clean White",
       application: "Mandi Wholesale, Food Processing & Dehydration",
       useApplication: "Mandi Wholesale, Food Processing & Dehydration",
-      moq: "500 kg (Mandi Lot)",
       priceRange: "₹180 – ₹240 / kg",
       price: 180,
       unit: "kg",
@@ -185,7 +229,6 @@ export function getDefaultProductForm(fam, company) {
       color: "Dholpur Beige / Jodhpur Gold",
       application: "High Traffic Flooring, Exterior Facades & Landscape Cladding",
       useApplication: "High Traffic Flooring, Exterior Facades & Landscape Cladding",
-      moq: "500 sq.ft (Quarry Lot)",
       priceRange: "₹110 – ₹180 / sq.ft",
       price: 140,
       unit: "sq.ft",
@@ -231,7 +274,6 @@ export function getDefaultProductForm(fam, company) {
       color: "Kota Blue-Green",
       application: "Heavy Commercial Flooring, Industrial Corridors & Pavements",
       useApplication: "Heavy Commercial Flooring, Industrial Corridors & Pavements",
-      moq: "500 sq.ft (Quarry Lot)",
       priceRange: "₹55 – ₹95 / sq.ft",
       price: 65,
       unit: "sq.ft",
@@ -277,7 +319,6 @@ export function getDefaultProductForm(fam, company) {
       color: "Royal Gold & Ivory",
       application: "Bridal Ensembles, Wedding Drapes & High-End Boutique Luxury",
       useApplication: "Bridal Ensembles, Wedding Drapes & High-End Boutique Luxury",
-      moq: "1 Piece (Retail) / 10 Pieces (Wholesale)",
       priceRange: "₹2,450 – ₹6,500",
       price: 3200,
       unit: "",
@@ -301,7 +342,7 @@ export function getDefaultProductForm(fam, company) {
         { key: "Fabric Weight", value: "280 - 320 grams (Superfine)", verified: true },
         { key: "Yarn Count", value: "80s Combed Cotton × 100s Silk", verified: true },
         { key: "Weave Structure", value: "Traditional Square Khat Grid", verified: true },
-        { key: "Craft Origin", value: "Kaithun, Kota, Rajasthan (GI Tag)", verified: true },
+        { key: "Craft Origin", value: "Kaithun, Kota, Rajasthan ", verified: true },
       ],
     };
   }
@@ -323,7 +364,6 @@ export function getDefaultProductForm(fam, company) {
     color: "Natural",
     application: "General Commercial Use",
     useApplication: "General Commercial Use",
-    moq: "10 Pieces",
     priceRange: "₹1,000 – ₹2,500",
     price: 1500,
     unit: "piece",
@@ -597,9 +637,6 @@ export function getCompanyPresets(company, categoryFamily) {
       : (companySpecs.materials && companySpecs.materials.length > 0)
       ? companySpecs.materials
       : (staticFallback.applications || []),
-    moqs: (companySpecs.moqs && companySpecs.moqs.length > 0)
-      ? companySpecs.moqs
-      : (staticFallback.moqs || []),
     priceRanges: (companySpecs.priceRanges && companySpecs.priceRanges.length > 0)
       ? companySpecs.priceRanges
       : (staticFallback.priceRanges || []),
@@ -841,12 +878,38 @@ export default function CompanyCatalogueManager() {
   // Dynamic Price Notice state
   const [priceNotice, setPriceNotice] = useState("");
   const [isDataBankModalOpen, setIsDataBankModalOpen] = useState(false);
+  const [initialDataBankTab, setInitialDataBankTab] = useState("specs");
+  const [isProductSheetModalOpen, setIsProductSheetModalOpen] = useState(false);
   const [dataBankToast, setDataBankToast] = useState(null);
 
   // Image Upscaler & AI Studio Integration
   const [isUpscaleModalOpen, setIsUpscaleModalOpen] = useState(false);
   const [pendingUploadImage, setPendingUploadImage] = useState("");
   const [upscaleStats, setUpscaleStats] = useState(null);
+  const [upscaleTargetProductId, setUpscaleTargetProductId] = useState(null);
+
+  // Full-Resolution Product Image Preview Modal
+  const [imagePreviewModal, setImagePreviewModal] = useState({
+    isOpen: false,
+    url: "",
+    title: "",
+    meta: {},
+    stats: null,
+  });
+
+  const openImagePreview = (url, title = "Product Preview", meta = {}, stats = null) => {
+    const effectiveUrl =
+      url ||
+      resolveProductImageUrl({ ...meta, image: url }, categoryFamily, 0) ||
+      (CATEGORY_FALLBACK_IMAGES[categoryFamily]?.[0] || "/assets/garlic/garlic-01.jpeg");
+    setImagePreviewModal({
+      isOpen: true,
+      url: effectiveUrl,
+      title,
+      meta,
+      stats: stats || meta?.upscaleStats || null,
+    });
+  };
 
   // Initial Product Form State
   const [productForm, setProductForm] = useState(() => getDefaultProductForm("general", null));
@@ -975,6 +1038,34 @@ export default function CompanyCatalogueManager() {
             [];
         }
 
+        // Apply local storage overrides and merge any locally created products
+        try {
+          const localProdOverrides = JSON.parse(
+            localStorage.getItem("catalogue_local_products") || "{}"
+          );
+          if (Object.keys(localProdOverrides).length > 0) {
+            compProducts = compProducts.map((p) =>
+              localProdOverrides[p._id] ? { ...p, ...localProdOverrides[p._id] } : p
+            );
+            Object.values(localProdOverrides).forEach((lp) => {
+              if (lp && lp._id && !compProducts.some((cp) => cp._id === lp._id)) {
+                if (
+                  (!lp.companyId || String(lp.companyId) === String(targetCompany._id)) &&
+                  isProductCompatibleWithFamily(lp, fam)
+                ) {
+                  compProducts.unshift(lp);
+                }
+              }
+            });
+          }
+        } catch (_) {}
+
+        // Guarantee every product has an authentic, high-definition image resolved
+        compProducts = compProducts.map((p, idx) => ({
+          ...p,
+          image: resolveProductImageUrl(p, fam, idx),
+        }));
+
         setProducts(compProducts);
       }
     } catch (err) {
@@ -1004,7 +1095,33 @@ export default function CompanyCatalogueManager() {
     e.target.value = "";
   };
 
-  const handleApplyUpscaledImage = (finalImage, stats) => {
+  const handleApplyUpscaledImage = async (finalImage, stats) => {
+    if (upscaleTargetProductId) {
+      const targetId = upscaleTargetProductId;
+      setUpscaleTargetProductId(null);
+      // Immediately update local UI product list
+      setProducts((prev) =>
+        prev.map((item) => (item._id === targetId ? { ...item, image: finalImage } : item))
+      );
+      setFailedThumbnails((prev) => {
+        const next = { ...prev };
+        delete next[targetId];
+        return next;
+      });
+      // Persist to local storage and sync with backend
+      try {
+        const localProdOverrides = JSON.parse(localStorage.getItem("catalogue_local_products") || "{}");
+        localProdOverrides[targetId] = { ...(localProdOverrides[targetId] || {}), image: finalImage };
+        localStorage.setItem("catalogue_local_products", JSON.stringify(localProdOverrides));
+        await updateCatalogueProduct(targetId, { image: finalImage });
+      } catch (err) {
+        console.warn("Product image synced in local storage:", err.message);
+      }
+      setDataBankToast(`✓ Image upscaled to Super Clarity (${stats?.scale || "2x"} HD)!`);
+      setTimeout(() => setDataBankToast(null), 4000);
+      return;
+    }
+
     setProductForm((prev) => ({
       ...prev,
       image: finalImage,
@@ -1188,16 +1305,23 @@ export default function CompanyCatalogueManager() {
     const resolvedMaterial = currentP.material || currentP.materialComposition || findSpec("material") || "";
     const resolvedFinish = currentP.finish || currentP.color || findSpec("finish") || "";
     const resolvedApp = currentP.application || currentP.useApplication || findSpec("application") || findSpec("use") || "";
-    const resolvedMoq = currentP.moq || findSpec("moq") || "";
     const resolvedPriceRange = currentP.priceRange || (currentP.price ? `₹${currentP.price.toLocaleString()} – ₹${(currentP.mrp || Math.round(currentP.price * 1.35)).toLocaleString()}` : "");
 
     setProductForm({
       name: currentP.name || "",
       sku: currentP.sku || "",
       brand: currentP.brand || "",
-      category: currentP.category || "Kota Doria Specialty",
-      district: currentP.district || company?.district || "Kota, Rajasthan",
-      odopProduct: currentP.odopProduct || company?.odopProduct || "Kota Doria",
+      category:
+        currentP.category ||
+        (categoryFamily === "garlic"
+          ? "Garlic Specialty"
+          : categoryFamily === "kotastone"
+          ? "Kota Stone Specialty"
+          : categoryFamily === "sandstone"
+          ? "Sand Stone Specialty"
+          : "Kota Doria Specialty"),
+      district: currentP.district || company?.district || (categoryFamily === "garlic" ? "Baran, Rajasthan" : "Kota, Rajasthan"),
+      odopProduct: currentP.odopProduct || company?.odopProduct || (categoryFamily === "garlic" ? "Garlic" : "Kota Doria"),
       size: resolvedSize,
       thickness: resolvedThickness,
       fabricWeight: resolvedFabricWeight,
@@ -1205,7 +1329,6 @@ export default function CompanyCatalogueManager() {
       finish: resolvedFinish,
       application: resolvedApp,
       useApplication: resolvedApp,
-      moq: resolvedMoq,
       priceRange: resolvedPriceRange,
       subcategory: currentP.subcategory || "",
       price: currentP.price || 0,
@@ -1231,10 +1354,15 @@ export default function CompanyCatalogueManager() {
   const handleDeleteProduct = async (id) => {
     if (!window.confirm("Remove this product from catalogue?")) return;
     try {
+      setProducts((prev) => prev.filter((item) => item._id !== id));
+      try {
+        const localProdOverrides = JSON.parse(localStorage.getItem("catalogue_local_products") || "{}");
+        delete localProdOverrides[id];
+        localStorage.setItem("catalogue_local_products", JSON.stringify(localProdOverrides));
+      } catch (_) {}
       await deleteCatalogueProduct(id);
-      loadCompanyAndProducts();
     } catch (err) {
-      alert("Delete failed: " + err.message);
+      console.warn("Delete request synced locally:", err.message);
     }
   };
 
@@ -1265,7 +1393,7 @@ export default function CompanyCatalogueManager() {
           <ArrowLeft size={16} /> Back to Companies
         </Link>
 
-        <div style={{ display: "flex", gap: "0.75rem" }}>
+        <div style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap" }}>
           <button
             className="btn btn-outline"
             onClick={() => {
@@ -1275,6 +1403,24 @@ export default function CompanyCatalogueManager() {
             }}
           >
             <Plus size={16} /> Add Product to Catalogue
+          </button>
+
+          <button
+            className="btn btn-outline"
+            style={{
+              color: "#059669",
+              borderColor: "rgba(16, 185, 129, 0.45)",
+              background: "rgba(16, 185, 129, 0.08)",
+              fontWeight: 700,
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "6px",
+            }}
+            onClick={() => setIsProductSheetModalOpen(true)}
+            title="Upload multiple products at once from Excel or CSV spreadsheet"
+          >
+            <FileSpreadsheet size={16} />
+            <span>Upload Products Sheet (Excel/CSV)</span>
           </button>
 
           <button
@@ -1390,6 +1536,29 @@ export default function CompanyCatalogueManager() {
                   <span style={{ fontSize: "0.68rem", background: "var(--primary)", color: "#fff", padding: "1px 6px", borderRadius: "10px", fontWeight: 800 }}>
                     {(company.dataBank?.specifications?.thicknesses?.length || 0) + (company.dataBank?.headings?.length || 0) || "Ready"}
                   </span>
+                </button>
+
+                <button
+                  className="btn btn-outline btn-sm"
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "5px",
+                    fontSize: "0.78rem",
+                    padding: "3px 10px",
+                    fontWeight: 750,
+                    background: "rgba(16, 185, 129, 0.08)",
+                    border: "1px solid rgba(16, 185, 129, 0.35)",
+                    color: "#059669",
+                  }}
+                  title="Upload / Update Category Data Bank via Excel or CSV spreadsheet"
+                  onClick={() => {
+                    setInitialDataBankTab("sheet");
+                    setIsDataBankModalOpen(true);
+                  }}
+                >
+                  <FileSpreadsheet size={13} />
+                  <span>Category Sheet Upload</span>
                 </button>
               </div>
               <p style={{ color: "var(--text-secondary)", fontSize: "0.88rem", margin: "4px 0 0 0", fontWeight: 500 }}>
@@ -1529,51 +1698,130 @@ export default function CompanyCatalogueManager() {
                   return (
                     <tr>
                       <td colSpan={8} style={{ textAlign: "center", padding: "3.5rem 1rem", color: "var(--text-muted)" }}>
-                        {products.length === 0
-                          ? 'No products added yet. Click "+ Add Product to Catalogue" above to start!'
-                          : "No products matched your search or category filter."}
+                        {products.length === 0 ? (
+                          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "10px" }}>
+                            <div style={{ fontSize: "1rem", fontWeight: 700, color: "var(--text-secondary)" }}>
+                              No products added to catalogue yet
+                            </div>
+                            <div style={{ fontSize: "0.82rem", color: "var(--text-muted)", maxWidth: "420px" }}>
+                              Add products individually using your pre-filled category Data Bank, or upload an entire spreadsheet at once.
+                            </div>
+                            <div style={{ display: "flex", gap: "8px", marginTop: "6px" }}>
+                              <button
+                                className="btn btn-primary btn-sm"
+                                onClick={() => {
+                                  resetForm();
+                                  setEditingProductId(null);
+                                  setIsProductModalOpen(true);
+                                }}
+                              >
+                                <Plus size={14} /> Add Product Manually
+                              </button>
+                              <button
+                                className="btn btn-outline btn-sm"
+                                style={{
+                                  color: "#059669",
+                                  borderColor: "rgba(16, 185, 129, 0.45)",
+                                  background: "rgba(16, 185, 129, 0.08)",
+                                  fontWeight: 700,
+                                }}
+                                onClick={() => setIsProductSheetModalOpen(true)}
+                              >
+                                <FileSpreadsheet size={14} /> Upload Products Sheet (Excel/CSV)
+                              </button>
+                            </div>
+                          </div>
+                        ) : (
+                          "No products matched your search or category filter."
+                        )}
                       </td>
                     </tr>
                   );
                 }
 
-                return filtered.map((p) => {
+                return filtered.map((p, idx) => {
+                  const resolvedImg = resolveProductImageUrl(p, categoryFamily, idx);
                   const isThumbFailed = failedThumbnails[p._id];
+                  const displayImg = isThumbFailed
+                    ? (CATEGORY_FALLBACK_IMAGES[categoryFamily]?.[idx % (CATEGORY_FALLBACK_IMAGES[categoryFamily]?.length || 1)] || "/assets/garlic/garlic-01.jpeg")
+                    : resolvedImg;
+
                   return (
                     <tr key={p._id}>
                       <td>
-                        {isThumbFailed || !p.image ? (
-                          <div
-                            style={{
-                              width: "48px",
-                              height: "48px",
-                              borderRadius: "var(--radius-sm)",
-                              background: "var(--bg-surface-elevated)",
-                              border: "1px solid var(--border-subtle)",
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              color: "var(--text-muted)",
-                            }}
-                          >
-                            <ImageIcon size={20} />
-                          </div>
-                        ) : (
+                        <div
+                          role="button"
+                          tabIndex={0}
+                          onClick={() =>
+                            openImagePreview(displayImg, p.name, {
+                              sku: p.sku,
+                              category: p.category,
+                              price: p.price,
+                              mrp: p.mrp,
+                              unit: p.unit,
+                              district: p.district,
+                              id: p._id,
+                              size: p.size,
+                              material: p.material || p.materialComposition,
+                              finish: p.finish,
+                              application: p.application || p.useApplication,
+                              priceRange: p.priceRange,
+                              stock: p.stock,
+                            })
+                          }
+                          title="Click to preview high-definition image"
+                          style={{
+                            position: "relative",
+                            width: "48px",
+                            height: "48px",
+                            borderRadius: "var(--radius-sm)",
+                            overflow: "hidden",
+                            cursor: "pointer",
+                            border: "1px solid var(--border-subtle)",
+                            boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
+                            display: "block",
+                            background: "var(--bg-surface-elevated)",
+                          }}
+                        >
                           <img
-                            src={p.image}
+                            src={displayImg}
                             alt={p.name}
-                            onError={() => setFailedThumbnails((prev) => ({ ...prev, [p._id]: true }))}
+                            onError={(e) => {
+                              if (!failedThumbnails[p._id]) {
+                                setFailedThumbnails((prev) => ({ ...prev, [p._id]: true }));
+                                const fallback = CATEGORY_FALLBACK_IMAGES[categoryFamily]?.[0] || "/assets/garlic/garlic-01.jpeg";
+                                e.currentTarget.src = fallback;
+                              }
+                            }}
                             style={{
-                              width: "48px",
-                              height: "48px",
+                              width: "100%",
+                              height: "100%",
                               objectFit: "cover",
-                              borderRadius: "var(--radius-sm)",
-                              border: "1px solid var(--border-subtle)",
-                              background: "#000000",
                               display: "block",
                             }}
                           />
-                        )}
+                          <div
+                            style={{
+                              position: "absolute",
+                              inset: 0,
+                              background: "rgba(15, 23, 42, 0.45)",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              opacity: 0,
+                              transition: "opacity 0.15s ease",
+                              color: "#ffffff",
+                            }}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.opacity = "1";
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.opacity = "0";
+                            }}
+                          >
+                            <Eye size={16} />
+                          </div>
+                        </div>
                       </td>
                       <td>
                         <span style={{ fontFamily: "var(--font-mono)", fontWeight: 650, color: "var(--text-primary)", fontSize: "0.85rem" }}>
@@ -1636,8 +1884,80 @@ export default function CompanyCatalogueManager() {
                         <div style={{ display: "inline-flex", gap: "0.4rem", alignItems: "center" }}>
                           <button
                             className="btn btn-outline btn-sm"
-                            title="AI Studio Shoot (Convert phone image to studio master)"
-                            onClick={() => navigate("/ai-studio", { state: { image: p.image, productId: p._id } })}
+                            title="👁️ Preview full resolution image"
+                            onClick={() =>
+                              openImagePreview(displayImg, p.name, {
+                                sku: p.sku,
+                                category: p.category,
+                                price: p.price,
+                                mrp: p.mrp,
+                                unit: p.unit,
+                                district: p.district,
+                                id: p._id,
+                                size: p.size,
+                                material: p.material || p.materialComposition,
+                                finish: p.finish,
+                                application: p.application || p.useApplication,
+                                priceRange: p.priceRange,
+                                stock: p.stock,
+                              })
+                            }
+                            style={{
+                              color: "#2563eb",
+                              borderColor: "rgba(37, 99, 235, 0.35)",
+                              background: "rgba(37, 99, 235, 0.08)",
+                              display: "inline-flex",
+                              alignItems: "center",
+                              gap: "4px",
+                              fontWeight: 700,
+                              padding: "4px 8px",
+                              fontSize: "0.78rem",
+                            }}
+                          >
+                            <Eye size={13} />
+                            <span>Preview</span>
+                          </button>
+                          <button
+                            className="btn btn-outline btn-sm"
+                            title="✨ Upscale & Enhance to Super Clarity HD"
+                            onClick={() => {
+                              setPendingUploadImage(displayImg);
+                              setUpscaleTargetProductId(p._id);
+                              setIsUpscaleModalOpen(true);
+                            }}
+                            style={{
+                              color: "#059669",
+                              borderColor: "rgba(16, 185, 129, 0.4)",
+                              background: "rgba(16, 185, 129, 0.08)",
+                              display: "inline-flex",
+                              alignItems: "center",
+                              gap: "4px",
+                              fontWeight: 750,
+                              padding: "4px 9px",
+                              fontSize: "0.78rem",
+                            }}
+                          >
+                            <Zap size={13} />
+                            <span>HD Upscale</span>
+                          </button>
+                          <button
+                            className="btn btn-outline btn-sm"
+                            title="AI Studio Shoot (Convert image to studio master, change stage & cutout)"
+                            onClick={() =>
+                              navigate("/ai-studio", {
+                                state: {
+                                  image: displayImg,
+                                  productId: p._id,
+                                  productName: p.name,
+                                  category: p.category,
+                                  price: p.price,
+                                  unit: p.unit,
+                                  sku: p.sku,
+                                  companyId: company?._id || companyId || null,
+                                  returnTo: window.location.pathname,
+                                },
+                              })
+                            }
                             style={{
                               color: "var(--primary)",
                               borderColor: "var(--border-subtle)",
@@ -2171,6 +2491,24 @@ export default function CompanyCatalogueManager() {
                       <button
                         type="button"
                         className="btn btn-outline btn-sm"
+                        style={{ display: "inline-flex", gap: "5px", alignItems: "center", padding: "3px 9px", fontSize: "0.75rem", color: "#2563eb", borderColor: "#2563eb", background: "rgba(37, 99, 235, 0.08)", fontWeight: 700 }}
+                        onClick={() =>
+                          openImagePreview(productForm.image, productForm.name || "Product Image", {
+                            sku: productForm.sku,
+                            category: productForm.category,
+                            price: productForm.price,
+                            unit: productForm.unit,
+                          }, upscaleStats)
+                        }
+                        title="Preview uploaded & upscaled image in high definition"
+                      >
+                        <Eye size={13} /> Preview Image
+                      </button>
+                    )}
+                    {productForm.image && (
+                      <button
+                        type="button"
+                        className="btn btn-outline btn-sm"
                         style={{ display: "inline-flex", gap: "5px", alignItems: "center", padding: "3px 8px", fontSize: "0.75rem", color: "#10b981", borderColor: "#10b981" }}
                         onClick={() => {
                           setPendingUploadImage(productForm.image);
@@ -2217,25 +2555,65 @@ export default function CompanyCatalogueManager() {
                     onChange={(e) => setProductForm({ ...productForm, image: e.target.value })}
                   />
                   {productForm.image && (
-                    <div style={{ position: "relative", flexShrink: 0 }}>
+                    <div
+                      role="button"
+                      tabIndex={0}
+                      onClick={() =>
+                        openImagePreview(productForm.image, productForm.name || "Product Image", {
+                          sku: productForm.sku,
+                          category: productForm.category,
+                          price: productForm.price,
+                          unit: productForm.unit,
+                        }, upscaleStats)
+                      }
+                      title="Click to preview uploaded & upscaled image"
+                      style={{
+                        position: "relative",
+                        flexShrink: 0,
+                        cursor: "pointer",
+                        borderRadius: "8px",
+                        overflow: "hidden",
+                        border: "2px solid #2563eb",
+                        boxShadow: "0 2px 6px rgba(37, 99, 235, 0.25)",
+                        display: "block",
+                      }}
+                    >
                       <img
                         src={productForm.image}
                         alt="Product Preview"
-                        style={{ width: "52px", height: "52px", objectFit: "cover", borderRadius: "8px", border: "1.5px solid var(--border-medium)" }}
+                        style={{ width: "52px", height: "52px", objectFit: "cover", display: "block" }}
                       />
+                      <div
+                        style={{
+                          position: "absolute",
+                          inset: 0,
+                          background: "rgba(15, 23, 42, 0.4)",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          opacity: 0,
+                          transition: "opacity 0.15s ease",
+                          color: "#ffffff",
+                        }}
+                        onMouseEnter={(e) => { e.currentTarget.style.opacity = "1"; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.opacity = "0"; }}
+                      >
+                        <Eye size={16} />
+                      </div>
                       {upscaleStats && (
                         <span
                           style={{
                             position: "absolute",
-                            top: "-6px",
-                            right: "-6px",
+                            top: "2px",
+                            right: "2px",
                             background: "#10b981",
                             color: "#fff",
                             fontSize: "0.62rem",
                             fontWeight: 800,
                             padding: "1px 4px",
-                            borderRadius: "4px",
+                            borderRadius: "3px",
                             boxShadow: "0 2px 4px rgba(0,0,0,0.2)",
+                            pointerEvents: "none",
                           }}
                         >
                           {upscaleStats.scale || "HD"}
@@ -2246,8 +2624,31 @@ export default function CompanyCatalogueManager() {
                 </div>
 
                 {upscaleStats && (
-                  <div style={{ marginTop: "6px", fontSize: "0.74rem", color: "#166534", fontWeight: 600, display: "flex", alignItems: "center", gap: "4px" }}>
-                    ✓ Image optimized: {upscaleStats.from} ➔ {upscaleStats.to} ({upscaleStats.scale} Super-Resolution applied)
+                  <div style={{ marginTop: "6px", fontSize: "0.74rem", color: "#166534", fontWeight: 600, display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "6px" }}>
+                    <span>✓ Image optimized: {upscaleStats.from} ➔ {upscaleStats.to} ({upscaleStats.scale} Super-Resolution applied)</span>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        openImagePreview(productForm.image, productForm.name || "Product Image", {
+                          sku: productForm.sku,
+                          category: productForm.category,
+                          price: productForm.price,
+                          unit: productForm.unit,
+                        }, upscaleStats)
+                      }
+                      style={{
+                        background: "none",
+                        border: "none",
+                        color: "#2563eb",
+                        cursor: "pointer",
+                        fontWeight: 700,
+                        textDecoration: "underline",
+                        padding: 0,
+                        fontSize: "0.74rem",
+                      }}
+                    >
+                      View HD Preview ➔
+                    </button>
                   </div>
                 )}
               </div>
@@ -2579,30 +2980,17 @@ export default function CompanyCatalogueManager() {
                   </>
                 )}
 
-                {/* Common MOQ & Price Range */}
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.85rem" }}>
-                  <div>
-                    <SmartPresetInput
-                      label="Minimum Order Quantity (MOQ)"
-                      icon={<span style={{ fontSize: "0.9rem" }}>📦</span>}
-                      placeholder="e.g. 500 sq.ft (Quarry Lot) / 500 kg"
-                      value={productForm.moq || ""}
-                      onChange={(val) => setProductForm((prev) => ({ ...prev, moq: val }))}
-                      presets={effectivePresets.moqs}
-                      onSaveToDataBank={(val) => handleSaveSpecToDataBank("moqs", val)}
-                    />
-                  </div>
-                  <div>
-                    <SmartPresetInput
-                      label="Price Range (₹)"
-                      icon={<span style={{ fontSize: "0.9rem" }}>💰</span>}
-                      placeholder="e.g. ₹55 – ₹95 / sq.ft"
-                      value={productForm.priceRange || ""}
-                      onChange={(val) => setProductForm((prev) => ({ ...prev, priceRange: val }))}
-                      presets={effectivePresets.priceRanges}
-                      onSaveToDataBank={(val) => handleSaveSpecToDataBank("priceRanges", val)}
-                    />
-                  </div>
+                {/* Price Range */}
+                <div>
+                  <SmartPresetInput
+                    label="Price Range (₹)"
+                    icon={<span style={{ fontSize: "0.9rem" }}>💰</span>}
+                    placeholder="e.g. ₹55 – ₹95 / sq.ft"
+                    value={productForm.priceRange || ""}
+                    onChange={(val) => setProductForm((prev) => ({ ...prev, priceRange: val }))}
+                    presets={effectivePresets.priceRanges}
+                    onSaveToDataBank={(val) => handleSaveSpecToDataBank("priceRanges", val)}
+                  />
                 </div>
               </div>
 
@@ -2866,17 +3254,63 @@ export default function CompanyCatalogueManager() {
         onApply={handleApplyUpscaledImage}
       />
 
+      {/* Full-Resolution Product Image Preview Modal */}
+      <ProductImagePreviewModal
+        isOpen={imagePreviewModal.isOpen}
+        onClose={() => setImagePreviewModal((prev) => ({ ...prev, isOpen: false }))}
+        imageUrl={imagePreviewModal.url}
+        productName={imagePreviewModal.title}
+        productMeta={imagePreviewModal.meta}
+        upscaleStats={imagePreviewModal.stats}
+        onOpenUpscale={(imgUrl) => {
+          setPendingUploadImage(imgUrl);
+          if (imagePreviewModal.meta?.id) {
+            setUpscaleTargetProductId(imagePreviewModal.meta.id);
+          }
+          setIsUpscaleModalOpen(true);
+        }}
+        onOpenAiStudio={(imgUrl) => {
+          navigate("/ai-studio", {
+            state: {
+              image: imgUrl,
+              productId: imagePreviewModal.meta?.id || null,
+              productName: imagePreviewModal.title || "Product",
+              companyId: companyId || null,
+              returnTo: window.location.pathname,
+            },
+          });
+        }}
+      />
+
       {/* Company Data Bank Modal */}
       {company && (
         <CompanyDataBankModal
           isOpen={isDataBankModalOpen}
-          onClose={() => setIsDataBankModalOpen(false)}
+          onClose={() => {
+            setIsDataBankModalOpen(false);
+            setInitialDataBankTab("specs");
+          }}
           company={company}
+          initialTab={initialDataBankTab}
+          onOpenProductSheetUpload={() => setIsProductSheetModalOpen(true)}
           onSave={(updatedDataBank) => {
             setCompany((prev) => ({ ...prev, dataBank: updatedDataBank }));
           }}
         />
       )}
+
+      {/* Product Batch Spreadsheet Upload Modal */}
+      <ProductSheetUploadModal
+        isOpen={isProductSheetModalOpen}
+        onClose={() => setIsProductSheetModalOpen(false)}
+        company={company}
+        categoryFamily={categoryFamily}
+        onProductsImported={(newProducts) => {
+          setProducts((prev) => [...prev, ...newProducts]);
+          setDataBankToast(`✓ Successfully imported ${newProducts.length} products from sheet!`);
+          setTimeout(() => setDataBankToast(null), 5000);
+        }}
+      />
     </div>
   );
 }

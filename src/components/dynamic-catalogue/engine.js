@@ -387,19 +387,8 @@ export async function prepareItems(products, fam = '') {
     const priceFormatted = formatProductPrice(priceNum || v.price, resolvedUnit, v);
     const priceRange = formatProductPriceRange(v.priceRange, priceNum, mrpNum, resolvedUnit, v);
 
-    // j) Minimum order quantity (MOQ), wherever applicable
-    let moq = v.moq || (v.wholesalePrice ? '50 pcs' : '');
-    if (!moq) {
-      if (catLower.includes('doria') || subLower.includes('saree') || subLower.includes('dupatta') || subLower.includes('suit')) {
-        moq = '10 Pieces (Wholesale)';
-      } else if (catLower.includes('garlic')) {
-        moq = '500 kg (Container Load)';
-      } else if (catLower.includes('stone') || catLower.includes('sand')) {
-        moq = '500 sq.ft / 1 Truckload';
-      } else {
-        moq = '10 Units';
-      }
-    }
+    // MOQ removed per catalogue requirements
+    const moq = '';
 
     // e) Short product description, preferably AI-assisted and participant-verified
     let shortDescription = v.shortDescription || v.description || '';

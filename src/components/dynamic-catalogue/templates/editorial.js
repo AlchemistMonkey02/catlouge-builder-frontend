@@ -95,7 +95,7 @@ function hero(c, t, no, it, chapter){
       ${para(sentences(c.info.desc).slice(0, 2).join(' ') || c.info.desc || 'Refined details created with precision and care.')}
       <div class="e-inset" style="${bgi(d.img, 'center 30%')}"></div><div class="e-capt" style="position:static;margin-top:8px">A closer look: ${E(d.name)}.</div></div>
     <div class="e-sig" style="left:${txX}px"><div class="e-eye">THE SIGNATURE PIECE</div><div class="e-signm">${E(it.name)}</div><div class="e-sigsp">${E(spec(it))}</div>
-      <div class="e-sigrow"><span class="e-sigpr">${E(it.price)}</span><em>${it.moq ? 'MOQ ' + E(it.moq) : E(cap(c.info.product || 'IN STOCK'))}</em></div></div>
+      <div class="e-sigrow"><span class="e-sigpr">${E(it.price)}</span><em>${E(cap(c.info.product || 'IN STOCK'))}</em></div></div>
     <div class="e-pfoot"><span>${E(cap(c.info.district || 'INDIA'))}</span><span>${E(c.info.mobile || '')}</span></div>`;
 }
 

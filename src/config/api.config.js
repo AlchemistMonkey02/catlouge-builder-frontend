@@ -97,6 +97,8 @@ export const API_ENDPOINTS = {
     APPLY_TO_PRODUCT: "/images/apply-to-product",
     CREATE_FROM_STUDIO: "/images/create-from-studio",
     UPSCALE_ENHANCE: "/images/upscale-enhance",
+    CUTOUT: "/images/cutout",
+    GENERATE_BG: "/images/generate-bg",
   },
 
   // AI Content Engine (Stubs)

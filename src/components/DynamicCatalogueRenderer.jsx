@@ -722,9 +722,6 @@ export default function DynamicCatalogueRenderer({
                             <div style={{ fontSize: "0.70rem", opacity: 0.65 }}>
                               Range: {p.priceRange || `${currencySymbol}${p.price ? p.price.toLocaleString() : "1,450"} – ${currencySymbol}${mrp ? mrp.toLocaleString() : "5,200"}`}
                             </div>
-                            <div style={{ fontSize: "0.68rem", color: accentColor, fontWeight: 700, marginTop: "2px" }}>
-                              📦 MOQ: {p.moq || "10 Pieces (Wholesale)"}
-                            </div>
                           </div>
 
                           <div style={{ textAlign: "right", display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "3px" }}>

@@ -250,7 +250,6 @@ function renderKotaStoneProductCard(it, idx, c, prefix = 'kts') {
   const specFinish = it.finish || 'Mirror High Polish / Honed';
   const specApp = it.application || it.useApplication || 'Heavy Commercial Flooring & Corridors';
   const specPriceRange = formatProductPriceRange(it.priceRange, it.price, null, it.unit, it);
-  const specMoq = it.moq || '500 sq.ft (Quarry Lot)';
 
   const safeImg = typeof cardImg === 'string' ? cardImg.replace(/'/g, '%27') : '/assets/kota-stone/Blue-Kota-Stone-Tiles-1.jpg';
 
@@ -264,7 +263,6 @@ function renderKotaStoneProductCard(it, idx, c, prefix = 'kts') {
       <div class="ks-odop-details">
         <div class="ks-odop-meta-row">
           <span class="ks-odop-sku-chip">SKU: ${E(cardSku)}</span>
-          <span class="ks-odop-moq-chip">MOQ: ${E(specMoq)}</span>
         </div>
         <h3>${E(cardName)}</h3>
         <div class="ks-odop-desc-row">
@@ -821,7 +819,7 @@ const CSS = `
   font-weight: 700;
   color: var(--acc, #0284c7);
 }
-.ks-odop-moq-chip {
+.ks-odop-rate-chip {
   font-size: 8px;
   background: rgba(2, 132, 199, 0.08);
   color: #0369a1;
@@ -1250,7 +1248,6 @@ const CSS = `
 .ks6-mode .ks6-meta { display: flex; justify-content: space-between; font-size: 10.5px; color: var(--ink); margin-bottom: 12px; }
 .ks6-mode .ks6-foot { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--line); padding-top: 10px; }
 .ks6-mode .ks6-price { font-size: 15px; font-weight: 800; color: var(--acc); }
-.ks6-mode .ks6-moq { font-size: 10px; color: var(--muted); font-weight: 600; }
 
 /* =========================================================================
    STYLE SUITE 7: FORTRESS CHEQUER & COBBLES (ks7-mode)
@@ -1309,7 +1306,6 @@ const CSS = `
 .ks8-mode .ks8-tbl td b { color: var(--ink); }
 .ks8-mode .ks8-foot { display: flex; justify-content: space-between; align-items: center; }
 .ks8-mode .ks8-price { font-size: 15px; font-weight: 800; color: var(--acc); }
-.ks8-mode .ks8-moq { font-size: 10px; background: var(--soft); padding: 3px 8px; border-radius: 4px; font-weight: 700; }
 `;
 
 const KOTASTONE_TEMPLATES = { list: TEMPLATES, css: CSS, render, pageCount };

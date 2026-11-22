@@ -241,7 +241,6 @@ function renderSandstoneProductCard(it, idx, c, prefix = 'snd') {
   const specFinish = it.finish || 'Sandblasted / Hand-Chiseled / Honed';
   const specApp = it.application || it.useApplication || 'Exterior Facades, Cladding & Paving';
   const specPriceRange = formatProductPriceRange(it.priceRange, it.price, null, it.unit, it);
-  const specMoq = it.moq || '400 sq.ft (Project Lot)';
 
   const safeImg = typeof cardImg === 'string' ? cardImg.replace(/'/g, '%27') : '/assets/sand-stone/Agra-Red-Sandstone-Sandblasted.jpg';
 
@@ -255,7 +254,6 @@ function renderSandstoneProductCard(it, idx, c, prefix = 'snd') {
       <div class="ss-odop-details">
         <div class="ss-odop-meta-row">
           <span class="ss-odop-sku-chip">SKU: ${E(cardSku)}</span>
-          <span class="ss-odop-moq-chip">MOQ: ${E(specMoq)}</span>
         </div>
         <h3>${E(cardName)}</h3>
         <div class="ss-odop-desc-row">
@@ -804,7 +802,7 @@ const CSS = `
   font-weight: 700;
   color: var(--acc, #c2410c);
 }
-.ss-odop-moq-chip {
+.ss-odop-rate-chip {
   font-size: 8px;
   background: rgba(194, 65, 12, 0.08);
   color: #c2410c;
@@ -1115,7 +1113,6 @@ const CSS = `
 .ss1-mode .ss1-specs b { color: var(--ink); }
 .ss1-mode .ss1-foot { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--line); padding-top: 6px; margin-top: auto; }
 .ss1-mode .ss1-price { font-size: 15px; font-weight: 800; color: var(--acc); line-height: 1; }
-.ss1-mode .ss1-moq { font-size: 10px; color: var(--muted); font-weight: 600; }
 
 /* =========================================================================
    STYLE SUITE 2: RAINBOW & TEAKWOOD EXOTIC (ss2-mode Butterfly Bookmatch)
@@ -1297,7 +1294,6 @@ const CSS = `
 .ss6-mode .ss6-data b { color: var(--ink); }
 .ss6-mode .ss6-foot { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--line); padding-top: 10px; }
 .ss6-mode .ss6-price { font-size: 15px; font-weight: 800; color: var(--acc); }
-.ss6-mode .ss6-moq { font-size: 10px; background: var(--soft); padding: 3px 8px; border-radius: 4px; font-weight: 700; }
 
 /* =========================================================================
    STYLE SUITE 7: ARTISANAL JALI SCREENS (ss7-mode Lattice)
@@ -1355,7 +1351,6 @@ const CSS = `
 .ss8-mode .ss8-tbl td b { color: var(--ink); }
 .ss8-mode .ss8-foot { display: flex; justify-content: space-between; align-items: center; }
 .ss8-mode .ss8-price { font-size: 15px; font-weight: 800; color: var(--acc); }
-.ss8-mode .ss8-moq { font-size: 10px; background: var(--soft); padding: 3px 8px; border-radius: 4px; font-weight: 700; }
 `;
 
 const SANDSTONE_TEMPLATES = { list: TEMPLATES, css: CSS, render, pageCount };

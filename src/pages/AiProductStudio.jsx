@@ -46,6 +46,7 @@ import {
   fetchGeminiStudioPlan,
   upscaleAndEnhanceImage,
 } from "../services/api";
+import ImageUpscaleModal from "../components/ImageUpscaleModal";
 import demoCutouts from "../data/demoCutouts.json";
 
 // Curated demo products with pre-cached transparent PNG cutouts for instant 0ms rendering
@@ -257,6 +258,10 @@ export default function AiProductStudio() {
   const [isUpscaling, setIsUpscaling] = useState(false);
   const [isUpscaled, setIsUpscaled] = useState(false);
   const [upscaleScale, setUpscaleScale] = useState(2); // 2x HD or 4x Ultra-HD
+  const [upscaleEngine, setUpscaleEngine] = useState("auto"); // "auto", "super-image", "opencv", "qirias"
+  const [upscaleSharpness, setUpscaleSharpness] = useState(true);
+  const [upscaleContrast, setUpscaleContrast] = useState(true);
+  const [isUpscaleModalOpen, setIsUpscaleModalOpen] = useState(false);
   const [upscaleStats, setUpscaleStats] = useState(null);
 
   // Compact Zero-Scroll Workbench Tabs
@@ -412,8 +417,8 @@ export default function AiProductStudio() {
 
       let targetR = 255, targetG = 255, targetB = 255;
       if (sampleX !== null && sampleY !== null) {
-        const sx = Math.max(0, Math.min(w - 1, Math.round(sampleX)));
-        const sy = Math.max(0, Math.min(h - 1, Math.round(sampleY)));
+        const sx = sampleX <= 1.0 ? Math.round(sampleX * (w - 1)) : Math.max(0, Math.min(w - 1, Math.round(sampleX)));
+        const sy = sampleY <= 1.0 ? Math.round(sampleY * (h - 1)) : Math.max(0, Math.min(h - 1, Math.round(sampleY)));
         const idx = (sy * w + sx) * 4;
         targetR = data[idx];
         targetG = data[idx + 1];
@@ -495,8 +500,8 @@ export default function AiProductStudio() {
     }
   };
 
-  // Trigger Server-side Super-Resolution HD Upscale (Lanczos + Unsharp Sharpening + HDR)
-  const handleUpscaleAndEnhance = async (scaleMultiplier = 2) => {
+  // Trigger Server-side Super-Resolution HD Upscale (Hybrid Neural / OpenCV / Qirias)
+  const handleUpscaleAndEnhance = async (scaleMultiplier = 2, selectedEngine = upscaleEngine) => {
     const targetImg = useCutout && cutoutImage ? cutoutImage : sourceImage;
     if (!targetImg) return;
 
@@ -506,6 +511,11 @@ export default function AiProductStudio() {
       const res = await upscaleAndEnhanceImage({
         image: targetImg,
         scale: scaleMultiplier,
+        scaleFactor: scaleMultiplier,
+        engine: selectedEngine,
+        sharpness: upscaleSharpness ? 1.35 : 1.0,
+        contrast: upscaleContrast ? 1.15 : 1.0,
+        saturation: upscaleContrast ? 1.08 : 1.0,
       });
 
       const upscaledData = res.image || res.upscaled;
@@ -521,6 +531,7 @@ export default function AiProductStudio() {
             from: `${res.originalWidth}x${res.originalHeight}`,
             to: `${res.width}x${res.height}`,
             scale: `${scaleMultiplier}x`,
+            engine: res.engine || selectedEngine,
           }
         );
         // Ensure product is scaled prominently and clearly visible
@@ -528,7 +539,7 @@ export default function AiProductStudio() {
           setProductScale(108);
         }
         setActionSuccessMessage(
-          `🚀 Super-Resolution HD Applied (${scaleMultiplier}x Lanczos + Dual-pass Unsharp Sharpening + HDR Clarity)!`
+          `🚀 Super-Resolution HD Applied (${scaleMultiplier}x • ${res.engine || selectedEngine} Engine)!`
         );
         setTimeout(() => setActionSuccessMessage(""), 5000);
       } else {
@@ -1221,13 +1232,10 @@ export default function AiProductStudio() {
     if (!canvas) return;
 
     const rect = canvas.getBoundingClientRect();
-    const scaleX = canvas.width / rect.width;
-    const scaleY = canvas.height / rect.height;
+    const normX = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+    const normY = Math.max(0, Math.min(1, (e.clientY - rect.top) / rect.height));
 
-    const canvasClickX = (e.clientX - rect.left) * scaleX;
-    const canvasClickY = (e.clientY - rect.top) * scaleY;
-
-    handlePerformCutout(canvasClickX, canvasClickY);
+    handlePerformCutout(normX, normY);
     setMagicWandActive(false);
   };
 
@@ -1276,11 +1284,20 @@ export default function AiProductStudio() {
       );
       setIsPlaceModalOpen(false);
 
-      // Save directly into custom gallery so it's immediately available in Catalogue Studio too
+      // Save directly into custom gallery and local product sync
       try {
         const existing = JSON.parse(localStorage.getItem("catalogue_custom_gallery") || "[]");
         const updated = [studioDataUrl, ...existing.filter((u) => u !== studioDataUrl)].slice(0, 30);
         localStorage.setItem("catalogue_custom_gallery", JSON.stringify(updated));
+
+        if (selectedTargetProductId) {
+          const localProdOverrides = JSON.parse(localStorage.getItem("catalogue_local_products") || "{}");
+          localProdOverrides[selectedTargetProductId] = {
+            ...(localProdOverrides[selectedTargetProductId] || {}),
+            image: studioDataUrl,
+          };
+          localStorage.setItem("catalogue_local_products", JSON.stringify(localProdOverrides));
+        }
       } catch (_) {}
 
       if (location.state?.returnTo) {
@@ -1321,11 +1338,20 @@ export default function AiProductStudio() {
       );
       setIsCreateModalOpen(false);
 
-      // Save directly into custom gallery so it's immediately available in Catalogue Studio too
+      // Save directly into custom gallery and local product sync
       try {
         const existing = JSON.parse(localStorage.getItem("catalogue_custom_gallery") || "[]");
         const updated = [studioDataUrl, ...existing.filter((u) => u !== studioDataUrl)].slice(0, 30);
         localStorage.setItem("catalogue_custom_gallery", JSON.stringify(updated));
+
+        if (selectedTargetProductId) {
+          const localProdOverrides = JSON.parse(localStorage.getItem("catalogue_local_products") || "{}");
+          localProdOverrides[selectedTargetProductId] = {
+            ...(localProdOverrides[selectedTargetProductId] || {}),
+            image: studioDataUrl,
+          };
+          localStorage.setItem("catalogue_local_products", JSON.stringify(localProdOverrides));
+        }
       } catch (_) {}
 
       if (location.state?.returnTo) {
@@ -1819,106 +1845,182 @@ export default function AiProductStudio() {
           {/* 3. Super-Resolution HD Upscale & Sharpening */}
           {(expandAllPanels || leftActiveTab === "upscale") && (
             <div className="card">
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "0.5rem", marginBottom: "0.75rem" }}>
-              <label style={{ fontSize: "0.88rem", fontWeight: 700, color: "var(--text-primary)", display: "flex", alignItems: "center", gap: "6px", margin: 0 }}>
-                <Maximize2 size={16} color="var(--primary)" />
-                3. HD Upscale Engine
-              </label>
-              <span
-                className={`status-pill ${isUpscaled ? "approved" : "draft"}`}
-                style={{
-                  fontSize: "0.70rem",
-                  whiteSpace: "nowrap",
-                  flexShrink: 0,
-                  padding: "3px 8px",
-                  lineHeight: "1.2",
-                  display: "inline-flex",
-                  alignItems: "center",
-                }}
-              >
-                {isUpscaled ? `HD (${upscaleScale}x)` : "Native Res"}
-              </span>
-            </div>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "0.5rem", marginBottom: "0.75rem" }}>
+                <label style={{ fontSize: "0.88rem", fontWeight: 700, color: "var(--text-primary)", display: "flex", alignItems: "center", gap: "6px", margin: 0 }}>
+                  <Maximize2 size={16} color="var(--primary)" />
+                  3. HD Super-Resolution Engine
+                </label>
+                <span
+                  className={`status-pill ${isUpscaled ? "approved" : "draft"}`}
+                  style={{
+                    fontSize: "0.70rem",
+                    whiteSpace: "nowrap",
+                    flexShrink: 0,
+                    padding: "3px 8px",
+                    lineHeight: "1.2",
+                    display: "inline-flex",
+                    alignItems: "center",
+                  }}
+                >
+                  {isUpscaled ? `HD (${upscaleScale}x)` : "Native Res"}
+                </span>
+              </div>
 
-            <p style={{ fontSize: "0.75rem", color: "var(--text-secondary)", margin: "0 0 0.75rem 0", lineHeight: 1.4 }}>
-              Upscales product foreground using sub-pixel Lanczos interpolation, dual-pass unsharp masking, and HDR tone contrast for crystal-clear catalogue presentation.
-            </p>
+              <p style={{ fontSize: "0.75rem", color: "var(--text-secondary)", margin: "0 0 0.75rem 0", lineHeight: 1.4 }}>
+                Reconstructs fine textures, sharpens micro-contours, and lifts dynamic contrast for ultra-high-definition product imagery.
+              </p>
 
-            {/* Scale Selector */}
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.4rem", marginBottom: "0.75rem" }}>
-              <button
-                type="button"
-                className={`btn btn-sm ${upscaleScale === 2 ? "btn-primary" : "btn-outline"}`}
-                onClick={() => setUpscaleScale(2)}
-                style={{ fontSize: "0.78rem", fontWeight: 700 }}
-              >
-                ⚡ 2x High-Def
-              </button>
-              <button
-                type="button"
-                className={`btn btn-sm ${upscaleScale === 4 ? "btn-primary" : "btn-outline"}`}
-                onClick={() => setUpscaleScale(4)}
-                style={{ fontSize: "0.78rem", fontWeight: 700 }}
-              >
-                💎 4x Ultra-HD
-              </button>
-            </div>
-
-            {/* Action Buttons */}
-            <button
-              className="btn btn-primary btn-sm"
-              style={{ width: "100%", justifyContent: "center", fontWeight: 750, padding: "8px 12px", marginBottom: "0.5rem" }}
-              onClick={() => handleUpscaleAndEnhance(upscaleScale)}
-              disabled={isUpscaling || isTransforming || isProcessingCutout}
-            >
-              {isUpscaling ? (
-                <>
-                  <RefreshCw size={14} className="spin" />
-                  <span>Enhancing Micro-Textures &amp; HD...</span>
-                </>
-              ) : (
-                <>
-                  <Zap size={14} />
-                  <span>{isUpscaled ? `Re-Enhance ${upscaleScale}x HD Details` : `Upscale Product to ${upscaleScale}x HD`}</span>
-                </>
-              )}
-            </button>
-
-            {/* Status / Reset */}
-            {isUpscaled && (
-              <div
-                style={{
-                  padding: "0.5rem 0.65rem",
-                  background: "rgba(16, 185, 129, 0.1)",
-                  borderRadius: "var(--radius-sm)",
-                  border: "1px solid rgba(16, 185, 129, 0.25)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  fontSize: "0.74rem",
-                }}
-              >
-                <div style={{ color: "#059669", fontWeight: 650 }}>
-                  ✓ {upscaleScale}x HD Texture Sharpened
-                  {upscaleStats && (
-                    <div style={{ fontSize: "0.68rem", opacity: 0.85, fontWeight: 400 }}>
-                      {upscaleStats.from} → {upscaleStats.to} ({upscaleStats.durationMs}ms)
-                    </div>
-                  )}
+              {/* Scale Selector */}
+              <div style={{ marginBottom: "0.75rem" }}>
+                <div style={{ fontSize: "0.74rem", fontWeight: 700, color: "var(--text-secondary)", marginBottom: "4px" }}>
+                  Resolution Multiplier:
                 </div>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.4rem" }}>
+                  <button
+                    type="button"
+                    className={`btn btn-sm ${upscaleScale === 2 ? "btn-primary" : "btn-outline"}`}
+                    onClick={() => setUpscaleScale(2)}
+                    style={{ fontSize: "0.78rem", fontWeight: 700 }}
+                  >
+                    ⚡ 2x High-Def
+                  </button>
+                  <button
+                    type="button"
+                    className={`btn btn-sm ${upscaleScale === 4 ? "btn-primary" : "btn-outline"}`}
+                    onClick={() => setUpscaleScale(4)}
+                    style={{ fontSize: "0.78rem", fontWeight: 700 }}
+                  >
+                    💎 4x Ultra-HD
+                  </button>
+                </div>
+              </div>
+
+              {/* Engine Selector */}
+              <div style={{ marginBottom: "0.75rem" }}>
+                <div style={{ fontSize: "0.74rem", fontWeight: 700, color: "var(--text-secondary)", marginBottom: "4px" }}>
+                  Clarity &amp; Upscaling Engine:
+                </div>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.35rem" }}>
+                  {[
+                    { id: "auto", name: "✨ Studio Hybrid", desc: "Neural + CLAHE" },
+                    { id: "super-image", name: "⚡ super-image", desc: "PyTorch EDSR/PAN" },
+                    { id: "opencv", name: "🔬 OpenCV", desc: "Lanczos4 + Mask" },
+                    { id: "qirias", name: "📐 Qirias Multi", desc: "Laplacian Edge" },
+                  ].map((eng) => {
+                    const isSel = upscaleEngine === eng.id;
+                    return (
+                      <button
+                        key={eng.id}
+                        type="button"
+                        onClick={() => setUpscaleEngine(eng.id)}
+                        style={{
+                          padding: "6px 8px",
+                          borderRadius: "6px",
+                          border: isSel ? "1.5px solid var(--primary)" : "1px solid var(--border-subtle)",
+                          background: isSel ? "rgba(99, 102, 241, 0.08)" : "var(--bg-surface)",
+                          cursor: "pointer",
+                          textAlign: "left",
+                          transition: "all 0.15s ease",
+                        }}
+                      >
+                        <div style={{ fontSize: "0.74rem", fontWeight: 750, color: isSel ? "var(--primary)" : "var(--text-primary)" }}>
+                          {eng.name}
+                        </div>
+                        <div style={{ fontSize: "0.64rem", color: "var(--text-muted)" }}>
+                          {eng.desc}
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Finishing Toggles */}
+              <div style={{ display: "flex", gap: "0.5rem", marginBottom: "0.75rem" }}>
+                <label style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "0.74rem", color: "var(--text-secondary)", cursor: "pointer", flex: 1 }}>
+                  <input
+                    type="checkbox"
+                    checked={upscaleSharpness}
+                    onChange={(e) => setUpscaleSharpness(e.target.checked)}
+                  />
+                  <span>Edge Sharpness</span>
+                </label>
+                <label style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "0.74rem", color: "var(--text-secondary)", cursor: "pointer", flex: 1 }}>
+                  <input
+                    type="checkbox"
+                    checked={upscaleContrast}
+                    onChange={(e) => setUpscaleContrast(e.target.checked)}
+                  />
+                  <span>CLAHE Contrast</span>
+                </label>
+              </div>
+
+              {/* Action Buttons */}
+              <div style={{ display: "flex", flexDirection: "column", gap: "0.4rem", marginBottom: "0.5rem" }}>
+                <button
+                  className="btn btn-primary btn-sm"
+                  style={{ width: "100%", justifyContent: "center", fontWeight: 750, padding: "8px 12px" }}
+                  onClick={() => handleUpscaleAndEnhance(upscaleScale)}
+                  disabled={isUpscaling || isTransforming || isProcessingCutout}
+                >
+                  {isUpscaling ? (
+                    <>
+                      <RefreshCw size={14} className="spin" />
+                      <span>Enhancing Micro-Textures &amp; HD...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Zap size={14} />
+                      <span>{isUpscaled ? `Re-Enhance ${upscaleScale}x HD Details` : `Upscale Product to ${upscaleScale}x HD`}</span>
+                    </>
+                  )}
+                </button>
+
                 <button
                   type="button"
                   className="btn btn-outline btn-sm"
-                  onClick={() => {
-                    setIsUpscaled(false);
-                    setUpscaleStats(null);
-                  }}
-                  style={{ fontSize: "0.68rem", padding: "2px 6px" }}
+                  onClick={() => setIsUpscaleModalOpen(true)}
+                  style={{ width: "100%", justifyContent: "center", fontSize: "0.74rem", color: "#059669", borderColor: "rgba(16, 185, 129, 0.4)" }}
                 >
-                  Reset
+                  <span>🔍 Open Visual Before/After Dialog</span>
                 </button>
               </div>
-            )}
+
+              {/* Status / Reset */}
+              {isUpscaled && (
+                <div
+                  style={{
+                    padding: "0.5rem 0.65rem",
+                    background: "rgba(16, 185, 129, 0.1)",
+                    borderRadius: "var(--radius-sm)",
+                    border: "1px solid rgba(16, 185, 129, 0.25)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    fontSize: "0.74rem",
+                  }}
+                >
+                  <div style={{ color: "#059669", fontWeight: 650 }}>
+                    ✓ {upscaleScale}x HD Texture Sharpened
+                    {upscaleStats && (
+                      <div style={{ fontSize: "0.68rem", opacity: 0.85, fontWeight: 400 }}>
+                        {upscaleStats.from} → {upscaleStats.to} ({upscaleStats.engine || upscaleEngine})
+                      </div>
+                    )}
+                  </div>
+                  <button
+                    type="button"
+                    className="btn btn-outline btn-sm"
+                    onClick={() => {
+                      setIsUpscaled(false);
+                      setUpscaleStats(null);
+                    }}
+                    style={{ fontSize: "0.68rem", padding: "2px 6px" }}
+                  >
+                    Reset
+                  </button>
+                </div>
+              )}
             </div>
           )}
 
@@ -2410,9 +2512,6 @@ export default function AiProductStudio() {
                     className={`studio-scene-pill ${isSelected ? "active" : ""}`}
                     onClick={() => {
                       setSelectedStage(stg.id);
-                      if (stg.id === "custom_ai" && !customAiBgUrl) {
-                        handleGenerateAiScene();
-                      }
                     }}
                   >
                     <div style={{ display: "flex", justifyContent: "space-between", width: "100%", marginBottom: "4px" }}>
@@ -3307,6 +3406,29 @@ export default function AiProductStudio() {
           </div>
         </div>
       )}
+
+      {/* Super Clarity Image Upscale Dialog */}
+      <ImageUpscaleModal
+        isOpen={isUpscaleModalOpen}
+        onClose={() => setIsUpscaleModalOpen(false)}
+        imageSrc={useCutout && cutoutImage ? cutoutImage : sourceImage}
+        productData={{
+          productId: selectedTargetProductId,
+          name: "Studio Product",
+          companyId: selectedCompanyId,
+        }}
+        onApply={(finalImg, stats) => {
+          if (useCutout && cutoutImage) {
+            setCutoutImage(finalImg);
+          } else {
+            setSourceImage(finalImg);
+          }
+          setIsUpscaled(true);
+          setUpscaleStats(stats);
+          setActionSuccessMessage(`🚀 Super-Resolution Applied (${stats?.scale || "2x"} HD)!`);
+          setTimeout(() => setActionSuccessMessage(""), 5000);
+        }}
+      />
     </div>
   );
 }

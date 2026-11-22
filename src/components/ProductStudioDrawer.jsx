@@ -23,8 +23,10 @@ import {
   Zap,
   Palette,
   ExternalLink,
+  Eye,
 } from "lucide-react";
 import ImageUpscaleModal from "./ImageUpscaleModal";
+import ProductImagePreviewModal from "./ProductImagePreviewModal";
 import { SmartPresetInput, ODOP_CATEGORY_PRESETS } from "../pages/CompanyCatalogueManager";
 
 const ODOP_PRESETS = {
@@ -36,7 +38,6 @@ const ODOP_PRESETS = {
     material: "Pure Mulberry Silk Warp, Fine Cotton Weft",
     finish: "Tested Electro-Gold Zari on Square Khat",
     application: "Bridal Ensembles, Wedding Drapes & High-End Boutique Luxury",
-    moq: "10 Pieces (Wholesale)",
     priceRange: "₹2,450 – ₹6,500",
     unit: "",
   },
@@ -48,7 +49,6 @@ const ODOP_PRESETS = {
     material: "100% Organically Grown Malwa Garlic",
     finish: "Sun-Cured Export Clean White Skin",
     application: "Commercial Culinary, Food Processing & Export",
-    moq: "500 kg (Wholesale Lot)",
     priceRange: "₹180 – ₹240 / kg",
     unit: "kg",
   },
@@ -60,7 +60,6 @@ const ODOP_PRESETS = {
     material: "Natural Indurated Limestone (Kota Stone)",
     finish: "Mirror High Polish / Honed",
     application: "Heavy Commercial Flooring & Corridors",
-    moq: "500 sq.ft (Quarry Lot)",
     priceRange: "₹85 – ₹120 / sq.ft",
     unit: "sq.ft",
   },
@@ -72,7 +71,6 @@ const ODOP_PRESETS = {
     material: "Natural Quartzite Sandstone",
     finish: "Sandblasted / Hand-Chiseled / Honed",
     application: "Exterior Facades, Cladding & Paving",
-    moq: "400 sq.ft (Project Lot)",
     priceRange: "₹135 – ₹190 / sq.ft",
     unit: "sq.ft",
   },
@@ -120,6 +118,8 @@ export default function ProductStudioDrawer({ product, onClose, onSave }) {
   const [contrast, setContrast] = useState(100);
   const [isUpscaleModalOpen, setIsUpscaleModalOpen] = useState(false);
   const [pendingUploadImage, setPendingUploadImage] = useState("");
+  const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
+  const [upscaleStats, setUpscaleStats] = useState(null);
   const canvasRef = useRef(null);
 
   useEffect(() => {
@@ -775,50 +775,27 @@ export default function ProductStudioDrawer({ product, onClose, onSave }) {
                   </>
                 )}
 
-                {/* Common MOQ & Price Range */}
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.75rem" }}>
-                  <div>
-                    <label style={{ fontSize: "0.8rem", fontWeight: 650, color: "var(--text-secondary)", display: "block", marginBottom: "4px" }}>
-                      📦 Minimum Order Quantity (MOQ)
-                    </label>
-                    <input
-                      type="text"
-                      className="input-field"
-                      style={{ paddingLeft: "0.85rem" }}
-                      placeholder={
-                        categoryFamily === "garlic"
-                          ? "e.g. 500 kg (Wholesale Lot) / 5 Quintals"
-                          : (categoryFamily === "sandstone" || categoryFamily === "kotastone")
-                          ? "e.g. 500 sq.ft (Quarry Lot) / 1 Truckload"
-                          : categoryFamily === "kotadoria"
-                          ? "e.g. 10 Sarees / 25 Pieces (Wholesale Pack)"
-                          : "e.g. 10 Pieces / 50 Units"
-                      }
-                      value={formData.moq || ""}
-                      onChange={(e) => handleChange("moq", e.target.value)}
-                    />
-                  </div>
-                  <div>
-                    <label style={{ fontSize: "0.8rem", fontWeight: 650, color: "var(--text-secondary)", display: "block", marginBottom: "4px" }}>
-                      💰 Price Range (₹)
-                    </label>
-                    <input
-                      type="text"
-                      className="input-field"
-                      style={{ paddingLeft: "0.85rem" }}
-                      placeholder={
-                        categoryFamily === "garlic"
-                          ? "e.g. ₹180 – ₹240 / kg"
-                          : (categoryFamily === "sandstone" || categoryFamily === "kotastone")
-                          ? "e.g. ₹85 – ₹140 / sq.ft"
-                          : categoryFamily === "kotadoria"
-                          ? "e.g. ₹2,450 – ₹6,500"
-                          : "e.g. ₹1,000 – ₹2,500"
-                      }
-                      value={formData.priceRange || ""}
-                      onChange={(e) => handleChange("priceRange", e.target.value)}
-                    />
-                  </div>
+                {/* Price Range */}
+                <div>
+                  <label style={{ fontSize: "0.8rem", fontWeight: 650, color: "var(--text-secondary)", display: "block", marginBottom: "4px" }}>
+                    💰 Price Range (₹)
+                  </label>
+                  <input
+                    type="text"
+                    className="input-field"
+                    style={{ paddingLeft: "0.85rem" }}
+                    placeholder={
+                      categoryFamily === "garlic"
+                        ? "e.g. ₹180 – ₹240 / kg"
+                        : (categoryFamily === "sandstone" || categoryFamily === "kotastone")
+                        ? "e.g. ₹85 – ₹140 / sq.ft"
+                        : categoryFamily === "kotadoria"
+                        ? "e.g. ₹2,450 – ₹6,500"
+                        : "e.g. ₹1,000 – ₹2,500"
+                    }
+                    value={formData.priceRange || ""}
+                    onChange={(e) => handleChange("priceRange", e.target.value)}
+                  />
                 </div>
               </div>
 
@@ -1194,20 +1171,33 @@ export default function ProductStudioDrawer({ product, onClose, onSave }) {
                   <label style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--text-secondary)" }}>
                     Primary Image (Upload &amp; Upscale 2x/4x)
                   </label>
-                  {formData.image && (
-                    <button
-                      type="button"
-                      className="btn btn-outline btn-sm"
-                      style={{ display: "inline-flex", gap: "5px", alignItems: "center", padding: "2px 8px", fontSize: "0.74rem", color: "#10b981", borderColor: "#10b981" }}
-                      onClick={() => {
-                        setPendingUploadImage(formData.image);
-                        setIsUpscaleModalOpen(true);
-                      }}
-                      title="Upscale this image to 2x or 4x HD"
-                    >
-                      <Zap size={12} /> Upscale 2x/4x
-                    </button>
-                  )}
+                  <div style={{ display: "flex", gap: "6px" }}>
+                    {formData.image && (
+                      <button
+                        type="button"
+                        className="btn btn-outline btn-sm"
+                        style={{ display: "inline-flex", gap: "5px", alignItems: "center", padding: "2px 8px", fontSize: "0.74rem", color: "#2563eb", borderColor: "#2563eb", background: "rgba(37, 99, 235, 0.08)", fontWeight: 700 }}
+                        onClick={() => setIsPreviewModalOpen(true)}
+                        title="Preview uploaded & upscaled image in full resolution"
+                      >
+                        <Eye size={12} /> Preview Image
+                      </button>
+                    )}
+                    {formData.image && (
+                      <button
+                        type="button"
+                        className="btn btn-outline btn-sm"
+                        style={{ display: "inline-flex", gap: "5px", alignItems: "center", padding: "2px 8px", fontSize: "0.74rem", color: "#10b981", borderColor: "#10b981" }}
+                        onClick={() => {
+                          setPendingUploadImage(formData.image);
+                          setIsUpscaleModalOpen(true);
+                        }}
+                        title="Upscale this image to 2x or 4x HD"
+                      >
+                        <Zap size={12} /> Upscale 2x/4x
+                      </button>
+                    )}
+                  </div>
                 </div>
 
                 <div style={{ display: "flex", gap: "0.6rem", alignItems: "center" }}>
@@ -1238,7 +1228,88 @@ export default function ProductStudioDrawer({ product, onClose, onSave }) {
                     onChange={(e) => handleChange("image", e.target.value)}
                     placeholder="Paste URL or upload image"
                   />
+                  {formData.image && (
+                    <div
+                      role="button"
+                      tabIndex={0}
+                      onClick={() => setIsPreviewModalOpen(true)}
+                      title="Click to preview full-resolution product image"
+                      style={{
+                        position: "relative",
+                        flexShrink: 0,
+                        cursor: "pointer",
+                        borderRadius: "8px",
+                        overflow: "hidden",
+                        border: "1.5px solid #2563eb",
+                        boxShadow: "0 2px 4px rgba(37, 99, 235, 0.2)",
+                        display: "block",
+                      }}
+                    >
+                      <img
+                        src={formData.image}
+                        alt="Preview"
+                        style={{ width: "42px", height: "42px", objectFit: "cover", display: "block" }}
+                      />
+                      <div
+                        style={{
+                          position: "absolute",
+                          inset: 0,
+                          background: "rgba(15, 23, 42, 0.4)",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          opacity: 0,
+                          transition: "opacity 0.15s ease",
+                          color: "#ffffff",
+                        }}
+                        onMouseEnter={(e) => { e.currentTarget.style.opacity = "1"; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.opacity = "0"; }}
+                      >
+                        <Eye size={14} />
+                      </div>
+                      {upscaleStats && (
+                        <span
+                          style={{
+                            position: "absolute",
+                            top: "1px",
+                            right: "1px",
+                            background: "#10b981",
+                            color: "#fff",
+                            fontSize: "0.55rem",
+                            fontWeight: 800,
+                            padding: "0 3px",
+                            borderRadius: "2px",
+                            pointerEvents: "none",
+                          }}
+                        >
+                          {upscaleStats.scale || "HD"}
+                        </span>
+                      )}
+                    </div>
+                  )}
                 </div>
+
+                {upscaleStats && (
+                  <div style={{ marginTop: "6px", fontSize: "0.74rem", color: "#166534", fontWeight: 600, display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "6px" }}>
+                    <span>✓ Image optimized: {upscaleStats.from} ➔ {upscaleStats.to} ({upscaleStats.scale} Super-Resolution applied)</span>
+                    <button
+                      type="button"
+                      onClick={() => setIsPreviewModalOpen(true)}
+                      style={{
+                        background: "none",
+                        border: "none",
+                        color: "#2563eb",
+                        cursor: "pointer",
+                        fontWeight: 700,
+                        textDecoration: "underline",
+                        padding: 0,
+                        fontSize: "0.74rem",
+                      }}
+                    >
+                      View HD Preview ➔
+                    </button>
+                  </div>
+                )}
               </div>
 
               {/* Studio Canvas & Controls */}
@@ -1419,8 +1490,41 @@ export default function ProductStudioDrawer({ product, onClose, onSave }) {
           name: formData.name || "Product",
           companyId: formData.companyId,
         }}
-        onApply={(finalImg) => {
+        onApply={(finalImg, stats) => {
           handleChange("image", finalImg);
+          setUpscaleStats(stats);
+        }}
+      />
+
+      {/* Full-Resolution Product Image Preview Modal */}
+      <ProductImagePreviewModal
+        isOpen={isPreviewModalOpen}
+        onClose={() => setIsPreviewModalOpen(false)}
+        imageUrl={formData.image}
+        productName={formData.name || "Product"}
+        productMeta={{
+          sku: formData.sku,
+          category: formData.category,
+          price: formData.price,
+          unit: formData.unit,
+          district: formData.district,
+          id: formData._id,
+        }}
+        upscaleStats={upscaleStats}
+        onOpenUpscale={(imgUrl) => {
+          setPendingUploadImage(imgUrl);
+          setIsUpscaleModalOpen(true);
+        }}
+        onOpenAiStudio={(imgUrl) => {
+          navigate("/ai-studio", {
+            state: {
+              image: imgUrl,
+              productId: formData._id || null,
+              productName: formData.name || "Product",
+              companyId: formData.companyId || null,
+              returnTo: window.location.pathname,
+            },
+          });
         }}
       />
     </div>

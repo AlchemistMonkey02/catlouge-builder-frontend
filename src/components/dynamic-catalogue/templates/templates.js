@@ -28,7 +28,7 @@ const covers = {
   farm: c => `<div class="t-topbar"></div><div class="t-logo">${E(c.info.ent).toUpperCase()}<small>${E(c.info.district || '').toUpperCase()}</small></div><div class="t-badge">${E(c.copy.badge || 'Verified')}</div>
     <h1 class="t-h1f">${E(c.copy.titleA || 'Signature')} <em>${E(c.copy.titleB || 'Collection')}</em></h1><div class="t-subf">${E(c.short)}</div>
     <div class="t-bigp ph" style="${bgi(c.hero)}"></div>
-    <div class="t-factsf"><div><b>${E(c.info.district || 'Origin')}</b>Origin</div><div><b>${c.items.length}</b>Products</div><div><b>${E(c.items[0] && c.items[0].moq || 'On request')}</b>Minimum order</div><div><b>Pan-India</b>Delivery</div></div>
+    <div class="t-factsf"><div><b>${E(c.info.district || 'Origin')}</b>Origin</div><div><b>${c.items.length}</b>Products</div><div><b>Pan-India</b>Express Dispatch</div><div><b>Certified</b>Verified Grade</div></div>
     <div class="t-proc"><h4>HOW IT REACHES YOU</h4><div class="t-steps">${(c.copy.process || [['Source', 'Careful selection'], ['Create', 'Crafted to spec'], ['Check', 'Quality tested'], ['Pack', 'Safely delivered']]).map((x, k) => `<div><i>${k + 1}</i>${E(x[0])}<small>${E(x[1])}</small></div>`).join('')}</div></div>
     <div class="t-cnf"><span>${E(c.info.person || '')} · ${E(c.info.mobile || '')}</span><span>${E(c.info.email || '')}</span></div>`,
   type: c => `<div class="t-ty1" style="font-size:${fsz(c.info.product || 'CATALOGUE', 92, 64, 12)}px">${E(c.info.product || 'Catalogue')}</div><div class="t-ty2">catalogue ${c.year}</div>
@@ -50,24 +50,24 @@ const prods = {
     <div class="t-g4">${items.map(it => `<div><div class="ph t-p34" style="${bgi(it.img)}"></div><div class="t-nm">${E(it.name)}</div><div class="t-sp">${E(spec(it))}</div><div class="t-pr">${E(it.price)}</div></div>`).join('')}</div>${pfoot(c)}` },
   specrows: { per: 3, html: (c, items, no) => `${run(c, 'SPECIFICATIONS', no)}<h3 class="t-ptitle">${E(c.title1)} <i>${E(c.title2)}</i></h3>
     ${items.map((it, k) => `<div class="t-item" style="top:${140 + k * 288}px"><div class="ph t-iph" style="${bgi(it.img)}"></div><div class="t-itx"><div class="t-nm2">${E(it.name)}</div>
-      <div class="t-sg">${[['Size', it.size], ['Material', it.material], ['Colour', it.colour], ['Min. order', it.moq]].filter(r => r[1]).map(r => `<div><span>${r[0]}</span><b>${E(r[1])}</b></div>`).join('')}</div>
+      <div class="t-sg">${[['Size', it.size], ['Material', it.material], ['Colour', it.colour], ['Finish', it.finish]].filter(r => r[1]).map(r => `<div><span>${r[0]}</span><b>${E(r[1])}</b></div>`).join('')}</div>
       <div class="t-pr2">${E(it.price)}</div></div></div>`).join('')}${pfoot(c)}` },
   masonry: { per: 4, html: (c, items, no) => {
     const sp = [[3, 3], [3, 3], [3, 3], [3, 3]];
     return `${run(c, 'THE COLLECTION', no)}<h3 class="t-ptitle">${E(c.title1)} <i>${E(c.title2)}</i></h3>
     <div class="t-mas">${items.map((it, k) => `<div class="c ph" style="grid-column:span ${(sp[k] || [3,3])[0]};grid-row:span ${(sp[k] || [3,3])[1]};${bgi(it.img)}"><span>${E(it.name)}<small>${E([it.size, it.price].filter(Boolean).join(' · '))}</small></span></div>`).join('')}</div>${pfoot(c)}`; } },
   table: { per: 4, html: (c, items, no) => `${run(c, 'PRODUCTS &amp; PRICE LIST', no)}<h3 class="t-ptitle">${E(c.title1)} <i>${E(c.title2)}</i></h3>
-    <div class="t-tb"><div class="t-tr h"><span>Photo</span><span>Product</span><span>Size</span><span>Packing / finish</span><span>MOQ</span><span>Price</span></div>
-    ${items.map(it => `<div class="t-tr"><div class="ph t-tph" style="${bgi(it.img)}"></div><div><b>${E(it.name)}</b><span class="g">${E(it.colour || 'Standard')}</span></div><span>${E(it.size || '-')}</span><span>${E(it.material || '-')}</span><span>${E(it.moq || '-')}</span><b>${E(it.price)}</b></div>`).join('')}</div>${pfoot(c)}` },
+    <div class="t-tb"><div class="t-tr h"><span>Photo</span><span>Product</span><span>Size</span><span>Packing / finish</span><span>Dispatch</span><span>Price</span></div>
+    ${items.map(it => `<div class="t-tr"><div class="ph t-tph" style="${bgi(it.img)}"></div><div><b>${E(it.name)}</b><span class="g">${E(it.colour || 'Standard')}</span></div><span>${E(it.size || '-')}</span><span>${E(it.material || '-')}</span><span>${E(it.finish || 'Pan-India')}</span><b>${E(it.price)}</b></div>`).join('')}</div>${pfoot(c)}` },
   cards2: { per: 4, html: (c, items, no) => `${run(c, 'OUR RANGE', no)}<h3 class="t-ptitle">${E(c.title1)} <i>${E(c.title2)}</i></h3>
-    <div class="t-c2">${items.map(it => `<div class="t-card"><div class="ph t-cph" style="${bgi(it.img)}"></div><div class="t-cb"><div class="t-nm2">${E(it.name)}</div><div class="t-sp2">${E(spec(it))}</div><div class="t-cr"><b>${E(it.price)}</b>${it.moq ? `<span>MOQ ${E(it.moq)}</span>` : ''}</div></div></div>`).join('')}</div>${pfoot(c)}` },
+    <div class="t-c2">${items.map(it => `<div class="t-card"><div class="ph t-cph" style="${bgi(it.img)}"></div><div class="t-cb"><div class="t-nm2">${E(it.name)}</div><div class="t-sp2">${E(spec(it))}</div><div class="t-cr"><b>${E(it.price)}</b></div></div></div>`).join('')}</div>${pfoot(c)}` },
   feature: { per: 3, html: (c, items, no) => `${run(c, 'FEATURED', no)}
-    <div class="t-feat"><div class="ph t-fph" style="${bgi(items[0].img)}"></div><div class="t-ftx"><div class="t-lab">FEATURED PIECE</div><div class="t-nm3">${E(items[0].name)}</div><div class="t-sp">${E(spec(items[0]))}</div><div class="t-pr3">${E(items[0].price)}</div>${items[0].moq ? `<div class="t-chip">MOQ ${E(items[0].moq)}</div>` : ''}</div></div>
+    <div class="t-feat"><div class="ph t-fph" style="${bgi(items[0].img)}"></div><div class="t-ftx"><div class="t-lab">FEATURED PIECE</div><div class="t-nm3">${E(items[0].name)}</div><div class="t-sp">${E(spec(items[0]))}</div><div class="t-pr3">${E(items[0].price)}</div></div></div>
     <div class="t-two">${items.slice(1).map(it => `<div><div class="ph t-tw" style="${bgi(it.img)}"></div><div class="t-nm">${E(it.name)}</div><div class="t-sp">${E(spec(it))}</div><div class="t-pr">${E(it.price)}</div></div>`).join('')}</div>${pfoot(c)}` },
   tall: { per: 3, html: (c, items, no) => `${run(c, 'THE EDIT', no)}<h3 class="t-ptitle">${E(c.title1)} <i>${E(c.title2)}</i></h3>
     <div class="t-g3">${items.map(it => `<div><div class="ph t-tall" style="${bgi(it.img)}"></div><div class="t-nm2">${E(it.name)}</div><div class="t-sp">${E(spec(it))}</div><div class="t-pr">${E(it.price)}</div></div>`).join('')}</div>${pfoot(c)}` },
   alt: { per: 4, html: (c, items, no) => `${run(c, 'THE COLLECTION', no)}
-    ${items.map((it, k) => `<div class="t-alt ${k % 2 ? 'r' : ''}" style="top:${86 + k * 238}px"><div class="ph t-aph" style="${bgi(it.img)}"></div><div class="t-atx"><div class="t-lab">${pn(it._n)}</div><div class="t-nm3">${E(it.name)}</div><div class="t-sp">${E(spec(it))}</div><div class="t-pr">${E(it.price)}${it.moq ? ' · MOQ ' + E(it.moq) : ''}</div></div></div>`).join('')}${pfoot(c)}` }
+    ${items.map((it, k) => `<div class="t-alt ${k % 2 ? 'r' : ''}" style="top:${86 + k * 238}px"><div class="ph t-aph" style="${bgi(it.img)}"></div><div class="t-atx"><div class="t-lab">${pn(it._n)}</div><div class="t-nm3">${E(it.name)}</div><div class="t-sp">${E(spec(it))}</div><div class="t-pr">${E(it.price)}</div></div></div>`).join('')}${pfoot(c)}` }
 };
 
 /* ---------------- story + closing ---------------- */

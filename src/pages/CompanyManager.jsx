@@ -125,7 +125,7 @@ const EMPTY_FORM = {
   },
   legal: { gstNumber: "", taxId: "", currency: "INR" },
   wholesaleTerms:
-    "Standard Trade Terms: Net 30 payment terms for verified accounts. Minimum order quantity applies.",
+    "Standard Trade Terms: Net 30 payment terms for verified accounts. Direct dispatch available across India.",
 };
 
 export default function CompanyManager() {

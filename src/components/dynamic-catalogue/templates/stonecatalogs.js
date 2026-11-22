@@ -53,7 +53,7 @@ const x1 = {
     return `${x1.head(c, no)}<div class="x-ptitle">${E(it.name)}</div>
       <div class="x-pic" style="${bg(it.img)}"></div>
       <div class="x-formats">${f.map(r => `<div><div class="fp" style="${bg(it.img, r[2])}"></div><b>${E(cap(r[0]))}</b><span>${E(r[1])}</span></div>`).join('')}</div>
-      <div class="x-pdesc"><b>${E(it.name)}</b> ${E([it.colour, it.material].filter(Boolean).join(', '))}. ${E((c.info.desc || '').split('. ')[0])}.<br><span>${it.price ? 'Price: ' + E(it.price) + ' · ' : ''}${it.moq ? 'MOQ ' + E(it.moq) : ''}</span><br><span>${lorem.custom}</span></div>
+      <div class="x-pdesc"><b>${E(it.name)}</b> ${E([it.colour, it.material].filter(Boolean).join(', '))}. ${E((c.info.desc || '').split('. ')[0])}.<br><span>${it.price ? 'Price: ' + E(it.price) : ''}</span><br><span>${lorem.custom}</span></div>
       <div class="x-disc"><b>Please note:</b> ${E((c.copy && c.copy.note) || lorem.disc)}</div>`;
   },
   contact: c => `<div class="x-full" style="${bg((c.items[c.items.length - 1] || {}).img || '')};width:520px"></div>

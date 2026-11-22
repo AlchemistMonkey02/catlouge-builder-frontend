@@ -176,9 +176,26 @@ export const createProductFromStudio = async (payload) => {
   return data;
 };
 
-// --- AI Image Studio functions stubs ---
-export const generateAiStudioBackground = async () => ({ data: {} });
-export const neuralAiCutout = async () => ({ data: {} });
+// --- AI Image Studio APIs ---
+export const generateAiStudioBackground = async (payload) => {
+  try {
+    const { data } = await api.post(API_ENDPOINTS.IMAGES.GENERATE_BG, payload);
+    return data;
+  } catch (err) {
+    console.warn("Backend generate-bg error, returning empty result:", err.message);
+    return { success: false, data: {} };
+  }
+};
+
+export const neuralAiCutout = async (payload) => {
+  try {
+    const { data } = await api.post(API_ENDPOINTS.IMAGES.CUTOUT, payload);
+    return data;
+  } catch (err) {
+    console.warn("Backend cutout error, falling back to client canvas:", err.message);
+    return { success: false, error: err.message };
+  }
+};
 export const fetchGeminiStudioPlan = async () => ({ success: false, message: "Gemini features disabled." });
 
 export const clientSideUpscale = (imageBase64, scaleFactor = 2, sharpness = 1.35, contrast = 1.12, saturation = 1.08) => {
@@ -204,26 +221,53 @@ export const clientSideUpscale = (imageBase64, scaleFactor = 2, sharpness = 1.35
 
         const isPng = typeof imageBase64 === "string" && (imageBase64.includes("image/png") || imageBase64.startsWith("data:image/png"));
 
-        // Micro-contrast, clarity and unsharp sharpening
+        // Micro-contrast, clarity, unsharp sharpening and saturation
         try {
           const imgData = ctx.getImageData(0, 0, targetW, targetH);
           const d = imgData.data;
-          const contrastFactor = Number(contrast) || 1.12;
+          const contrastFactor = Number(contrast) || 1.15;
           const satFactor = Number(saturation) || 1.08;
+          const sharpnessFactor = Number(sharpness) || 1.35;
 
+          // Pass 1: Contrast tone curve and color vibrancy
           for (let i = 0; i < d.length; i += 4) {
             if (d[i + 3] === 0) continue;
-            // Contrast
+            // Contrast S-curve
             d[i] = Math.min(255, Math.max(0, ((d[i] / 255 - 0.5) * contrastFactor + 0.5) * 255));
             d[i + 1] = Math.min(255, Math.max(0, ((d[i + 1] / 255 - 0.5) * contrastFactor + 0.5) * 255));
             d[i + 2] = Math.min(255, Math.max(0, ((d[i + 2] / 255 - 0.5) * contrastFactor + 0.5) * 255));
 
-            // Saturation
+            // Saturation vibrancy
             const gray = 0.2989 * d[i] + 0.5870 * d[i + 1] + 0.1140 * d[i + 2];
             d[i] = Math.min(255, Math.max(0, gray + (d[i] - gray) * satFactor));
             d[i + 1] = Math.min(255, Math.max(0, gray + (d[i + 1] - gray) * satFactor));
             d[i + 2] = Math.min(255, Math.max(0, gray + (d[i + 2] - gray) * satFactor));
           }
+
+          // Pass 2: High-definition Unsharp Masking (Laplacian edge recovery convolution)
+          if (sharpnessFactor > 1.0) {
+            const strength = Math.min(0.65, (sharpnessFactor - 1.0) * 0.85);
+            const copy = new Uint8ClampedArray(d);
+            const stride = targetW * 4;
+            for (let y = 1; y < targetH - 1; y++) {
+              const yOff = y * stride;
+              for (let x = 1; x < targetW - 1; x++) {
+                const idx = yOff + x * 4;
+                for (let c = 0; c < 3; c++) {
+                  const center = copy[idx + c];
+                  const surrounding = (
+                    copy[idx - 4 + c] +
+                    copy[idx + 4 + c] +
+                    copy[idx - stride + c] +
+                    copy[idx + stride + c]
+                  ) * 0.25;
+                  const sharpened = center + (center - surrounding) * strength * 2.4;
+                  d[idx + c] = Math.min(255, Math.max(0, sharpened));
+                }
+              }
+            }
+          }
+
           ctx.putImageData(imgData, 0, 0);
         } catch (_) {}
 
