@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   Sparkles,
   Building2,
@@ -10,6 +10,7 @@ import {
   Palette,
   Camera,
   Layers,
+  LogOut,
 } from "lucide-react";
 
 const THEMES = [
@@ -21,6 +22,13 @@ const THEMES = [
 
 export default function Navbar() {
   const location = useLocation();
+  const navigate = useNavigate();
+  const isLoggedIn = Boolean(localStorage.getItem("token"));
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    navigate("/login");
+  };
 
   const [currentTheme, setCurrentTheme] = useState(() => {
     return localStorage.getItem("app_theme") || "light";
@@ -182,6 +190,26 @@ export default function Navbar() {
           />
           <span>Studio Ready</span>
         </div>
+
+        {isLoggedIn && (
+          <button
+            type="button"
+            onClick={handleLogout}
+            className="org-badge"
+            style={{
+              cursor: "pointer",
+              fontSize: "0.82rem",
+              padding: "0.42rem 0.85rem",
+              color: "#dc2626",
+              borderColor: "rgba(220, 38, 38, 0.25)",
+              background: "rgba(220, 38, 38, 0.06)",
+            }}
+            title="Sign out"
+          >
+            <LogOut size={15} />
+            <span>Logout</span>
+          </button>
+        )}
       </div>
     </header>
   );
