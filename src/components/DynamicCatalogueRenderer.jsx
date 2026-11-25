@@ -290,9 +290,13 @@ export default function DynamicCatalogueRenderer({
               <div style={{ display: "grid", gridTemplateColumns: "1.2fr 1fr", gap: "2.5rem", alignItems: "center" }}>
                 <div style={{ borderRadius: `${cardRadius}px`, overflow: "hidden", height: "480px", border: `2px solid ${accentColor}`, boxShadow: getShadowCss() }}>
                   <img
-                    src={coverConfig.coverImage || "/assets/reference/p1_1.jpg"}
+                    src={coverConfig.coverImage || "/assets/garlic/garlic-01.jpeg"}
                     alt="Cover Hero"
                     style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                    onError={(e) => {
+                      e.currentTarget.onerror = null;
+                      e.currentTarget.src = "/assets/garlic/garlic-01.jpeg";
+                    }}
                   />
                 </div>
                 <div>
@@ -348,9 +352,13 @@ export default function DynamicCatalogueRenderer({
 
                 <div style={{ width: "100%", height: "460px", borderRadius: `${cardRadius}px`, overflow: "hidden", border: `2px solid ${cardBorderColor}`, boxShadow: getShadowCss(), position: "relative" }}>
                   <img
-                    src={coverConfig.coverImage || "/assets/reference/p1_1.jpg"}
+                    src={coverConfig.coverImage || "/assets/garlic/garlic-01.jpeg"}
                     alt="Cover Showcase"
                     style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                    onError={(e) => {
+                      e.currentTarget.onerror = null;
+                      e.currentTarget.src = "/assets/garlic/garlic-01.jpeg";
+                    }}
                   />
                   <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, background: "linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 100%)", padding: "2rem", color: "#ffffff" }}>
                     <div style={{ fontSize: "0.82rem", fontWeight: 800, letterSpacing: "0.15em", textTransform: "uppercase", color: accentColor }}>
@@ -409,9 +417,13 @@ export default function DynamicCatalogueRenderer({
 
               <div style={{ height: "340px", borderRadius: `${cardRadius}px`, overflow: "hidden", border: `2px solid ${cardBorderColor}`, boxShadow: getShadowCss() }}>
                 <img
-                  src={aboutConfig.aboutImage || "/assets/reference/p2_1.jpg"}
+                  src={aboutConfig.aboutImage || "/assets/garlic/garlic-02.jpeg"}
                   alt="About Us Heritage"
                   style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                  onError={(e) => {
+                    e.currentTarget.onerror = null;
+                    e.currentTarget.src = "/assets/garlic/garlic-02.jpeg";
+                  }}
                 />
               </div>
             </div>
@@ -566,6 +578,7 @@ export default function DynamicCatalogueRenderer({
                       const mrp = p.mrp || (p.price ? Math.round(p.price * 1.25) : 0);
                       const savings = mrp && p.price && mrp > p.price ? Math.round(((mrp - p.price) / mrp) * 100) : 0;
                       const qrData = productQrMap[p._id];
+                      const productUrl = p.customUrl || (typeof window !== "undefined" ? `${window.location.origin}/companies/${currentCompany._id || "view"}/catalogue?sku=${encodeURIComponent(p.sku || p._id)}` : "#");
 
                       return (
                         <tr key={p._id} style={{ borderBottom: `1px solid ${cardBorderColor}`, background: pIdx % 2 === 0 ? "transparent" : `${primaryColor}06` }}>
@@ -619,7 +632,33 @@ export default function DynamicCatalogueRenderer({
                           {showProductQr && (
                             <td style={{ padding: "10px 14px", textAlign: "center" }}>
                               {qrData ? (
-                                <img src={qrData} alt="Scan QR" style={{ width: "45px", height: "45px", display: "inline-block", border: `1px solid ${cardBorderColor}`, borderRadius: "4px", background: "#fff", padding: "2px" }} />
+                                <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "2px" }}>
+                                  <a href={productUrl} target="_blank" rel="noopener noreferrer" style={{ display: "inline-block", textDecoration: "none" }}>
+                                    <img src={qrData} alt="Scan QR" style={{ width: "45px", height: "45px", display: "inline-block", border: `1px solid ${cardBorderColor}`, borderRadius: "4px", background: "#fff", padding: "2px" }} />
+                                  </a>
+                                  <a
+                                    href={productUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="qr-click-btn"
+                                    style={{
+                                      display: "inline-flex",
+                                      alignItems: "center",
+                                      gap: "2px",
+                                      fontSize: "0.62rem",
+                                      fontWeight: 700,
+                                      color: "#ffffff",
+                                      background: accentColor || "#2563eb",
+                                      padding: "2px 7px",
+                                      borderRadius: "99px",
+                                      textDecoration: "none",
+                                      marginTop: "2px",
+                                      boxShadow: "0 1px 3px rgba(0,0,0,0.15)"
+                                    }}
+                                  >
+                                    Click here ↗
+                                  </a>
+                                </div>
                               ) : (
                                 <span style={{ fontSize: "0.7rem", opacity: 0.6 }}>QR</span>
                               )}
@@ -638,6 +677,7 @@ export default function DynamicCatalogueRenderer({
                   const mrp = p.mrp || (p.price ? Math.round(p.price * 1.25) : 0);
                   const savings = mrp && p.price && mrp > p.price ? Math.round(((mrp - p.price) / mrp) * 100) : 0;
                   const qrData = productQrMap[p._id];
+                  const productUrl = p.customUrl || (typeof window !== "undefined" ? `${window.location.origin}/companies/${currentCompany._id || "view"}/catalogue?sku=${encodeURIComponent(p.sku || p._id)}` : "#");
 
                   return (
                     <div
@@ -654,9 +694,13 @@ export default function DynamicCatalogueRenderer({
                     >
                       <div style={getImageContainerStyle()}>
                         <img
-                          src={p.image || p.imageUrl || "/assets/reference/p4_1.jpg"}
+                          src={p.image || p.imageUrl || (p.images && p.images[0]?.url) || "/assets/garlic/garlic-01.jpeg"}
                           alt={p.name}
                           style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+                          onError={(e) => {
+                            e.currentTarget.onerror = null;
+                            e.currentTarget.src = "/assets/garlic/garlic-01.jpeg";
+                          }}
                         />
                         {showSavings && savings > 0 && (
                           <span style={{ position: "absolute", top: "10px", left: "10px", background: accentColor, color: "#fff", fontWeight: 900, fontSize: "0.72rem", padding: "3px 9px", borderRadius: "16px" }}>
@@ -726,9 +770,33 @@ export default function DynamicCatalogueRenderer({
 
                           <div style={{ textAlign: "right", display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "3px" }}>
                             {showProductQr && qrData && (
-                              <div style={{ textAlign: "center" }}>
-                                <img src={qrData} alt="Product QR" style={{ width: "42px", height: "42px", background: "#ffffff", padding: "2px", borderRadius: "4px", border: `1px solid ${cardBorderColor}`, display: "block" }} />
+                              <div style={{ textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center" }}>
+                                <a href={productUrl} target="_blank" rel="noopener noreferrer" style={{ display: "inline-block", textDecoration: "none" }}>
+                                  <img src={qrData} alt="Product QR" style={{ width: "42px", height: "42px", background: "#ffffff", padding: "2px", borderRadius: "4px", border: `1px solid ${cardBorderColor}`, display: "block" }} />
+                                </a>
                                 <span style={{ fontSize: "0.56rem", fontWeight: 700, color: primaryColor, display: "block", marginTop: "1px" }}>PART A QR</span>
+                                <a
+                                  href={productUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="qr-click-btn"
+                                  style={{
+                                    display: "inline-flex",
+                                    alignItems: "center",
+                                    gap: "2px",
+                                    fontSize: "0.60rem",
+                                    fontWeight: 700,
+                                    color: "#ffffff",
+                                    background: accentColor || primaryColor || "#2563eb",
+                                    padding: "2px 7px",
+                                    borderRadius: "99px",
+                                    textDecoration: "none",
+                                    marginTop: "2px",
+                                    boxShadow: "0 1px 3px rgba(0,0,0,0.15)"
+                                  }}
+                                >
+                                  Click here ↗
+                                </a>
                               </div>
                             )}
                             <div style={{ fontSize: "0.70rem", color: "#15803d", fontWeight: 700 }}>
@@ -776,7 +844,15 @@ export default function DynamicCatalogueRenderer({
               {(galleryConfig.items || []).map((item, idx) => (
                 <div key={idx} style={{ background: cardBg, borderRadius: `${cardRadius}px`, border: `1px solid ${cardBorderColor}`, overflow: "hidden", boxShadow: getShadowCss() }}>
                   <div style={{ height: "230px", overflow: "hidden" }}>
-                    <img src={item.image || "/assets/reference/p6_1.jpg"} alt={item.title} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                    <img
+                      src={item.image || "/assets/garlic/garlic-03.jpeg"}
+                      alt={item.title}
+                      style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                      onError={(e) => {
+                        e.currentTarget.onerror = null;
+                        e.currentTarget.src = "/assets/garlic/garlic-03.jpeg";
+                      }}
+                    />
                   </div>
                   <div style={{ padding: "1.25rem" }}>
                     <h4 style={{ fontFamily: headingFont, fontSize: "1.15rem", fontWeight: 800, color: primaryColor, margin: "0 0 4px 0" }}>
@@ -849,7 +925,26 @@ export default function DynamicCatalogueRenderer({
                       <div style={{ fontWeight: 800, fontSize: "0.88rem", color: primaryColor, marginTop: "8px", letterSpacing: "0.06em" }}>
                         {box.title}
                       </div>
-                      <a href={box.link || "#"} target="_blank" rel="noopener noreferrer" style={{ fontSize: "0.80rem", color: accentColor || "#2563eb", fontWeight: 700, textDecoration: "underline", margin: "3px 0 2px" }}>
+                      <a
+                        href={box.link || "#"}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="qr-click-btn"
+                        style={{
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: "3px",
+                          fontSize: "0.75rem",
+                          color: "#ffffff",
+                          background: accentColor || "#2563eb",
+                          fontWeight: 700,
+                          padding: "3px 12px",
+                          borderRadius: "99px",
+                          textDecoration: "none",
+                          margin: "6px 0 3px",
+                          boxShadow: "0 2px 6px rgba(0,0,0,0.12)"
+                        }}
+                      >
                         Click here ↗
                       </a>
                       <div style={{ fontSize: "0.72rem", color: textColor, opacity: 0.7 }}>

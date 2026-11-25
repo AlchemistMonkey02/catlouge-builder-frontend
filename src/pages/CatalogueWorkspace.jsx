@@ -67,12 +67,6 @@ export default function CatalogueWorkspace() {
       const res = await fetchCatalogueProducts(params);
       if (res.data) {
         let prods = res.data.products || [];
-        try {
-          const localProdOverrides = JSON.parse(localStorage.getItem("catalogue_local_products") || "{}");
-          if (Object.keys(localProdOverrides).length > 0) {
-            prods = prods.map((p) => (localProdOverrides[p._id] ? { ...p, ...localProdOverrides[p._id] } : p));
-          }
-        } catch (_) {}
         setProducts(prods);
         setCounts(res.data.counts || {});
       }
@@ -168,11 +162,6 @@ export default function CatalogueWorkspace() {
   const handleSaveProductFromDrawer = async (updatedProduct) => {
     try {
       await updateCatalogueProduct(updatedProduct._id, updatedProduct);
-      try {
-        const localProdOverrides = JSON.parse(localStorage.getItem("catalogue_local_products") || "{}");
-        localProdOverrides[updatedProduct._id] = { ...updatedProduct };
-        localStorage.setItem("catalogue_local_products", JSON.stringify(localProdOverrides));
-      } catch (_) {}
       setActiveDrawerProduct(null);
       loadProducts();
     } catch (err) {

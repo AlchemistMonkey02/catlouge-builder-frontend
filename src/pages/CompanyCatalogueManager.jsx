@@ -1001,18 +1001,7 @@ export default function CompanyCatalogueManager() {
           prods = [...prodRes.data];
         }
 
-        try {
-          const localProdOverrides = JSON.parse(
-            localStorage.getItem("catalogue_local_products") || "{}"
-          );
-          if (Object.keys(localProdOverrides).length > 0) {
-            prods = prods.map((p) =>
-              localProdOverrides[p._id] ? { ...p, ...localProdOverrides[p._id] } : p
-            );
-          }
-        } catch (_) {}
-
-        // Match products belonging to this company or matching brand name AND category
+        // Match products belonging strictly to this company from server API
         let compProducts = prods.filter(
           (p) =>
             (String(p.companyId) === String(targetCompany._id) ||
@@ -1021,44 +1010,13 @@ export default function CompanyCatalogueManager() {
                 p.brand.toLowerCase() === targetCompany.name.toLowerCase()) ||
               (p.companyName &&
                 targetCompany.name &&
-                p.companyName.toLowerCase() === targetCompany.name.toLowerCase())) &&
-            isProductCompatibleWithFamily(p, fam)
+                p.companyName.toLowerCase() === targetCompany.name.toLowerCase()))
         );
 
-        // Fallback 1: If no direct match by ID/name in DB, match any product compatible with this company's ODOP family
+        // If no products matched by ID or name, match compatible products
         if (compProducts.length === 0) {
           compProducts = prods.filter((p) => isProductCompatibleWithFamily(p, fam));
         }
-
-        // Fallback 2: If still empty (e.g. fresh DB or offline), load verified authentic specialty demo products
-        if (compProducts.length === 0) {
-          compProducts =
-            SPECIALTY_DEMO_PRODUCTS[fam] ||
-            SPECIALTY_DEMO_PRODUCTS.garlic ||
-            [];
-        }
-
-        // Apply local storage overrides and merge any locally created products
-        try {
-          const localProdOverrides = JSON.parse(
-            localStorage.getItem("catalogue_local_products") || "{}"
-          );
-          if (Object.keys(localProdOverrides).length > 0) {
-            compProducts = compProducts.map((p) =>
-              localProdOverrides[p._id] ? { ...p, ...localProdOverrides[p._id] } : p
-            );
-            Object.values(localProdOverrides).forEach((lp) => {
-              if (lp && lp._id && !compProducts.some((cp) => cp._id === lp._id)) {
-                if (
-                  (!lp.companyId || String(lp.companyId) === String(targetCompany._id)) &&
-                  isProductCompatibleWithFamily(lp, fam)
-                ) {
-                  compProducts.unshift(lp);
-                }
-              }
-            });
-          }
-        } catch (_) {}
 
         // Guarantee every product has an authentic, high-definition image resolved
         compProducts = compProducts.map((p, idx) => ({
@@ -1069,14 +1027,8 @@ export default function CompanyCatalogueManager() {
         setProducts(compProducts);
       }
     } catch (err) {
-      console.error("Error loading catalogue products:", err);
-      // Guarantee products are visible even on network error
-      const famFallback = company ? getCategoryFamily(company) : "garlic";
-      setProducts(
-        SPECIALTY_DEMO_PRODUCTS[famFallback] ||
-        SPECIALTY_DEMO_PRODUCTS.garlic ||
-        []
-      );
+      console.error("Error loading catalogue products from API:", err);
+      setProducts([]);
     } finally {
       setLoading(false);
     }
@@ -1101,21 +1053,25 @@ export default function CompanyCatalogueManager() {
       setUpscaleTargetProductId(null);
       // Immediately update local UI product list
       setProducts((prev) =>
-        prev.map((item) => (item._id === targetId ? { ...item, image: finalImage } : item))
+        prev.map((item) => (item._id === targetId ? { ...item, image: finalImage, upscaleStats: stats } : item))
       );
       setFailedThumbnails((prev) => {
         const next = { ...prev };
         delete next[targetId];
         return next;
       });
-      // Persist to local storage and sync with backend
+      // Update imagePreviewModal if it is open for this product
+      setImagePreviewModal((prev) => {
+        if (prev.isOpen && prev.meta?.id === targetId) {
+          return { ...prev, url: finalImage, stats: stats };
+        }
+        return prev;
+      });
+      // Sync image update directly with backend API
       try {
-        const localProdOverrides = JSON.parse(localStorage.getItem("catalogue_local_products") || "{}");
-        localProdOverrides[targetId] = { ...(localProdOverrides[targetId] || {}), image: finalImage };
-        localStorage.setItem("catalogue_local_products", JSON.stringify(localProdOverrides));
         await updateCatalogueProduct(targetId, { image: finalImage });
       } catch (err) {
-        console.warn("Product image synced in local storage:", err.message);
+        console.warn("Product image server update:", err.message);
       }
       setDataBankToast(`✓ Image upscaled to Super Clarity (${stats?.scale || "2x"} HD)!`);
       setTimeout(() => setDataBankToast(null), 4000);
@@ -1241,17 +1197,11 @@ export default function CompanyCatalogueManager() {
 
     try {
       if (editingProductId) {
-        await updateCatalogueProduct(editingProductId, payload);
-        // Immediately update local UI state
+        const res = await updateCatalogueProduct(editingProductId, payload);
+        const serverData = res?.data || { ...payload, _id: editingProductId };
         setProducts((prev) =>
-          prev.map((item) => (item._id === editingProductId ? { ...item, ...payload } : item))
+          prev.map((item) => (item._id === editingProductId ? { ...item, ...serverData } : item))
         );
-        // Persist in localStorage backup for instant catalogue sync
-        try {
-          const localProdOverrides = JSON.parse(localStorage.getItem("catalogue_local_products") || "{}");
-          localProdOverrides[editingProductId] = { ...payload, _id: editingProductId };
-          localStorage.setItem("catalogue_local_products", JSON.stringify(localProdOverrides));
-        } catch (_) {}
       } else {
         const created = await createCatalogueProduct(payload);
         if (created?.data) {
@@ -1263,23 +1213,8 @@ export default function CompanyCatalogueManager() {
       resetForm();
       loadCompanyAndProducts();
     } catch (err) {
-      console.warn("Product save server response:", err.message);
-      // Even if network blips, persist edits in UI and localStorage so user never loses work
-      if (editingProductId) {
-        setProducts((prev) =>
-          prev.map((item) => (item._id === editingProductId ? { ...item, ...payload } : item))
-        );
-        try {
-          const localProdOverrides = JSON.parse(localStorage.getItem("catalogue_local_products") || "{}");
-          localProdOverrides[editingProductId] = { ...payload, _id: editingProductId };
-          localStorage.setItem("catalogue_local_products", JSON.stringify(localProdOverrides));
-        } catch (_) {}
-        setIsProductModalOpen(false);
-        setEditingProductId(null);
-        resetForm();
-      } else {
-        alert("Save failed: " + (err.response?.data?.message || err.message));
-      }
+      console.warn("Product save server error:", err.message);
+      alert("Save failed: " + (err.response?.data?.message || err.message));
     }
   };
 
@@ -1287,14 +1222,7 @@ export default function CompanyCatalogueManager() {
   const handleOpenEditProduct = (p) => {
     setEditingProductId(p._id);
 
-    // Apply any local override if present
     let currentP = { ...p };
-    try {
-      const localProdOverrides = JSON.parse(localStorage.getItem("catalogue_local_products") || "{}");
-      if (localProdOverrides[p._id]) {
-        currentP = { ...currentP, ...localProdOverrides[p._id] };
-      }
-    } catch (_) {}
 
     const pSpecs = currentP.technicalSpecifications || [];
     const findSpec = (key) => pSpecs.find((s) => s.key?.toLowerCase().includes(key.toLowerCase()))?.value || "";
@@ -1354,15 +1282,11 @@ export default function CompanyCatalogueManager() {
   const handleDeleteProduct = async (id) => {
     if (!window.confirm("Remove this product from catalogue?")) return;
     try {
-      setProducts((prev) => prev.filter((item) => item._id !== id));
-      try {
-        const localProdOverrides = JSON.parse(localStorage.getItem("catalogue_local_products") || "{}");
-        delete localProdOverrides[id];
-        localStorage.setItem("catalogue_local_products", JSON.stringify(localProdOverrides));
-      } catch (_) {}
       await deleteCatalogueProduct(id);
+      setProducts((prev) => prev.filter((item) => item._id !== id));
     } catch (err) {
-      console.warn("Delete request synced locally:", err.message);
+      console.warn("Delete request error:", err.message);
+      alert("Failed to delete product: " + (err.response?.data?.message || err.message));
     }
   };
 
@@ -1767,7 +1691,8 @@ export default function CompanyCatalogueManager() {
                               application: p.application || p.useApplication,
                               priceRange: p.priceRange,
                               stock: p.stock,
-                            })
+                              upscaleStats: p.upscaleStats || null,
+                            }, p.upscaleStats || null)
                           }
                           title="Click to preview high-definition image"
                           style={{
@@ -1900,7 +1825,8 @@ export default function CompanyCatalogueManager() {
                                 application: p.application || p.useApplication,
                                 priceRange: p.priceRange,
                                 stock: p.stock,
-                              })
+                                upscaleStats: p.upscaleStats || null,
+                              }, p.upscaleStats || null)
                             }
                             style={{
                               color: "#2563eb",
@@ -2392,13 +2318,7 @@ export default function CompanyCatalogueManager() {
                 </div>
                 <div>
                   <label style={{ fontSize: "0.8rem", fontWeight: 600, color: "var(--text-secondary)", display: "block", marginBottom: "4px" }}>
-                    {categoryFamily === "garlic"
-                      ? "Mandi Rate / MRP (₹)"
-                      : categoryFamily === "sandstone" || categoryFamily === "kotastone"
-                      ? "Quarry List / MRP (₹)"
-                      : categoryFamily === "kotadoria"
-                      ? "Artisan Benchmark / MRP (₹)"
-                      : "MRP (₹)"}
+                    MRP (₹)
                   </label>
                   <input
                     type="number"
@@ -2579,9 +2499,24 @@ export default function CompanyCatalogueManager() {
                       }}
                     >
                       <img
-                        src={productForm.image}
+                        src={
+                          productForm.image && (productForm.image.startsWith("assets/") || productForm.image.startsWith("uploads/"))
+                            ? `/${productForm.image}`
+                            : productForm.image
+                        }
                         alt="Product Preview"
                         style={{ width: "52px", height: "52px", objectFit: "cover", display: "block" }}
+                        onError={(e) => {
+                          e.currentTarget.onerror = null;
+                          e.currentTarget.src =
+                            categoryFamily === "garlic"
+                              ? "/assets/garlic/garlic-01.jpeg"
+                              : categoryFamily === "kotastone"
+                              ? "/assets/kota-stone/Blue-Kota-Stone-Tiles-1.jpg"
+                              : categoryFamily === "sandstone"
+                              ? "/assets/sand-stone/Dholpur-Beige-Sandstone.jpg"
+                              : "/assets/kota-doria/0X2A0389_db4c4b42-1d9b-405b-9ea0-664b5017af38.jpg";
+                        }}
                       />
                       <div
                         style={{
@@ -3247,8 +3182,8 @@ export default function CompanyCatalogueManager() {
         onClose={() => setIsUpscaleModalOpen(false)}
         imageSrc={pendingUploadImage}
         productData={{
-          productId: editingProductId || null,
-          name: productForm.name || "Product",
+          productId: upscaleTargetProductId || imagePreviewModal.meta?.id || editingProductId || null,
+          name: (upscaleTargetProductId ? products.find((x) => x._id === upscaleTargetProductId)?.name : null) || imagePreviewModal.title || productForm.name || "Product",
           companyId: companyId,
         }}
         onApply={handleApplyUpscaledImage}
@@ -3264,18 +3199,21 @@ export default function CompanyCatalogueManager() {
         upscaleStats={imagePreviewModal.stats}
         onOpenUpscale={(imgUrl) => {
           setPendingUploadImage(imgUrl);
-          if (imagePreviewModal.meta?.id) {
-            setUpscaleTargetProductId(imagePreviewModal.meta.id);
-          }
+          const targetId = imagePreviewModal.meta?.id || editingProductId || null;
+          setUpscaleTargetProductId(targetId);
           setIsUpscaleModalOpen(true);
         }}
         onOpenAiStudio={(imgUrl) => {
           navigate("/ai-studio", {
             state: {
               image: imgUrl,
-              productId: imagePreviewModal.meta?.id || null,
-              productName: imagePreviewModal.title || "Product",
-              companyId: companyId || null,
+              productId: imagePreviewModal.meta?.id || editingProductId || null,
+              productName: imagePreviewModal.title || productForm.name || "Product",
+              category: imagePreviewModal.meta?.category || productForm.category || "",
+              price: imagePreviewModal.meta?.price || productForm.price || "",
+              unit: imagePreviewModal.meta?.unit || productForm.unit || "",
+              sku: imagePreviewModal.meta?.sku || productForm.sku || "",
+              companyId: company?._id || companyId || null,
               returnTo: window.location.pathname,
             },
           });

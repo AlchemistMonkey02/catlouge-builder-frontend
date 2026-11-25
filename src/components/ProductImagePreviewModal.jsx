@@ -5,6 +5,7 @@ import {
   ZoomOut,
   RotateCcw,
   Maximize2,
+  Minimize2,
   Download,
   Zap,
   Sparkles,
@@ -42,9 +43,11 @@ export default function ProductImagePreviewModal({
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
   const [isLoaded, setIsLoaded] = useState(false);
   const [downloadSuccess, setDownloadSuccess] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const [currentUrl, setCurrentUrl] = useState(imageUrl || "");
   const [hasFallbackApplied, setHasFallbackApplied] = useState(false);
   const containerRef = useRef(null);
+  const modalWrapperRef = useRef(null);
 
   // Determine fallback image based on product metadata/category
   const getFallbackImage = () => {
@@ -64,6 +67,7 @@ export default function ProductImagePreviewModal({
       setIsLoaded(false);
       setDownloadSuccess(false);
       setHasFallbackApplied(false);
+      setIsFullscreen(false);
       let normalized = (imageUrl || "").trim();
       if (normalized.startsWith("assets/") || normalized.startsWith("uploads/")) {
         normalized = `/${normalized}`;
@@ -100,19 +104,23 @@ export default function ProductImagePreviewModal({
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.key === "Escape" && isOpen) {
-        onClose();
+        if (isFullscreen) {
+          setIsFullscreen(false);
+        } else {
+          onClose();
+        }
       }
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isOpen, onClose]);
+  }, [isOpen, isFullscreen, onClose]);
 
   if (!isOpen) return null;
   const displayImage = currentUrl || imageUrl || getFallbackImage();
 
   // Zoom manipulation
-  const handleZoomIn = () => setZoom((prev) => Math.min(prev + 0.25, 4));
-  const handleZoomOut = () => setZoom((prev) => Math.max(prev - 0.25, 0.5));
+  const handleZoomIn = () => setZoom((prev) => Math.min(Number((prev + 0.25).toFixed(2)), 4));
+  const handleZoomOut = () => setZoom((prev) => Math.max(Number((prev - 0.25).toFixed(2)), 0.5));
   const handleZoomReset = () => {
     setZoom(1);
     setPan({ x: 0, y: 0 });
@@ -141,17 +149,25 @@ export default function ProductImagePreviewModal({
     setIsDragging(false);
   };
 
-  // Direct Download
+  // Fullscreen Toggle
+  const toggleFullscreen = () => {
+    setIsFullscreen((prev) => !prev);
+  };
+
+  // Direct Bulletproof Download
   const handleDownload = async () => {
     try {
       const sanitizedName = (productName || "product-image")
         .toLowerCase()
         .replace(/[^a-z0-9]/g, "-")
         .replace(/-+/g, "-");
-      const filename = `${sanitizedName}-${upscaleStats?.scale || "hd"}-${dimensions.width}x${dimensions.height}.png`;
+      const scaleTag = upscaleStats?.scale ? `-${upscaleStats.scale}` : "-hd";
+      const resTag = dimensions.width ? `-${dimensions.width}x${dimensions.height}` : "";
+      const filename = `${sanitizedName}${scaleTag}${resTag}.png`;
 
       const targetImgUrl = displayImage || currentUrl || imageUrl || getFallbackImage();
-      // If data URL, download directly
+
+      // Tier 1: If data URL, download directly via link
       if (targetImgUrl?.startsWith?.("data:")) {
         const link = document.createElement("a");
         link.href = targetImgUrl;
@@ -159,26 +175,77 @@ export default function ProductImagePreviewModal({
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
-      } else {
-        // Fetch as blob for remote URLs to trigger true download
-        const res = await fetch(targetImgUrl);
-        const blob = await res.blob();
-        const blobUrl = URL.createObjectURL(blob);
+        setDownloadSuccess(true);
+        setTimeout(() => setDownloadSuccess(false), 2500);
+        return;
+      }
+
+      // Tier 2: Fetch as blob to trigger true browser download
+      try {
+        const res = await fetch(targetImgUrl, { mode: "cors" });
+        if (res.ok) {
+          const blob = await res.blob();
+          const blobUrl = URL.createObjectURL(blob);
+          const link = document.createElement("a");
+          link.href = blobUrl;
+          link.download = filename;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
+          setDownloadSuccess(true);
+          setTimeout(() => setDownloadSuccess(false), 2500);
+          return;
+        }
+      } catch (fetchErr) {
+        console.warn("Fetch download blocked, trying canvas fallback:", fetchErr);
+      }
+
+      // Tier 3: Offscreen Canvas export
+      try {
+        const tempImg = new Image();
+        tempImg.crossOrigin = "anonymous";
+        await new Promise((resolve, reject) => {
+          tempImg.onload = resolve;
+          tempImg.onerror = reject;
+          tempImg.src = targetImgUrl;
+        });
+
+        const canvas = document.createElement("canvas");
+        canvas.width = tempImg.naturalWidth || tempImg.width || 800;
+        canvas.height = tempImg.naturalHeight || tempImg.height || 800;
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(tempImg, 0, 0);
+
+        const dataUrl = canvas.toDataURL("image/png");
         const link = document.createElement("a");
-        link.href = blobUrl;
+        link.href = dataUrl;
         link.download = filename;
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
-        URL.revokeObjectURL(blobUrl);
+        setDownloadSuccess(true);
+        setTimeout(() => setDownloadSuccess(false), 2500);
+        return;
+      } catch (canvasErr) {
+        console.warn("Canvas export fallback failed:", canvasErr);
       }
+
+      // Tier 4: Direct anchor click with target blank
+      const link = document.createElement("a");
+      link.href = targetImgUrl;
+      link.download = filename;
+      link.target = "_blank";
+      link.rel = "noopener noreferrer";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
 
       setDownloadSuccess(true);
       setTimeout(() => setDownloadSuccess(false), 2500);
     } catch (err) {
-      console.error("Download failed:", err);
-      // Fallback
-      window.open(imageUrl, "_blank");
+      console.error("All download methods failed:", err);
+      window.open(displayImage || imageUrl, "_blank");
     }
   };
 
@@ -192,14 +259,14 @@ export default function ProductImagePreviewModal({
       style={{
         position: "fixed",
         inset: 0,
-        backgroundColor: "rgba(10, 15, 29, 0.88)",
-        backdropFilter: "blur(10px)",
+        backgroundColor: "rgba(10, 15, 29, 0.9)",
+        backdropFilter: "blur(12px)",
         zIndex: 99999,
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
         justifyContent: "center",
-        padding: "1rem",
+        padding: isFullscreen ? "0" : "1rem",
         animation: "fadeIn 0.2s ease-out",
       }}
       onClick={(e) => {
@@ -208,25 +275,27 @@ export default function ProductImagePreviewModal({
     >
       {/* MODAL WRAPPER */}
       <div
+        ref={modalWrapperRef}
         style={{
-          width: "95vw",
-          maxWidth: "1160px",
-          height: "90vh",
-          maxHeight: "860px",
+          width: isFullscreen ? "100vw" : "96vw",
+          maxWidth: isFullscreen ? "100vw" : "1200px",
+          height: isFullscreen ? "100vh" : "92vh",
+          maxHeight: isFullscreen ? "100vh" : "900px",
           background: "var(--bg-surface, #ffffff)",
-          borderRadius: "16px",
-          border: "1px solid var(--border-medium, rgba(255, 255, 255, 0.15))",
-          boxShadow: "0 25px 60px -15px rgba(0, 0, 0, 0.5)",
+          borderRadius: isFullscreen ? "0" : "16px",
+          border: isFullscreen ? "none" : "1px solid var(--border-medium, rgba(255, 255, 255, 0.15))",
+          boxShadow: isFullscreen ? "none" : "0 25px 60px -15px rgba(0, 0, 0, 0.5)",
           display: "flex",
           flexDirection: "column",
           overflow: "hidden",
+          transition: "all 0.2s ease",
         }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* HEADER */}
         <div
           style={{
-            padding: "1rem 1.5rem",
+            padding: "0.9rem 1.4rem",
             borderBottom: "1px solid var(--border-subtle, #e2e8f0)",
             display: "flex",
             justifyContent: "space-between",
@@ -348,14 +417,11 @@ export default function ProductImagePreviewModal({
                 {productMeta.finish && <span>• ✨ <strong>{productMeta.finish}</strong></span>}
                 {productMeta.application && <span>• 🎯 <strong>{productMeta.application}</strong></span>}
                 {productMeta.priceRange && <span>• 💰 <strong>{productMeta.priceRange}</strong></span>}
-                {upscaleStats?.engine && (
-                  <span>• Engine: <strong style={{ color: "#059669" }}>{upscaleStats.engine}</strong></span>
-                )}
               </div>
             </div>
           </div>
 
-          {/* Quick Zoom Bar & Close Button */}
+          {/* Quick Zoom Bar, Presets, Fullscreen & Close Button */}
           <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
             <div
               style={{
@@ -412,21 +478,23 @@ export default function ProductImagePreviewModal({
             </div>
 
             {/* Quick Zoom Presets */}
-            <div style={{ display: "none", mdDisplay: "flex", gap: "3px" }} className="zoom-presets">
-              {[1, 1.5, 2].map((lvl) => (
+            <div style={{ display: "flex", gap: "4px", alignItems: "center" }} className="zoom-presets">
+              {[1, 1.5, 2, 3].map((lvl) => (
                 <button
                   key={lvl}
                   type="button"
                   onClick={() => handleSetZoomLevel(lvl)}
+                  title={`Zoom to ${lvl * 100}%`}
                   style={{
-                    background: zoom === lvl ? "var(--primary, #3b82f6)" : "transparent",
+                    background: zoom === lvl ? "var(--primary, #3b82f6)" : "var(--bg-surface, #ffffff)",
                     color: zoom === lvl ? "#ffffff" : "var(--text-secondary, #64748b)",
-                    border: "1px solid var(--border-subtle, #e2e8f0)",
+                    border: zoom === lvl ? "1px solid #2563eb" : "1px solid var(--border-medium, #cbd5e1)",
                     borderRadius: "6px",
-                    padding: "3px 7px",
-                    fontSize: "0.7rem",
+                    padding: "3px 8px",
+                    fontSize: "0.72rem",
                     fontWeight: 700,
                     cursor: "pointer",
+                    transition: "all 0.15s ease",
                   }}
                 >
                   {lvl * 100}%
@@ -434,6 +502,27 @@ export default function ProductImagePreviewModal({
               ))}
             </div>
 
+            {/* Fullscreen Toggle */}
+            <button
+              type="button"
+              onClick={toggleFullscreen}
+              style={{
+                background: isFullscreen ? "rgba(59, 130, 246, 0.1)" : "transparent",
+                border: "1px solid var(--border-subtle, #e2e8f0)",
+                cursor: "pointer",
+                padding: "6px",
+                borderRadius: "8px",
+                color: isFullscreen ? "#2563eb" : "var(--text-secondary, #64748b)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+              title={isFullscreen ? "Exit Fullscreen" : "Fullscreen Preview"}
+            >
+              {isFullscreen ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
+            </button>
+
+            {/* Close Button */}
             <button
               type="button"
               onClick={onClose}
@@ -501,8 +590,8 @@ export default function ProductImagePreviewModal({
                 }
               }}
               style={{
-                maxWidth: "85vw",
-                maxHeight: "68vh",
+                maxWidth: isFullscreen ? "94vw" : "85vw",
+                maxHeight: isFullscreen ? "82vh" : "68vh",
                 objectFit: "contain",
                 display: "block",
                 borderRadius: "8px",
@@ -591,7 +680,7 @@ export default function ProductImagePreviewModal({
               <ImageIcon size={14} color="#6366f1" />
               <span>Format: <strong>High-Definition {displayImage?.startsWith?.("data:image/png") ? "PNG" : "JPEG/WebP"}</strong></span>
             </span>
-            {dimensions.width > 0 && (
+            {dimensions.width > 0 && dimensions.height > 0 && (
               <span>• Aspect Ratio: <strong>{(dimensions.width / dimensions.height).toFixed(2)}:1</strong></span>
             )}
           </div>
@@ -619,7 +708,7 @@ export default function ProductImagePreviewModal({
                 }}
                 title="Upscale further to 2x or 4x Ultra 4K"
               >
-                <Zap size={14} /> Re-Upscale (2x/4x)
+                <Zap size={14} /> Re-Upscale &amp; Fix Clarity
               </button>
             )}
 
@@ -659,6 +748,10 @@ export default function ProductImagePreviewModal({
                 fontWeight: 700,
                 fontSize: "0.8rem",
                 padding: "5px 14px",
+                background: downloadSuccess ? "rgba(16, 185, 129, 0.15)" : undefined,
+                borderColor: downloadSuccess ? "#10b981" : undefined,
+                color: downloadSuccess ? "#059669" : undefined,
+                transition: "all 0.2s ease",
               }}
               title="Download full resolution image to your computer"
             >

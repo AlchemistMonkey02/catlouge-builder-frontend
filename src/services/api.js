@@ -198,7 +198,15 @@ export const neuralAiCutout = async (payload) => {
 };
 export const fetchGeminiStudioPlan = async () => ({ success: false, message: "Gemini features disabled." });
 
-export const clientSideUpscale = (imageBase64, scaleFactor = 2, sharpness = 1.35, contrast = 1.12, saturation = 1.08) => {
+export const clientSideUpscale = (
+  imageBase64,
+  scaleFactor = 2,
+  sharpness = 1.25,
+  contrast = 1.10,
+  saturation = 1.06,
+  clarityMode = "clean_hd",
+  denoise = true
+) => {
   return new Promise((resolve, reject) => {
     const img = new Image();
     img.crossOrigin = "anonymous";
@@ -225,9 +233,9 @@ export const clientSideUpscale = (imageBase64, scaleFactor = 2, sharpness = 1.35
         try {
           const imgData = ctx.getImageData(0, 0, targetW, targetH);
           const d = imgData.data;
-          const contrastFactor = Number(contrast) || 1.15;
-          const satFactor = Number(saturation) || 1.08;
-          const sharpnessFactor = Number(sharpness) || 1.35;
+          const contrastFactor = Number(contrast) || 1.10;
+          const satFactor = Number(saturation) || 1.06;
+          const sharpnessFactor = Number(sharpness) || 1.25;
 
           // Pass 1: Contrast tone curve and color vibrancy
           for (let i = 0; i < d.length; i += 4) {
@@ -244,11 +252,12 @@ export const clientSideUpscale = (imageBase64, scaleFactor = 2, sharpness = 1.35
             d[i + 2] = Math.min(255, Math.max(0, gray + (d[i + 2] - gray) * satFactor));
           }
 
-          // Pass 2: High-definition Unsharp Masking (Laplacian edge recovery convolution)
+          // Pass 2: Clean Edge-Thresholded Unsharp Masking (only sharpens true edges, suppresses flat noise)
           if (sharpnessFactor > 1.0) {
-            const strength = Math.min(0.65, (sharpnessFactor - 1.0) * 0.85);
+            const strength = Math.min(0.55, (sharpnessFactor - 1.0) * 0.7);
             const copy = new Uint8ClampedArray(d);
             const stride = targetW * 4;
+            const threshold = clarityMode === "clean_hd" ? 5 : 3;
             for (let y = 1; y < targetH - 1; y++) {
               const yOff = y * stride;
               for (let x = 1; x < targetW - 1; x++) {
@@ -261,8 +270,12 @@ export const clientSideUpscale = (imageBase64, scaleFactor = 2, sharpness = 1.35
                     copy[idx - stride + c] +
                     copy[idx + stride + c]
                   ) * 0.25;
-                  const sharpened = center + (center - surrounding) * strength * 2.4;
-                  d[idx + c] = Math.min(255, Math.max(0, sharpened));
+                  const delta = center - surrounding;
+                  // Only amplify if delta exceeds edge threshold
+                  if (Math.abs(delta) > threshold) {
+                    const sharpened = center + delta * strength * 2.0;
+                    d[idx + c] = Math.min(255, Math.max(0, sharpened));
+                  }
                 }
               }
             }
@@ -272,7 +285,7 @@ export const clientSideUpscale = (imageBase64, scaleFactor = 2, sharpness = 1.35
         } catch (_) {}
 
         const mimeType = isPng ? "image/png" : "image/jpeg";
-        const quality = isPng ? undefined : 0.95;
+        const quality = isPng ? undefined : 0.96;
         const upscaledDataUrl = canvas.toDataURL(mimeType, quality);
 
         resolve({
@@ -284,10 +297,12 @@ export const clientSideUpscale = (imageBase64, scaleFactor = 2, sharpness = 1.35
           width: targetW,
           height: targetH,
           scaleFactor,
+          clarityMode,
           stats: {
             from: `${origW}x${origH}`,
             to: `${targetW}x${targetH}`,
-            scale: `${scaleFactor}x`
+            scale: `${scaleFactor}x`,
+            clarity: "Clean HD",
           }
         });
       } catch (err) {
@@ -315,7 +330,9 @@ export const upscaleAndEnhanceImage = async (payload) => {
     payload.scale || payload.scaleFactor || 2,
     payload.sharpness,
     payload.contrast,
-    payload.saturation
+    payload.saturation,
+    payload.clarityMode || "clean_hd",
+    payload.denoise !== undefined ? payload.denoise : true
   );
 };
 

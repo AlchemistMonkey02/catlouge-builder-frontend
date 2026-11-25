@@ -161,32 +161,6 @@ function contactPage(c, no) {
           <p><strong>Specification:</strong> IS 1121 &bull; Compressive 140 MPa</p>
         </div>
       </div>
-
-      <div class="ks-qr-section">
-        <h3>Digital Access &amp; Instant Estimation</h3>
-        <div class="ks-qr-row">
-          ${qrs.length ? qrs.map(q => {
-            const qrUrl = q.url || q.link || (i.mobile ? `https://wa.me/${String(i.mobile).replace(/\D/g, '')}` : '#');
-            return `
-            <div class="ks-qr-pill">
-              <a href="${E(qrUrl)}" target="_blank" rel="noopener noreferrer" data-qr-url="${E(qrUrl)}" style="text-decoration:none; color:inherit; display:flex; flex-direction:column; align-items:center;">
-                <img src="${q.img}" class="qrimg" alt="${q.label}" />
-                <b>${E(q.label)}</b>
-                <span class="qr-click-btn" style="display:inline-block; font-size:11px; font-weight:700; color:var(--acc, #2563eb); text-decoration:underline; margin:4px 0 2px;">Click here ↗</span>
-                <small>${E(q.note || 'Scan with phone camera')}</small>
-              </a>
-            </div>
-            `;
-          }).join('') : `
-            <div class="ks-qr-pill">
-              <div class="ks-qr-placeholder">🏛️</div>
-              <b>Direct WhatsApp Desk</b>
-              ${i.mobile ? `<a href="https://wa.me/${String(i.mobile).replace(/\D/g, '')}" target="_blank" rel="noopener noreferrer" class="qr-click-btn" style="display:inline-block; font-size:11px; font-weight:700; color:var(--acc, #2563eb); text-decoration:underline; margin:4px 0 2px;">Click here ↗</a>` : ''}
-              <small>${E(i.mobile || 'Connect with quarry dispatch')}</small>
-            </div>
-          `}
-        </div>
-      </div>
     </div>
     ${foot(c)}
   `;

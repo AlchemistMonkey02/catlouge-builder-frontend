@@ -16,13 +16,23 @@ import ProductDetails from "./pages/ProductDetails";
 import LiveCatalogueViewer from "./pages/LiveCatalogueViewer";
 import NotFound from "./pages/NotFound";
 
+function RequireAuth({ children }) {
+  const isLoggedIn = localStorage.getItem("admin_logged_in") === "true";
+  if (!isLoggedIn) {
+    return <Navigate to="/login" replace />;
+  }
+  return children;
+}
+
 export default function App() {
   const location = useLocation();
   const isLiveViewer = /^\/(c|live|catalogues)\//i.test(location.pathname);
+  const isLoginPage = location.pathname === "/login";
+  const hideChrome = isLiveViewer || isLoginPage;
 
   return (
     <div className={`app-container ${isLiveViewer ? "live-viewer-active" : ""}`} style={isLiveViewer ? { minHeight: "100vh", height: "100vh", overflow: "hidden" } : undefined}>
-      {!isLiveViewer && <Navbar />}
+      {!hideChrome && <Navbar />}
       <Routes>
         {/* Public Digital Live Catalogue Viewer (Accessible to anyone via share link) */}
         <Route path="/c/:id" element={<LiveCatalogueViewer />} />
@@ -31,22 +41,22 @@ export default function App() {
 
         {/* Core Direct Workflow: Login -> Companies -> Add Products -> Generate PDF */}
         <Route path="/login" element={<AdminLogin />} />
-        <Route path="/" element={<CompanyManager />} />
-        <Route path="/companies" element={<CompanyManager />} />
-        <Route path="/companies/:companyId/catalogue" element={<CompanyCatalogueManager />} />
-        <Route path="/ai-studio" element={<AiProductStudio />} />
-        <Route path="/studio" element={<AiProductStudio />} />
-        <Route path="/photo-studio" element={<AiProductStudio />} />
-        <Route path="/pdf-generator" element={<PdfCatalogueGenerator />} />
-        <Route path="/pdf-catalogues" element={<PdfCatalogueGenerator />} />
-        <Route path="/pdf" element={<PdfCatalogueGenerator />} />
+        <Route path="/" element={<RequireAuth><CompanyManager /></RequireAuth>} />
+        <Route path="/companies" element={<RequireAuth><CompanyManager /></RequireAuth>} />
+        <Route path="/companies/:companyId/catalogue" element={<RequireAuth><CompanyCatalogueManager /></RequireAuth>} />
+        <Route path="/ai-studio" element={<RequireAuth><AiProductStudio /></RequireAuth>} />
+        <Route path="/studio" element={<RequireAuth><AiProductStudio /></RequireAuth>} />
+        <Route path="/photo-studio" element={<RequireAuth><AiProductStudio /></RequireAuth>} />
+        <Route path="/pdf-generator" element={<RequireAuth><PdfCatalogueGenerator /></RequireAuth>} />
+        <Route path="/pdf-catalogues" element={<RequireAuth><PdfCatalogueGenerator /></RequireAuth>} />
+        <Route path="/pdf" element={<RequireAuth><PdfCatalogueGenerator /></RequireAuth>} />
 
         {/* Studio Utilities */}
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/catalogue" element={<CatalogueWorkspace />} />
-        <Route path="/bulk-import" element={<BulkImportHub />} />
-        <Route path="/export-center" element={<ExportPublishingCenter />} />
-        <Route path="/brand-kit" element={<BrandKitSettings />} />
+        <Route path="/dashboard" element={<RequireAuth><Dashboard /></RequireAuth>} />
+        <Route path="/catalogue" element={<RequireAuth><CatalogueWorkspace /></RequireAuth>} />
+        <Route path="/bulk-import" element={<RequireAuth><BulkImportHub /></RequireAuth>} />
+        <Route path="/export-center" element={<RequireAuth><ExportPublishingCenter /></RequireAuth>} />
+        <Route path="/brand-kit" element={<RequireAuth><BrandKitSettings /></RequireAuth>} />
 
         {/* Storefront views */}
         <Route path="/storefront" element={<Products />} />
@@ -54,7 +64,7 @@ export default function App() {
         <Route path="/products/:id" element={<ProductDetails />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
-      {!isLiveViewer && (
+      {!hideChrome && (
         <footer
           className="no-print"
           style={{

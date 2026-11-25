@@ -27,7 +27,7 @@ import {
 } from "lucide-react";
 import confetti from "canvas-confetti";
 import { fetchCatalogueRecordById } from "../services/api";
-import { exportDynamicPdf, qrDataUrl } from "../components/dynamic-catalogue/engine";
+import { exportDynamicPdf, qrDataUrl, initTemplateRegistry } from "../components/dynamic-catalogue/engine";
 import Loading from "../components/Loading";
 
 export default function LiveCatalogueViewer() {
@@ -57,6 +57,7 @@ export default function LiveCatalogueViewer() {
 
   // Fetch record
   useEffect(() => {
+    initTemplateRegistry();
     async function loadCatalogue() {
       if (!id) return;
       setLoading(true);
@@ -1373,22 +1374,47 @@ export default function LiveCatalogueViewer() {
             </p>
 
             {qrCodeUrl && (
-              <div
-                style={{
-                  display: "inline-block",
-                  padding: "14px",
-                  background: "#ffffff",
-                  borderRadius: "14px",
-                  boxShadow: "0 10px 30px rgba(0,0,0,0.3)",
-                  marginBottom: "1.25rem"
-                }}
-              >
-                <img
-                  src={qrCodeUrl}
-                  alt="Live Catalogue QR Code"
-                  style={{ width: "210px", height: "210px", display: "block" }}
-                />
-              </div>
+              <>
+                <div
+                  style={{
+                    display: "inline-block",
+                    padding: "14px",
+                    background: "#ffffff",
+                    borderRadius: "14px",
+                    boxShadow: "0 10px 30px rgba(0,0,0,0.3)",
+                    marginBottom: "0.75rem"
+                  }}
+                >
+                  <img
+                    src={qrCodeUrl}
+                    alt="Live Catalogue QR Code"
+                    style={{ width: "210px", height: "210px", display: "block" }}
+                  />
+                </div>
+                <div style={{ marginBottom: "1.25rem" }}>
+                  <a
+                    href={typeof window !== "undefined" ? window.location.href : "#"}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="qr-click-btn"
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: "4px",
+                      fontSize: "0.85rem",
+                      fontWeight: 700,
+                      color: "#ffffff",
+                      background: "#2563eb",
+                      padding: "6px 18px",
+                      borderRadius: "99px",
+                      textDecoration: "none",
+                      boxShadow: "0 3px 10px rgba(37,99,235,0.35)"
+                    }}
+                  >
+                    Click here ↗
+                  </a>
+                </div>
+              </>
             )}
 
             <div style={{ display: "flex", gap: "8px", justifyContent: "center" }}>

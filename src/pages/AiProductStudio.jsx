@@ -1284,20 +1284,11 @@ export default function AiProductStudio() {
       );
       setIsPlaceModalOpen(false);
 
-      // Save directly into custom gallery and local product sync
+      // Save directly into custom gallery
       try {
         const existing = JSON.parse(localStorage.getItem("catalogue_custom_gallery") || "[]");
         const updated = [studioDataUrl, ...existing.filter((u) => u !== studioDataUrl)].slice(0, 30);
         localStorage.setItem("catalogue_custom_gallery", JSON.stringify(updated));
-
-        if (selectedTargetProductId) {
-          const localProdOverrides = JSON.parse(localStorage.getItem("catalogue_local_products") || "{}");
-          localProdOverrides[selectedTargetProductId] = {
-            ...(localProdOverrides[selectedTargetProductId] || {}),
-            image: studioDataUrl,
-          };
-          localStorage.setItem("catalogue_local_products", JSON.stringify(localProdOverrides));
-        }
       } catch (_) {}
 
       if (location.state?.returnTo) {
@@ -1338,20 +1329,11 @@ export default function AiProductStudio() {
       );
       setIsCreateModalOpen(false);
 
-      // Save directly into custom gallery and local product sync
+      // Save directly into custom gallery
       try {
         const existing = JSON.parse(localStorage.getItem("catalogue_custom_gallery") || "[]");
         const updated = [studioDataUrl, ...existing.filter((u) => u !== studioDataUrl)].slice(0, 30);
         localStorage.setItem("catalogue_custom_gallery", JSON.stringify(updated));
-
-        if (selectedTargetProductId) {
-          const localProdOverrides = JSON.parse(localStorage.getItem("catalogue_local_products") || "{}");
-          localProdOverrides[selectedTargetProductId] = {
-            ...(localProdOverrides[selectedTargetProductId] || {}),
-            image: studioDataUrl,
-          };
-          localStorage.setItem("catalogue_local_products", JSON.stringify(localProdOverrides));
-        }
       } catch (_) {}
 
       if (location.state?.returnTo) {
@@ -1895,46 +1877,6 @@ export default function AiProductStudio() {
                 </div>
               </div>
 
-              {/* Engine Selector */}
-              <div style={{ marginBottom: "0.75rem" }}>
-                <div style={{ fontSize: "0.74rem", fontWeight: 700, color: "var(--text-secondary)", marginBottom: "4px" }}>
-                  Clarity &amp; Upscaling Engine:
-                </div>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.35rem" }}>
-                  {[
-                    { id: "auto", name: "✨ Studio Hybrid", desc: "Neural + CLAHE" },
-                    { id: "super-image", name: "⚡ super-image", desc: "PyTorch EDSR/PAN" },
-                    { id: "opencv", name: "🔬 OpenCV", desc: "Lanczos4 + Mask" },
-                    { id: "qirias", name: "📐 Qirias Multi", desc: "Laplacian Edge" },
-                  ].map((eng) => {
-                    const isSel = upscaleEngine === eng.id;
-                    return (
-                      <button
-                        key={eng.id}
-                        type="button"
-                        onClick={() => setUpscaleEngine(eng.id)}
-                        style={{
-                          padding: "6px 8px",
-                          borderRadius: "6px",
-                          border: isSel ? "1.5px solid var(--primary)" : "1px solid var(--border-subtle)",
-                          background: isSel ? "rgba(99, 102, 241, 0.08)" : "var(--bg-surface)",
-                          cursor: "pointer",
-                          textAlign: "left",
-                          transition: "all 0.15s ease",
-                        }}
-                      >
-                        <div style={{ fontSize: "0.74rem", fontWeight: 750, color: isSel ? "var(--primary)" : "var(--text-primary)" }}>
-                          {eng.name}
-                        </div>
-                        <div style={{ fontSize: "0.64rem", color: "var(--text-muted)" }}>
-                          {eng.desc}
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
               {/* Finishing Toggles */}
               <div style={{ display: "flex", gap: "0.5rem", marginBottom: "0.75rem" }}>
                 <label style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "0.74rem", color: "var(--text-secondary)", cursor: "pointer", flex: 1 }}>
@@ -1951,7 +1893,7 @@ export default function AiProductStudio() {
                     checked={upscaleContrast}
                     onChange={(e) => setUpscaleContrast(e.target.checked)}
                   />
-                  <span>CLAHE Contrast</span>
+                  <span>Adaptive Contrast</span>
                 </label>
               </div>
 

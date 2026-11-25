@@ -30,70 +30,17 @@ import {
   createCompanyProfile,
   updateCompanyProfile,
   deleteCompanyProfile,
+  fetchCatalogueRecords,
 } from "../services/api";
 
-// Helper to dynamically resolve true company location and product without hardcoding Kota
+// Helper to dynamically resolve true company location and product directly from API data
 export function resolveCompanyLocationAndProduct(comp) {
   if (!comp) return { odopProduct: "General", district: "Location Pending" };
-  const name = (comp.name || "").toLowerCase();
-  const ind = (comp.industry || "").toLowerCase();
-  const addr = (comp.contact?.address || "").toLowerCase();
-
-  let odop = comp.odopProduct ? comp.odopProduct.trim() : "";
-  let dist = comp.district ? comp.district.trim() : "";
-
-  // 1. Detect if odop was erroneously defaulted to "Kota Doria" on non-Kota company
-  const isErroneousKotaDoria = (odop === "Kota Doria" || !odop) &&
-    (name.includes("garlic") || ind.includes("garlic") || addr.includes("garlic") || addr.includes("mandsaur") ||
-     name.includes("stone") || ind.includes("stone") || addr.includes("suket") || addr.includes("jigani") || addr.includes("bangalore") ||
-     name.includes("sand") || ind.includes("sand") || addr.includes("jodhpur") || addr.includes("bundi") ||
-     name.includes("audio") || ind.includes("audio") || name.includes("electronics") ||
-     name.includes("apparel") || ind.includes("apparel") || name.includes("wellness") || name.includes("furniture"));
-
-  if (isErroneousKotaDoria) {
-    if (name.includes("garlic") || ind.includes("garlic") || addr.includes("garlic") || addr.includes("mandsaur")) {
-      odop = "Garlic";
-    } else if (name.includes("sand") || ind.includes("sand") || addr.includes("jodhpur") || addr.includes("bundi")) {
-      odop = "Sandstone";
-    } else if (name.includes("stone") || ind.includes("stone") || addr.includes("suket") || addr.includes("jigani") || addr.includes("bangalore")) {
-      odop = "Kota Stone";
-    } else if (comp.industry && !comp.industry.includes("Kota Doria")) {
-      odop = comp.industry;
-    } else {
-      odop = "General";
-    }
-  }
-
-  // 2. Detect if district was erroneously defaulted to "Kota" or "Kota, Rajasthan" on a non-Kota company
-  const isErroneousKotaDistrict = (dist === "Kota" || dist === "Kota, Rajasthan" || !dist || dist === "India") &&
-    (name.includes("garlic") || addr.includes("mandsaur") || addr.includes("baran") ||
-     addr.includes("bangalore") || addr.includes("jigani") ||
-     addr.includes("jodhpur") || name.includes("marwar") || addr.includes("bundi") ||
-     addr.includes("suket") || addr.includes("jhalawar") ||
-     name.includes("audio") || addr.includes("gurugram") ||
-     name.includes("apparel") || addr.includes("mumbai") ||
-     name.includes("botanica") || addr.includes("bengaluru") ||
-     name.includes("furniture") || addr.includes("chennai"));
-
-  if (isErroneousKotaDistrict) {
-    if (addr.includes("mandsaur")) dist = "Mandsaur, MP";
-    else if (addr.includes("baran")) dist = "Baran, Rajasthan";
-    else if (addr.includes("jodhpur") || name.includes("marwar")) dist = "Jodhpur, Rajasthan";
-    else if (addr.includes("bundi")) dist = "Bundi, Rajasthan";
-    else if (addr.includes("jhalawar") || addr.includes("suket")) dist = "Jhalawar, Rajasthan";
-    else if (addr.includes("bangalore") || addr.includes("bengaluru") || addr.includes("jigani")) dist = "Bangalore, Karnataka";
-    else if (addr.includes("gurugram") || addr.includes("cybercity")) dist = "Gurugram, Haryana";
-    else if (addr.includes("mumbai") || addr.includes("bandra")) dist = "Mumbai, Maharashtra";
-    else if (addr.includes("chennai")) dist = "Chennai, Tamil Nadu";
-    else if (odop === "Garlic") dist = "Baran, Rajasthan";
-    else if (odop === "Kota Stone") dist = "Jhalawar, Rajasthan";
-    else if (odop === "Sandstone") dist = "Bundi, Rajasthan";
-    else dist = comp.state || "Location Pending";
-  }
-
+  const odop = (comp.odopProduct && comp.odopProduct.trim()) ? comp.odopProduct.trim() : (comp.industry && comp.industry.trim()) ? comp.industry.trim() : "General";
+  const dist = (comp.district && comp.district.trim()) ? comp.district.trim() : (comp.state && comp.state.trim()) ? comp.state.trim() : (comp.contact?.address ? comp.contact.address.split(",").slice(-2).join(",").trim() : "Location Pending");
   return {
-    odopProduct: odop || comp.industry || "General",
-    district: dist || (comp.contact?.address ? comp.contact.address.split(",").slice(-2).join(",").trim() : "Location Pending")
+    odopProduct: odop,
+    district: dist,
   };
 }
 
@@ -130,7 +77,9 @@ const EMPTY_FORM = {
 
 export default function CompanyManager() {
   const [companies, setCompanies] = useState([]);
+  const [catalogueCount, setCatalogueCount] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingCompanyId, setEditingCompanyId] = useState(null);
   const [activeTab, setActiveTab] = useState("general");
@@ -147,35 +96,44 @@ export default function CompanyManager() {
   const [searchParams, setSearchParams] = useSearchParams();
 
   useEffect(() => {
+    // Purge any stale legacy local storage caches so user always gets dynamic server API data
+    try {
+      localStorage.removeItem("catalogue_local_companies");
+      localStorage.removeItem("catalogue_local_products");
+    } catch (_) {}
     loadCompanies();
   }, []);
 
   const loadCompanies = async () => {
     try {
       setLoading(true);
+      setLoadError(null);
+
+      const [compRes, recRes] = await Promise.all([
+        fetchCompanies(),
+        fetchCatalogueRecords().catch((err) => {
+          console.warn("Could not fetch catalogue records:", err);
+          return { data: [] };
+        }),
+      ]);
+
       let list = [];
-      try {
-        const res = await fetchCompanies();
-        if (res && res.data) list = res.data;
-      } catch (err) {
-        console.warn("Error fetching remote companies:", err);
+      if (compRes && Array.isArray(compRes.data)) {
+        list = compRes.data;
+      } else if (Array.isArray(compRes)) {
+        list = compRes;
       }
 
-      // Merge local company updates / overrides
-      try {
-        const localOverrides = JSON.parse(localStorage.getItem("catalogue_local_companies") || "{}");
-        const overrideIds = Object.keys(localOverrides);
-        if (overrideIds.length > 0) {
-          list = list.map((c) => (localOverrides[c._id] ? { ...c, ...localOverrides[c._id] } : c));
-          overrideIds.forEach((id) => {
-            if (!list.some((c) => c._id === id)) {
-              list.push(localOverrides[id]);
-            }
-          });
-        }
-      } catch (_) {}
-
       setCompanies(list);
+
+      // Live digital catalogue count from server API
+      if (recRes && recRes.count !== undefined) {
+        setCatalogueCount(recRes.count);
+      } else if (recRes && Array.isArray(recRes.data)) {
+        setCatalogueCount(recRes.data.length);
+      } else {
+        setCatalogueCount(list.length);
+      }
 
       // Check if an edit company ID was requested in query string
       const editId = searchParams.get("edit");
@@ -186,7 +144,8 @@ export default function CompanyManager() {
         }
       }
     } catch (err) {
-      console.error("Error loading companies:", err);
+      console.error("Error loading companies from API:", err);
+      setLoadError(err.response?.data?.message || err.message || "Unable to reach server API");
     } finally {
       setLoading(false);
     }
@@ -269,7 +228,7 @@ export default function CompanyManager() {
     reader.readAsDataURL(file);
   };
 
-  // Submit Handler: Handles both Create and Update
+  // Submit Handler: Handles both Create and Update purely via Server API
   const handleSubmitCompany = async (e) => {
     e.preventDefault();
     if (!formData.name.trim()) return alert("Please enter a company name");
@@ -277,79 +236,19 @@ export default function CompanyManager() {
     try {
       setSaving(true);
       if (editingCompanyId) {
-        // Edit existing company: build updated object immediately
-        const optimisticCompany = {
-          ...formData,
-          _id: editingCompanyId,
-          updatedAt: new Date().toISOString(),
-        };
-
-        // 1. Immediately update in-memory state
+        const res = await updateCompanyProfile(editingCompanyId, formData);
+        const serverData = (res && res.data) ? res.data : { ...formData, _id: editingCompanyId };
         setCompanies((prev) =>
-          prev.map((c) => (c._id === editingCompanyId ? { ...c, ...optimisticCompany } : c))
+          prev.map((c) => (c._id === editingCompanyId ? { ...c, ...serverData } : c))
         );
-
-        // 2. Persist to localStorage immediately
-        try {
-          const localOverrides = JSON.parse(localStorage.getItem("catalogue_local_companies") || "{}");
-          localOverrides[editingCompanyId] = { ...(localOverrides[editingCompanyId] || {}), ...optimisticCompany };
-          localStorage.setItem("catalogue_local_companies", JSON.stringify(localOverrides));
-        } catch (storageErr) {
-          console.warn("Storage sync warning:", storageErr);
-        }
-
-        // 3. Attempt server update
-        try {
-          const res = await updateCompanyProfile(editingCompanyId, formData);
-          const serverData = (res && res.data) ? res.data : {};
-          const merged = { ...serverData, ...optimisticCompany };
-          setCompanies((prev) =>
-            prev.map((c) => (c._id === editingCompanyId ? merged : c))
-          );
-          try {
-            const localOverrides = JSON.parse(localStorage.getItem("catalogue_local_companies") || "{}");
-            localOverrides[editingCompanyId] = merged;
-            localStorage.setItem("catalogue_local_companies", JSON.stringify(localOverrides));
-          } catch (_) {}
-        } catch (serverErr) {
-          console.warn("Server update warning, local version preserved:", serverErr);
-        }
-
         setSaveSuccess(true);
         setTimeout(() => {
           closeModal();
         }, 600);
       } else {
-        // Create new company
-        const tempId = "local_comp_" + Date.now();
-        const optimisticNew = {
-          ...formData,
-          _id: tempId,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        };
-
-        try {
-          const res = await createCompanyProfile(formData);
-          const serverData = (res && res.data) ? res.data : {};
-          const finalId = serverData._id || tempId;
-          const mergedNew = { ...serverData, ...optimisticNew, _id: finalId };
-          setCompanies((prev) => [...prev, mergedNew]);
-          try {
-            const localOverrides = JSON.parse(localStorage.getItem("catalogue_local_companies") || "{}");
-            localOverrides[finalId] = mergedNew;
-            localStorage.setItem("catalogue_local_companies", JSON.stringify(localOverrides));
-          } catch (_) {}
-        } catch (serverErr) {
-          console.warn("Server create failed, saving locally:", serverErr);
-          setCompanies((prev) => [...prev, optimisticNew]);
-          try {
-            const localOverrides = JSON.parse(localStorage.getItem("catalogue_local_companies") || "{}");
-            localOverrides[tempId] = optimisticNew;
-            localStorage.setItem("catalogue_local_companies", JSON.stringify(localOverrides));
-          } catch (_) {}
-        }
-
+        const res = await createCompanyProfile(formData);
+        const serverData = (res && res.data) ? res.data : { ...formData, _id: "comp_" + Date.now() };
+        setCompanies((prev) => [serverData, ...prev]);
         setSaveSuccess(true);
         setTimeout(() => {
           closeModal();
@@ -365,17 +264,10 @@ export default function CompanyManager() {
   const handleDeleteCompany = async (id, name) => {
     if (!window.confirm(`Delete company profile for "${name}"? This cannot be undone.`)) return;
     try {
-      setCompanies((prev) => prev.filter((c) => c._id !== id));
-      try {
-        const localOverrides = JSON.parse(localStorage.getItem("catalogue_local_companies") || "{}");
-        if (localOverrides[id]) {
-          delete localOverrides[id];
-          localStorage.setItem("catalogue_local_companies", JSON.stringify(localOverrides));
-        }
-      } catch (_) {}
       await deleteCompanyProfile(id);
+      setCompanies((prev) => prev.filter((c) => c._id !== id));
     } catch (err) {
-      console.warn("Delete remote warning:", err);
+      alert("Error deleting company profile: " + (err.response?.data?.message || err.message));
     }
   };
 
@@ -525,7 +417,7 @@ export default function CompanyManager() {
               Digital Catalogues
             </div>
             <div style={{ fontSize: "1.45rem", fontWeight: 800, color: "var(--text-primary)", lineHeight: 1.2 }}>
-              {companies.length} Live
+              {catalogueCount > 0 ? `${catalogueCount} Live` : `${companies.length} Live`}
             </div>
           </div>
         </div>
@@ -559,7 +451,10 @@ export default function CompanyManager() {
               Dynamic QR Links
             </div>
             <div style={{ fontSize: "1.45rem", fontWeight: 800, color: "var(--text-primary)", lineHeight: 1.2 }}>
-              {companies.length * 6} Portals
+              {companies.reduce((sum, c) => {
+                if (!c.qrLinks) return sum;
+                return sum + Object.entries(c.qrLinks).filter(([k, v]) => k !== "customLabel" && typeof v === "string" && v.trim().length > 0).length;
+              }, 0)} Portals
             </div>
           </div>
         </div>
@@ -593,11 +488,41 @@ export default function CompanyManager() {
               Catalogue Formats
             </div>
             <div style={{ fontSize: "1.45rem", fontWeight: 800, color: "var(--text-primary)", lineHeight: 1.2 }}>
-              6 Canva Styles
+              6 Dynamic Styles
             </div>
           </div>
         </div>
       </div>
+
+      {/* Server Error Notice Banner */}
+      {loadError && (
+        <div
+          className="card"
+          style={{
+            padding: "1rem 1.25rem",
+            marginBottom: "1.25rem",
+            background: "rgba(239, 68, 68, 0.08)",
+            border: "1px solid rgba(239, 68, 68, 0.25)",
+            borderRadius: "var(--radius-md)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: "1rem",
+            flexWrap: "wrap",
+          }}
+        >
+          <div style={{ color: "#b91c1c", fontSize: "0.88rem", fontWeight: 600 }}>
+            ⚠️ Server Notice: {loadError}. Cached or mock data has been disabled.
+          </div>
+          <button
+            className="btn btn-sm btn-primary"
+            onClick={loadCompanies}
+            style={{ fontSize: "0.82rem", padding: "0.4rem 0.85rem" }}
+          >
+            Retry API Call
+          </button>
+        </div>
+      )}
 
       {/* Search & Filter Toolbar */}
       <div

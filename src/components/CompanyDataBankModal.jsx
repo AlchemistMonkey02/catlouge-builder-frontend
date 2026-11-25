@@ -38,6 +38,7 @@ import {
   generateCategoryDataBankTemplate,
   exportCurrentDataBankToCsv,
   downloadCsvFile,
+  getCategorySampleSheets,
 } from "../utils/csvSheetHelper";
 
 /**
@@ -370,6 +371,7 @@ export default function CompanyDataBankModal({
   const [sheetDragOver, setSheetDragOver] = useState(false);
   const [sheetInputMethod, setSheetInputMethod] = useState("file"); // "file" | "paste"
   const [showStructureGuide, setShowStructureGuide] = useState(false);
+  const [selectedDataBankFamily, setSelectedDataBankFamily] = useState(null);
   const sheetFileInputRef = useRef(null);
 
   // Sync active tab if initialTab prop changes
@@ -449,6 +451,41 @@ export default function CompanyDataBankModal({
     }
   };
 
+  const handleClearAllData = async () => {
+    if (
+      !window.confirm(
+        `Clear ALL Data Bank presets, headings, taglines, and stories for "${company.name}"? You can then upload a fresh Excel/CSV sheet.`
+      )
+    ) {
+      return;
+    }
+    const emptyBank = {
+      family: cfg.family,
+      companyName: company.name,
+      specifications: {
+        thicknesses: [],
+        sizes: [],
+        finishes: [],
+        materials: [],
+        applications: [],
+        priceRanges: [],
+      },
+      headings: [],
+      taglines: [],
+      paragraphs: [],
+      featureHighlights: [],
+    };
+    setDataBank(emptyBank);
+    try {
+      const res = await updateCompanyDataBank(company._id, emptyBank);
+      if (onSave && res?.data) onSave(res.data);
+      showToast("All Data Bank entries cleared. Ready for Excel/CSV sheet upload!");
+    } catch (err) {
+      console.error("Failed to clear data bank on server:", err);
+      showToast("Cleared locally. Click Save Data Bank to sync.");
+    }
+  };
+
   const handleResetToDefaults = async () => {
     if (
       !window.confirm(
@@ -483,12 +520,13 @@ export default function CompanyDataBankModal({
   };
 
   // --- SPREADSHEET (EXCEL/CSV) DATA BANK HANDLERS ---
-  const handleDownloadCategoryTemplate = () => {
+  const handleDownloadCategoryTemplate = (overrideFamily = null) => {
+    const targetFam = overrideFamily || cfg.family;
     const loc = resolveCompanyLocation(company);
-    const content = generateCategoryDataBankTemplate(cfg.family, loc.currencySymbol);
+    const content = generateCategoryDataBankTemplate(targetFam, loc.currencySymbol);
     const safeCompName = (company?.name || "company").toLowerCase().replace(/[^a-z0-9]/g, "_");
-    downloadCsvFile(`${safeCompName}_${cfg.family}_databank_template.csv`, content);
-    showToast(`✓ Downloaded ${cfg.family.toUpperCase()} Data Bank template`);
+    downloadCsvFile(`${safeCompName}_${targetFam}_databank_template.csv`, content);
+    showToast(`✓ Downloaded ${targetFam.toUpperCase()} Data Bank template (5 items/section)`);
   };
 
   const handleExportCurrentDataBank = () => {
@@ -842,6 +880,26 @@ export default function CompanyDataBankModal({
             >
               <FileSpreadsheet size={14} />
               <span>Sheet Upload</span>
+            </button>
+
+            <button
+              type="button"
+              className="btn btn-outline btn-sm"
+              onClick={handleClearAllData}
+              title="Clear all Data Bank entries so you can upload a fresh Excel/CSV sheet"
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "5px",
+                fontSize: "0.78rem",
+                color: "#dc2626",
+                borderColor: "rgba(220, 38, 38, 0.35)",
+                background: "rgba(220, 38, 38, 0.06)",
+                fontWeight: 700,
+              }}
+            >
+              <Trash2 size={14} />
+              <span>Clear All Data</span>
             </button>
 
             <button
@@ -2466,15 +2524,109 @@ export default function CompanyDataBankModal({
                     </h4>
                   </div>
                   <p style={{ margin: 0, fontSize: "0.82rem", color: "var(--text-secondary)", lineHeight: 1.45 }}>
-                    Instead of repeatedly typing product specifications, sizing dimensions, and rate presets, you can download the <strong>{cfg.family.toUpperCase()}</strong> spreadsheet template, update it in Microsoft Excel or Google Sheets, and upload it back. All specifications and copy presets will automatically populate into your product listing forms!
+                    Instead of repeatedly typing product specifications, sizing dimensions, and rate presets, you can download pre-configured spreadsheet templates (5 items per section), update them in Microsoft Excel or Google Sheets, and upload them back. All specifications and copy presets will automatically populate into your product listing forms!
                   </p>
+                  {/* Category Selection Tabs */}
+                  {(() => {
+                    const activeFamily = selectedDataBankFamily || cfg.family;
+                    return (
+                      <>
+                        <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", marginTop: "10px" }}>
+                          {[
+                            { id: "garlic", label: "🧄 Garlic" },
+                            { id: "kotastone", label: "🪨 Kota Stone" },
+                            { id: "sandstone", label: "🏛️ Sandstone" },
+                            { id: "kotadoria", label: "✨ Kota Doria" },
+                            { id: "general", label: "📦 General" },
+                          ].map((cat) => (
+                            <button
+                              key={cat.id}
+                              type="button"
+                              onClick={() => setSelectedDataBankFamily(cat.id)}
+                              style={{
+                                fontSize: "0.75rem",
+                                padding: "4px 10px",
+                                borderRadius: "6px",
+                                border: cat.id === activeFamily ? "1.5px solid #10b981" : "1px solid var(--border-medium, #cbd5e1)",
+                                background: cat.id === activeFamily ? "rgba(16, 185, 129, 0.12)" : "var(--bg-surface-elevated, #ffffff)",
+                                color: cat.id === activeFamily ? "#059669" : "var(--text-secondary)",
+                                fontWeight: cat.id === activeFamily ? 750 : 600,
+                                cursor: "pointer",
+                                display: "inline-flex",
+                                alignItems: "center",
+                                gap: "4px",
+                              }}
+                            >
+                              {cat.label} {cat.id === activeFamily && "✓"}
+                            </button>
+                          ))}
+                        </div>
+
+                        {/* 5 Distinct Specialized Sample Sheets for Selected Category */}
+                        <div
+                          style={{
+                            marginTop: "10px",
+                            background: "rgba(16, 185, 129, 0.04)",
+                            border: "1px solid rgba(16, 185, 129, 0.25)",
+                            borderRadius: "8px",
+                            padding: "8px 10px",
+                          }}
+                        >
+                          <div
+                            style={{
+                              fontSize: "0.72rem",
+                              fontWeight: 750,
+                              color: "#059669",
+                              marginBottom: "6px",
+                              display: "flex",
+                              alignItems: "center",
+                              gap: "6px",
+                            }}
+                          >
+                            <span>5 Ready-to-Use Sheets for {activeFamily.toUpperCase()}:</span>
+                            <span style={{ fontSize: "0.68rem", color: "var(--text-muted)", fontWeight: 500 }}>
+                              (Click any sheet to download .csv)
+                            </span>
+                          </div>
+                          <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
+                            {getCategorySampleSheets(activeFamily).map((sheet) => (
+                              <a
+                                key={sheet.filename}
+                                href={`/sample_sheets/${sheet.type === "databank" ? "databank" : "product"}/${sheet.filename}`}
+                                download={sheet.filename}
+                                style={{
+                                  fontSize: "0.72rem",
+                                  padding: "4px 9px",
+                                  borderRadius: "6px",
+                                  border: "1px solid rgba(16, 185, 129, 0.35)",
+                                  background: "#ffffff",
+                                  color: "#047857",
+                                  fontWeight: 650,
+                                  textDecoration: "none",
+                                  display: "inline-flex",
+                                  alignItems: "center",
+                                  gap: "5px",
+                                  boxShadow: "0 1px 2px rgba(0,0,0,0.04)",
+                                  transition: "all 0.15s ease",
+                                }}
+                                title={`${sheet.description} — File: ${sheet.filename}`}
+                              >
+                                <FileSpreadsheet size={12} color="#059669" />
+                                <span>Sheet {sheet.sheetNumber}: {sheet.title}</span>
+                              </a>
+                            ))}
+                          </div>
+                        </div>
+                      </>
+                    );
+                  })()}
                 </div>
 
                 <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
                   <button
                     type="button"
                     className="btn btn-primary btn-sm"
-                    onClick={handleDownloadCategoryTemplate}
+                    onClick={() => handleDownloadCategoryTemplate(selectedDataBankFamily || cfg.family)}
                     style={{
                       display: "inline-flex",
                       alignItems: "center",
@@ -2485,7 +2637,7 @@ export default function CompanyDataBankModal({
                     }}
                     title="Download pre-configured template with authentic ODOP category columns"
                   >
-                    <Download size={15} /> Download Category Template (.csv)
+                    <Download size={15} /> Download {(selectedDataBankFamily || cfg.family).toUpperCase()} Template (.csv)
                   </button>
 
                   <button

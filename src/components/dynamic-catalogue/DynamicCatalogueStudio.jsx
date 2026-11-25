@@ -736,7 +736,7 @@ const FAMILY_DEFAULT_TEMPLATES = {
   kotastone: "kotastone:ks-b1",
   sandstone: "sandstone:ss-1",
   kotadoria: "kotadoria:kd-1",
-  editorial: "editorial:ed-1",
+  editorial: "editorial:ed-kd1",
   simple: "simple:kd1",
   stonecat: "stonecat:x1a"
 };
@@ -925,11 +925,24 @@ export default function DynamicCatalogueStudio({
   const [dataBankFilter, setDataBankFilter] = useState("all"); // "all", "headings", "taglines", "paragraphs", "specs"
   const [dataBankCopiedId, setDataBankCopiedId] = useState(null);
 
-  const currentFam = (selectedUid?.split(":")[0]) || detectCompanyFamily(company) || "garlic";
+  const detectedCompFam = detectCompanyFamily(company);
+  const selectedPrefix = selectedUid?.split(":")[0];
+  const currentFam = (selectedPrefix && !["editorial", "simple", "stonecat"].includes(selectedPrefix))
+    ? selectedPrefix
+    : (detectedCompFam || "garlic");
 
   // Dynamic Resolution of Active Category Products based on selected template / category
   const activeProducts = useMemo(() => {
     const fam = currentFam;
+
+    // If parent manages product selection (selectedProductIds or companyProducts is provided),
+    // strictly respect the selected products (show 0 products when 0 are selected).
+    if (Array.isArray(selectedProductIds) || (Array.isArray(companyProducts) && companyProducts.length > 0)) {
+      if (!Array.isArray(products) || products.length === 0) {
+        return [];
+      }
+      return products.filter(p => isProductCompatibleWithFamily(p, fam));
+    }
 
     // 1. If explicit products array is passed from parent, filter out cross-category items!
     if (Array.isArray(products) && products.length > 0) {
@@ -947,7 +960,7 @@ export default function DynamicCatalogueStudio({
 
     // 3. Fallback to authentic specialty demo products for this family
     return SPECIALTY_DEMO_PRODUCTS[fam] || SPECIALTY_DEMO_PRODUCTS.garlic;
-  }, [currentFam, products, allProducts, company?._id]);
+  }, [currentFam, products, allProducts, company?._id, selectedProductIds, companyProducts]);
 
   // Dynamic Resolution of Active Company:
   // If a company profile is selected or provided by the user, faithfully keep and use that registered company!
@@ -1569,16 +1582,17 @@ export default function DynamicCatalogueStudio({
   useEffect(() => {
     const comp = activeCompany || company;
     if (comp) {
+      const compFam = detectCompanyFamily(comp) || currentFam || "garlic";
       const cProd = comp.odopProduct || (
-        currentFam === "garlic" ? "Garlic" :
-        currentFam === "kotastone" ? "Kota Stone" :
-        currentFam === "sandstone" ? "Sandstone" :
+        compFam === "garlic" ? "Garlic" :
+        compFam === "kotastone" ? "Kota Stone" :
+        compFam === "sandstone" ? "Sandstone" :
         "Kota Doria"
       );
       const resolvedDist = comp.district || (
-        currentFam === "garlic" ? "Baran, Rajasthan" :
-        currentFam === "kotastone" ? "Jhalawar, Rajasthan" :
-        currentFam === "sandstone" ? "Bundi, Rajasthan" :
+        compFam === "garlic" ? "Baran, Rajasthan" :
+        compFam === "kotastone" ? "Jhalawar, Rajasthan" :
+        compFam === "sandstone" ? "Bundi, Rajasthan" :
         "Kota, Rajasthan"
       );
       const copy = getCopy({
@@ -4969,7 +4983,31 @@ export default function DynamicCatalogueStudio({
                 onClick={() => setPreviewScale(0.8)}
                 style={{ padding: "2px 7px", fontSize: "0.75rem" }}
               >
-                Reset
+                Reset Zoom
+              </button>
+              <button
+                type="button"
+                className="btn btn-outline btn-sm"
+                onClick={() => {
+                  clearAllEditorEdits();
+                  setColorOverride(null);
+                  const comp = activeCompany || company;
+                  const compFam = detectCompanyFamily(comp) || currentFam || "garlic";
+                  const cProd = comp?.odopProduct || (compFam === "garlic" ? "Garlic" : compFam === "kotastone" ? "Kota Stone" : compFam === "sandstone" ? "Sandstone" : "Kota Doria");
+                  const resolvedDist = comp?.district || (compFam === "garlic" ? "Baran, Rajasthan" : compFam === "kotastone" ? "Jhalawar, Rajasthan" : compFam === "sandstone" ? "Bundi, Rajasthan" : "Kota, Rajasthan");
+                  const copy = getCopy({ ent: comp?.name, district: resolvedDist, product: cProd });
+                  setTextOverrides({
+                    tagline: comp?.tagline || copy.tagline || "",
+                    why: (copy.why || []).join("\n"),
+                    apps: (copy.apps || []).join("\n"),
+                    values: (copy.values || []).map(v => `${v[0]}: ${v[1]}`).join("\n")
+                  });
+                  setTimeout(() => compileCatalogue(true), 50);
+                }}
+                style={{ padding: "2px 8px", fontSize: "0.75rem", fontWeight: 700, color: "var(--color-primary, #3b82f6)" }}
+                title="Reset all element moves, styling and text overrides to pristine template defaults"
+              >
+                ↺ Reset Design
               </button>
             </div>
           </div>
@@ -5810,14 +5848,20 @@ export default function DynamicCatalogueStudio({
                       href={currentLiveUrl}
                       target="_blank"
                       rel="noopener noreferrer"
+                      className="qr-click-btn"
                       style={{
-                        fontSize: "0.76rem",
-                        color: "#10b981",
+                        fontSize: "0.74rem",
+                        color: "#ffffff",
+                        background: "#10b981",
                         fontWeight: 700,
-                        textDecoration: "underline",
+                        padding: "3px 10px",
+                        borderRadius: "99px",
+                        textDecoration: "none",
                         display: "inline-flex",
                         alignItems: "center",
-                        gap: "2px"
+                        gap: "2px",
+                        marginTop: "4px",
+                        boxShadow: "0 2px 6px rgba(16,185,129,0.3)"
                       }}
                     >
                       Click here ↗

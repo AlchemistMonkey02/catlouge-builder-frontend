@@ -91,6 +91,122 @@ const PACKS = {
     formats: [['Paving Slabs', 'Custom sizes'], ['Cobble / Tumble', '10 x 10, 14 x 14, 20 x 20 cm'], ['Step Stones', '50 - 200 x 35 x 15 cm'], ['Wall Cladding', '20 - 40 x 20 x 10 / 15 cm'], ['Kerbstones', '100 x 20 x 5 - 7 cm'], ['Palisades', '230 x 50 x 5 - 7 cm']],
     patterns: ['Floral Jali Lattice', 'Diamond Pattern', 'Star Inlay', 'Arch Border Relief', 'Lotus Carving', 'Geometric Screen']
   },
+  'Garlic': {
+    key: 'produce', badge: 'Farm-Fresh Harvest',
+    tagline: [
+      'Sun-cured Desi white garlic, direct from the Malwa agro corridor.',
+      'High bioactive allicin, sorted and cured for export grade.',
+      'Pure origin, harvest freshness and certified quality.'
+    ],
+    story: [
+      ['Sun-Cured White Garlic,', 'Rooted in Malwa Soil.'],
+      ['Grown with Dedication,', 'Harvested for Purity.'],
+      ['High Allicin Bulbs,', 'Direct Farm Collective.']
+    ],
+    hero: [
+      ['High Bioactive Allicin,', 'Pungent & Sun-Cured.'],
+      ['Export-Calibrated Bulbs,', 'Cleaned & Graded.'],
+      ['Pristine White Sheath,', 'Optimal Moisture Level.']
+    ],
+    dense: [
+      ['Farm to Mandi,', 'The Complete Harvest.'],
+      ['Selected Grades,', 'Retail & Bulk Supply.'],
+      ['Fresh Cloves & Bulbs,', 'Ready for Dispatch.']
+    ],
+    edit: ['The Harvest Edit', 'The Mandi Select Edit', 'The Export Grade Edit'],
+    values: [
+      [
+        ['Certified Grade A', 'Hand-sorted bulbs with clean, unbroken outer sheath and high allicin content.'],
+        ['Solar Cured', 'Naturally dried in open solar yards to achieve optimal 65% moisture equilibrium.'],
+        ['Direct Sourcing', 'Procured directly from Krishi Upaj Mandi Baran farmer collectives without middlemen.']
+      ],
+      [
+        ['High Pungency', 'Rich in natural bioactive alliin and allicin compounds for authentic aroma.'],
+        ['Uniform Calibration', 'Mechanically sorted by bulb diameter (40mm to 65mm+) with zero hollow cloves.'],
+        ['Reefer Ready', 'Jute-bag and mesh-aerated packing engineered for safe long-distance transit.']
+      ]
+    ],
+    why: [
+      'Certified ODOP Baran cluster',
+      'High allicin concentration',
+      'Direct farm mandi procurement',
+      'Solar-cured with < 65% moisture',
+      'Graded calibration (40-65mm+)',
+      'Ventilated export packing'
+    ],
+    what: [
+      'Commercial wholesale mandis',
+      'Culinary spice processing plants',
+      'Dehydration & pickle facilities',
+      'Pharmaceutical & nutraceutical extracts',
+      'Export reefer shipments'
+    ],
+    legacy: 'Rooted in the fertile black soils of the Malwa-Baran agricultural corridor, {ent} supplies authentic sun-cured white garlic with unmatched pungency and enduring freshness.',
+    isText: 'Baran garlic is celebrated for its tight white cloves, high oil content and pungent bioactive allicin. Naturally dried under open solar canopies, our garlic maintains long shelf life and authentic culinary integrity.',
+    understand: 'GRADING & BIOACTIVE SPECIFICATIONS',
+    benefits: [
+      ['shield', 'Natural shelf life', 'Solar curing seals the outer clove sheath for up to 9 months room-temperature storage.'],
+      ['leaf', 'High allicin content', 'Rich in alliin and essential sulphur oils delivering deep, pungent aroma and medicinal potency.'],
+      ['box', 'Breathable packing', 'Dispatched in aerated mesh bags or corrugated cartons to prevent moisture buildup.']
+    ],
+    fin: {
+      title: ['Grades &', 'Formats'],
+      intro: 'We supply whole calibrated bulbs, peeled cloves, and dehydrated garlic formats for both wholesale and food processing requirements.',
+      items: [
+        ['Export A+ Jumbo (55-65mm)', 'Premium large uniform bulbs with pristine multi-layered white skin.'],
+        ['Medium Cured Table (40-50mm)', 'Versatile daily culinary garlic with rich pungent clove clusters.'],
+        ['Processing Goli (25-35mm)', 'High-aroma compact bulbs ideal for pastes, pickles, and dehydration.'],
+        ['Vacuum Peeled Cloves', 'Freshly peeled sanitized cloves ready for commercial kitchens and HoReCa.']
+      ]
+    },
+    finAll: [
+      ['Export A+ Jumbo', '55mm - 65mm+ diameter, intact tight sheath.'],
+      ['Grade A Large', '50mm - 55mm diameter, pure white cloves.'],
+      ['Medium Cured Table', '40mm - 50mm diameter, everyday culinary grade.'],
+      ['Processing Goli', '25mm - 35mm diameter, intense aroma for paste.'],
+      ['Vacuum Peeled Cloves', 'Clean nitrogen-flushed peeled cloves.'],
+      ['Dehydrated Flakes', 'Kibbled sun-dried flakes for spice blending.'],
+      ['Garlic Powder', '100-mesh pure aromatic ground garlic powder.'],
+      ['Black Garlic Fermented', 'Aged caramelized garlic with sweet balsamic notes.'],
+      ['Clove Granules', 'Toasted granules for culinary seasoning.']
+    ],
+    appsTitle: 'COMMERCIAL APPLICATIONS',
+    apps: [
+      'Wholesale Mandis & Grocery Distribution',
+      'Food Processing & Sauce Manufacturing',
+      'Dehydration & Pickle Facilities',
+      'Pharmaceutical & Nutraceutical Extracts',
+      'HoReCa & Commercial Cloud Kitchens'
+    ],
+    steps: ['Harvested from farm', 'Sun-cured in yards', 'Mechanically sorted & graded', 'Dispatched in aerated mesh'],
+    process: [
+      ['Harvest', 'Fertile Malwa soils'],
+      ['Sun Cure', 'Open solar drying'],
+      ['Sort & Grade', 'Diameter calibration'],
+      ['Pack', 'Ventilated mesh sacks']
+    ],
+    seal: ['HARVEST', 'CERTIFIED'],
+    coverLine: 'Direct farm harvest from the Baran ODOP agro cluster, supplied across India with ventilated transit.',
+    promise: {
+      title: ['Naturally cured,', 'delivered fresh.'],
+      text: 'Every batch is inspected for clove density, moisture equilibrium and skin integrity before dispatch from {district}.'
+    },
+    care: [
+      ['Storage guidelines', 'Store in a cool, dry, well-ventilated space away from direct moisture and humidity.'],
+      ['Shelf life', 'Whole cured bulbs remain fresh for up to 6-9 months when kept in open aerated baskets or mesh.'],
+      ['Quality guarantee', 'Report any transit damage or sprouting within 48 hours for immediate replacement.']
+    ],
+    note: 'Garlic bulbs vary naturally in size and clove count. Average bulb diameter is measured across the equatorial axis.',
+    formats: [
+      ['Jumbo Bulbs', '55 - 65 mm caliber'],
+      ['Medium Bulbs', '40 - 50 mm caliber'],
+      ['Small / Goli', '25 - 35 mm caliber'],
+      ['Jute Sacks', '25 kg / 50 kg breathable bags'],
+      ['Mesh Bags', '5 kg / 10 kg retail aerated sacks'],
+      ['Corrugated Cartons', '10 kg ventilated master boxes']
+    ],
+    patterns: ['Grade A+ Large', 'Standard Table', 'Processing Goli', 'Dehydrated Flakes', 'Vacuum Cloves']
+  },
   'Generic': {
     key: 'general', badge: 'Certified Quality',
     tagline: ['Crafted with precision, delivered with care.', 'Premium products engineered for everyday living.', 'Consistency, transparency, and superior finish.'],
@@ -123,15 +239,20 @@ export function packFor(info) {
   const p = ((info && info.product) || '').toLowerCase();
   const ent = ((info && info.ent) || '').toLowerCase();
   const ind = ((info && info.industry) || '').toLowerCase();
-  const haystack = `${p} ${ent} ${ind}`;
+  const odop = ((info && info.odopProduct) || '').toLowerCase();
+  const dist = ((info && info.district) || '').toLowerCase();
+  const haystack = `${p} ${ent} ${ind} ${odop} ${dist}`;
 
-  if (haystack.includes('doria') || haystack.includes('fabric') || haystack.includes('cloth') || haystack.includes('textile') || haystack.includes('saree') || haystack.includes('fashion') || haystack.includes('garment')) {
+  if (haystack.includes('garlic') || haystack.includes('lahsun') || haystack.includes('agro') || haystack.includes('baran') || haystack.includes('mandi') || haystack.includes('clove') || haystack.includes('crop') || haystack.includes('produce')) {
+    return ['Garlic', PACKS['Garlic']];
+  }
+  if (haystack.includes('doria') || haystack.includes('fabric') || haystack.includes('cloth') || haystack.includes('textile') || haystack.includes('saree') || haystack.includes('fashion') || haystack.includes('garment') || haystack.includes('handloom') || haystack.includes('kaithun')) {
     return ['Kota Doria', PACKS['Kota Doria']];
   }
-  if (haystack.includes('sandstone') || haystack.includes('carving') || haystack.includes('jali') || haystack.includes('craft') || haystack.includes('artisan')) {
+  if (haystack.includes('sandstone') || haystack.includes('carving') || haystack.includes('jali') || haystack.includes('craft') || haystack.includes('artisan') || haystack.includes('bundi')) {
     return ['Sandstone', PACKS['Sandstone']];
   }
-  if (haystack.includes('stone') || haystack.includes('granite') || haystack.includes('marble') || haystack.includes('slab') || haystack.includes('tile') || haystack.includes('floor') || haystack.includes('construction') || haystack.includes('paving')) {
+  if (haystack.includes('stone') || haystack.includes('granite') || haystack.includes('marble') || haystack.includes('slab') || haystack.includes('tile') || haystack.includes('floor') || haystack.includes('construction') || haystack.includes('paving') || haystack.includes('jhalawar') || haystack.includes('suket')) {
     return ['Kota Stone', PACKS['Kota Stone']];
   }
   return [FALLBACK, PACKS[FALLBACK]];
@@ -149,18 +270,54 @@ export function getCopy(info, ov) {
   const pair = a => [T(a[0]), T(a[1])];
   const vals = pick(P.values, sd('values')).map(v => [T(v[0]), T(v[1])]);
 
+  // Sanitize values from ov to prevent stone/sandstone/saree copy leaking into garlic or vice versa
+  let resolvedValues = vals;
+  if (ov.values && Array.isArray(ov.values) && ov.values.length === 3) {
+    const valStr = JSON.stringify(ov.values).toLowerCase();
+    const hasStone = valStr.includes('stone') || valStr.includes('sandstone') || valStr.includes('drawing') || valStr.includes('carv') || valStr.includes('slab') || valStr.includes('quarry');
+    const hasGarlic = valStr.includes('garlic') || valStr.includes('clove') || valStr.includes('allicin') || valStr.includes('harvest') || valStr.includes('bulb') || valStr.includes('mandi');
+    const hasDoria = valStr.includes('doria') || valStr.includes('saree') || valStr.includes('zari') || valStr.includes('weave') || valStr.includes('fabric') || valStr.includes('loom');
+
+    let isCompatible = true;
+    if (name === 'Garlic' && (hasStone || hasDoria)) isCompatible = false;
+    else if (name === 'Kota Doria' && (hasStone || hasGarlic)) isCompatible = false;
+    else if ((name === 'Kota Stone' || name === 'Sandstone') && (hasGarlic || hasDoria)) isCompatible = false;
+
+    if (isCompatible) {
+      resolvedValues = ov.values;
+    }
+  }
+
+  // Sanitize tagline from ov to prevent cross-industry copy leakage
+  let resolvedTagline = info.tagline ? T(info.tagline) : T(pick(P.tagline, sd('tagline')));
+  if (ov.tagline && typeof ov.tagline === 'string') {
+    const tagStr = ov.tagline.toLowerCase();
+    const hasStone = tagStr.includes('stone') || tagStr.includes('sandstone') || tagStr.includes('jodhpur') || tagStr.includes('agra red') || tagStr.includes('quarry');
+    const hasGarlic = tagStr.includes('garlic') || tagStr.includes('clove') || tagStr.includes('allicin') || tagStr.includes('harvest') || tagStr.includes('malwa');
+    const hasDoria = tagStr.includes('doria') || tagStr.includes('saree') || tagStr.includes('zari') || tagStr.includes('weave');
+
+    let isTagCompatible = true;
+    if (name === 'Garlic' && (hasStone || hasDoria)) isTagCompatible = false;
+    else if (name === 'Kota Doria' && (hasStone || hasGarlic)) isTagCompatible = false;
+    else if ((name === 'Kota Stone' || name === 'Sandstone') && (hasGarlic || hasDoria)) isTagCompatible = false;
+
+    if (isTagCompatible) {
+      resolvedTagline = T(ov.tagline);
+    }
+  }
+
   return {
     pack: name,
     key: P.key,
     stone: !!P.stone,
     badge: P.badge,
-    tagline: ov.tagline || (info.tagline ? T(info.tagline) : T(pick(P.tagline, sd('tagline')))),
+    tagline: resolvedTagline,
     storyTitle: pair(pick(P.story, sd('story'))),
     heroTitle: pair(pick(P.hero, sd('hero'))),
     denseTitle: pair(pick(P.dense, sd('dense'))),
     editTitle: pick(P.edit, sd('edit')),
     titlePool: [].concat(P.story, P.hero, P.dense).map(pair),
-    values: (ov.values && ov.values.length === 3) ? ov.values : vals,
+    values: resolvedValues,
     why: (ov.why && ov.why.length) ? ov.why : P.why,
     what: (ov.what && ov.what.length) ? ov.what : P.what,
     legacy: T(P.legacy),

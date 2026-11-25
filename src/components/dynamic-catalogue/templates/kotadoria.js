@@ -497,25 +497,6 @@ function paramparaWholesaleEnquiry(c, pageNum) {
         </div>
 
         <div class="trade-qr-section">
-          <div class="trade-qr-content">
-            <h3>Instant Digital B2B Desk &amp; Live Catalogues</h3>
-            <p>Point your smartphone camera to connect directly with our wholesale trade directors for instant proforma invoices and sample requests.</p>
-          </div>
-          <div class="trade-qr-holder">
-            ${qrs[0] ? `
-              <a href="${E(qrs[0].url || qrs[0].link || (mobile ? `https://wa.me/${String(mobile).replace(/\D/g, '')}` : '#'))}" target="_blank" rel="noopener noreferrer" data-qr-url="${E(qrs[0].url || qrs[0].link || '')}" style="text-decoration:none; color:inherit; display:flex; flex-direction:column; align-items:center;">
-                <img src="${qrs[0].img}" class="trade-qr-img qrimg" alt="QR" />
-                <b>Scan for WhatsApp</b>
-                <span class="qr-click-btn" style="display:inline-block; font-size:11.5px; font-weight:700; color:#b45309; text-decoration:underline; margin-top:4px;">Click here ↗</span>
-              </a>
-            ` : `
-              <div class="trade-qr-box">🥻</div>
-              <b>Direct WhatsApp Desk</b>
-              ${mobile ? `<a href="https://wa.me/${String(mobile).replace(/\D/g, '')}" target="_blank" rel="noopener noreferrer" class="qr-click-btn" style="display:inline-block; font-size:11px; font-weight:700; color:#b45309; text-decoration:underline; margin-top:4px;">Click here ↗</a>` : ''}
-            `}
-          </div>
-        </div>
-
         <div class="trade-closing-tag">
           <span>${E(brand)} &bull; THIS CATALOGUE IS RESERVED STRICTLY FOR WHOLESALE TRADE &bull; ALL RIGHTS RESERVED</span>
         </div>
@@ -1039,18 +1020,6 @@ function kd1_cover(c, t) {
           </div>
           
           <div class="kd1-cover-odop-connect">
-            ${qrImg ? `
-            <div class="kd1-cover-qr-card">
-              <a href="${E(c.info?.link || c.info?.website || (c.info?.mobile ? `https://wa.me/${String(c.info.mobile).replace(/\D/g, '')}` : '#'))}" target="_blank" rel="noopener noreferrer" data-qr-url="${E(c.info?.link || c.info?.website || '')}" style="text-decoration:none; color:inherit; display:flex; align-items:center; gap:12px;">
-                <img src="${qrImg}" alt="Part A Direct Profile QR" class="kd1-cov-qr qrimg" />
-                <div class="kd1-cov-qr-meta">
-                  <b>SCAN FOR PRESCRIBED PART A PROFILE</b>
-                  <span class="qr-click-btn" style="display:inline-block; font-size:11px; font-weight:700; color:var(--gold, #d97706); text-decoration:underline; margin:2px 0;">Click here ↗</span>
-                  <small>Direct access to artisan credentials, verified price book &amp; orders</small>
-                </div>
-              </a>
-            </div>
-            ` : ''}
             <div class="kd1-cover-wa-pill">
               <span>💬 WhatsApp Business: <b>${E(fmtWa(waNum))}</b></span>
               <small>Instant catalog order &amp; bulk wholesale booking</small>
@@ -1341,18 +1310,6 @@ function kd1_closing(c, no) {
               <b>GSTIN: ${E(i.gst || '08AAGCP9876K1Z2')} &bull; Udyam: ${E(i.udyam || 'UDYAM-RJ-20-0012345')} &bull; ${E(i.giTag || 'GI Tag No. 37')}</b>
             </div>
           </div>
-
-          ${qrImg ? `
-          <div class="kd1-closing-qr-card">
-            <a href="${E(c.info?.link || c.info?.website || (qrs[0] && (qrs[0].url || qrs[0].link)) || (i.mobile ? `https://wa.me/${String(i.mobile).replace(/\D/g, '')}` : '#'))}" target="_blank" rel="noopener noreferrer" data-qr-url="${E(c.info?.link || c.info?.website || (qrs[0] && (qrs[0].url || qrs[0].link)) || '')}" style="text-decoration:none; color:inherit; display:flex; flex-direction:column; align-items:center;">
-              <img src="${qrImg}" alt="Part A Direct Profile QR" class="kd1-big-qr qrimg" />
-              <div class="kd1-qr-title">SCAN TO CONNECT DIRECTLY</div>
-              <span class="qr-click-btn" style="display:inline-block; font-size:12px; font-weight:800; color:var(--gold, #d97706); text-decoration:underline; margin:4px 0 2px;">Click here ↗</span>
-              <div class="kd1-qr-desc">Prescribed Part A Profile &bull; Digital Storefront</div>
-              <div class="kd1-qr-chip">✓ Verified Authentic Link</div>
-            </a>
-          </div>
-          ` : ''}
         </div>
 
         <div class="kd1-closing-guarantee">

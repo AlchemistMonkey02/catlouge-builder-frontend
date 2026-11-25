@@ -34,6 +34,14 @@ export function setEditorCompanyId(cId) {
 export function clearAllEditorEdits() {
   if (typeof window !== 'undefined') {
     window.DesignEdits = {};
+    try {
+      for (let i = localStorage.length - 1; i >= 0; i--) {
+        const k = localStorage.key(i);
+        if (k && (k.startsWith('catalogue_edits_') || k.startsWith('catalogue_draft_'))) {
+          localStorage.removeItem(k);
+        }
+      }
+    } catch (_) {}
   }
   Object.keys(EDITS).forEach(k => delete EDITS[k]);
 }
@@ -251,14 +259,32 @@ export function applyEdit(el, ed, photoUrl) {
 
   // Background Fill with full gradient & image clear
   if (ed.bg !== undefined) {
+    const isPhotoEl = isPhoto(el) || (el.classList && (
+      el.classList.contains('e-gp') ||
+      el.classList.contains('e-gp3') ||
+      el.classList.contains('e-gp4') ||
+      el.classList.contains('e-hph') ||
+      el.classList.contains('e-inset') ||
+      el.classList.contains('e-cph') ||
+      el.classList.contains('e-wide') ||
+      el.classList.contains('e-fphoto') ||
+      el.classList.contains('e-bleedph') ||
+      el.classList.contains('e-arch') ||
+      el.classList.contains('ph')
+    )) || el.tagName === 'IMG' || el.tagName === 'IMAGE';
+
     if (ed.bg === 'transparent' || ed.bg === '' || ed.bg === 'none') {
-      s.setProperty('background', 'transparent', 'important');
       s.setProperty('background-color', 'transparent', 'important');
-      s.setProperty('background-image', 'none', 'important');
+      if (!isPhotoEl) {
+        s.setProperty('background', 'transparent', 'important');
+        s.setProperty('background-image', 'none', 'important');
+      }
     } else {
-      s.setProperty('background', ed.bg, 'important');
       s.setProperty('background-color', ed.bg, 'important');
-      s.setProperty('background-image', 'none', 'important');
+      if (!isPhotoEl) {
+        s.setProperty('background', ed.bg, 'important');
+        s.setProperty('background-image', 'none', 'important');
+      }
     }
   }
 
@@ -394,14 +420,39 @@ export function applyEdit(el, ed, photoUrl) {
 
   // 6. Hide / Show
   if (ed.hide) {
-    s.visibility = 'hidden';
+    // Protect core structural layout elements and image elements from accidental or stale deletion/hiding
+    const isProtected = (el.classList && (
+      el.classList.contains('e-cols') ||
+      el.classList.contains('e-wide') ||
+      el.classList.contains('e-h') ||
+      el.classList.contains('e-run') ||
+      el.classList.contains('e-vals') ||
+      el.classList.contains('e-idx') ||
+      el.classList.contains('e-idxh') ||
+      el.classList.contains('e-gp') ||
+      el.classList.contains('e-gp3') ||
+      el.classList.contains('e-gp4') ||
+      el.classList.contains('e-hph') ||
+      el.classList.contains('e-inset') ||
+      el.classList.contains('e-cph') ||
+      el.classList.contains('e-fphoto') ||
+      el.classList.contains('e-bleedph') ||
+      el.classList.contains('e-arch') ||
+      el.classList.contains('ph')
+    )) || el.tagName === 'IMG' || el.tagName === 'IMAGE';
+    s.visibility = isProtected ? 'visible' : 'hidden';
   } else {
     s.visibility = 'visible';
   }
 
   // 7. Drag-to-move translation
   if (ed.dx || ed.dy) {
-    s.transform = `translate(${ed.dx || 0}px,${ed.dy || 0}px)`;
+    // Prevent corrupted upward jump of caption into header
+    if (el.classList && el.classList.contains('e-capt') && ed.dy && ed.dy < -150) {
+      s.transform = '';
+    } else {
+      s.transform = `translate(${ed.dx || 0}px,${ed.dy || 0}px)`;
+    }
   } else {
     s.transform = '';
   }
@@ -427,7 +478,8 @@ export async function applyAll(host, templateId, items) {
     const el = byPath(pg, pathIndices);
     if (!el) continue;
     const ed = edits[key], it = ed.photo != null ? (items && items[ed.photo]) : null;
-    applyEdit(el, ed, (it && it.img) || ed.customImg);
+    const photoUrl = it ? (it.img || it.image || it.imageUrl || it.url || it._src || (it.images && (it.images[0]?.url || it.images[0]))) : ed.customImg;
+    applyEdit(el, ed, photoUrl);
   }
 }
 
@@ -463,7 +515,11 @@ export function setEdit(patch, live = true, quiet = false) {
 const currentPhotoUrl = ed => {
   if (ed && ed.customImg) return ed.customImg;
   const items = (window.ODOP_FIT && window.ODOP_FIT.items && window.ODOP_FIT.items()) || [];
-  return ed.photo != null && items[ed.photo] ? items[ed.photo].img : null;
+  if (ed && ed.photo != null && items[ed.photo]) {
+    const it = items[ed.photo];
+    return it.img || it.image || it.imageUrl || it.url || it._src || null;
+  }
+  return null;
 };
 
 async function refit(el) {

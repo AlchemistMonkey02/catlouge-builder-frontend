@@ -17,6 +17,7 @@ import {
   parseProductCatalogueCsv,
   generateProductCatalogueCsvTemplate,
   downloadCsvFile,
+  getCategorySampleSheets,
 } from "../utils/csvSheetHelper";
 import { createCatalogueProduct } from "../services/api";
 
@@ -41,14 +42,16 @@ export default function ProductSheetUploadModal({
   const [importProgress, setImportProgress] = useState(0);
   const [importSuccess, setImportSuccess] = useState(false);
   const [isDragOver, setIsDragOver] = useState(false);
+  const [selectedFamily, setSelectedFamily] = useState(categoryFamily);
   const fileInputRef = useRef(null);
 
   if (!isOpen) return null;
 
-  const handleDownloadTemplate = () => {
-    const csvContent = generateProductCatalogueCsvTemplate(categoryFamily, company);
+  const handleDownloadTemplate = (overrideFamily = null) => {
+    const fam = overrideFamily || categoryFamily;
+    const csvContent = generateProductCatalogueCsvTemplate(fam, company);
     const safeCompName = (company?.name || "company").toLowerCase().replace(/[^a-z0-9]/g, "_");
-    downloadCsvFile(`${safeCompName}_${categoryFamily}_products_template.csv`, csvContent);
+    downloadCsvFile(`${safeCompName}_${fam}_products_template.csv`, csvContent);
   };
 
   const handleFileProcess = (selectedFile) => {
@@ -95,37 +98,24 @@ export default function ProductSheetUploadModal({
     setImportProgress(0);
 
     const importedList = [];
-    const localOverrides = JSON.parse(localStorage.getItem("catalogue_local_products") || "{}");
 
     for (let i = 0; i < parsedProducts.length; i++) {
       const prod = parsedProducts[i];
       try {
-        // Attempt backend save
+        // Save product directly to backend API
         const payload = {
           ...prod,
           organizationId: company?._id || "default_org",
           companyId: company?._id || null,
         };
         const res = await createCatalogueProduct(payload);
-        const savedProd = res?.data || { ...payload, _id: `local_prod_${Date.now()}_${i}` };
+        const savedProd = res?.data || { ...payload, _id: `prod_${Date.now()}_${i}` };
         importedList.push(savedProd);
-
-        // Sync with local storage
-        localOverrides[savedProd._id] = savedProd;
       } catch (err) {
-        console.warn(`Server creation failed for ${prod.name}, using local fallback:`, err.message);
-        const fallbackProd = { ...prod, _id: `local_prod_${Date.now()}_${i}` };
-        importedList.push(fallbackProd);
-        localOverrides[fallbackProd._id] = fallbackProd;
+        console.warn(`Server creation issue for ${prod.name}:`, err.message);
       }
 
       setImportProgress(Math.round(((i + 1) / parsedProducts.length) * 100));
-    }
-
-    try {
-      localStorage.setItem("catalogue_local_products", JSON.stringify(localOverrides));
-    } catch (e) {
-      console.warn("Could not save to localStorage:", e);
     }
 
     setIsImporting(false);
@@ -264,10 +254,97 @@ export default function ProductSheetUploadModal({
               </div>
               <div>
                 <div style={{ fontSize: "0.88rem", fontWeight: 750, color: "var(--text-primary)" }}>
-                  Step 1: Download Pre-Formatted {categoryFamily.toUpperCase()} Excel/CSV Template
+                  Step 1: Download Pre-Formatted Excel/CSV Template (5 Sample Products Per Category)
                 </div>
                 <div style={{ fontSize: "0.78rem", color: "var(--text-secondary)", marginTop: "2px", lineHeight: 1.4 }}>
-                  The template includes verified column headers (Name, SKU, Price, Unit, Sizing/Grade, Finish, Material, Commercial Application) and 3 sample rows. Open in Excel, update with your product inventory, and upload below.
+                  Verified column headers (Name, SKU, Price, MRP, Unit, Size, Thickness/Grade, Finish, Material, Application, Stock, Image_URL, Description) with 5 authentic products per category. Open in Excel, customize, and upload below.
+                </div>
+                {/* Category Selection Tabs */}
+                <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", marginTop: "10px" }}>
+                  {[
+                    { id: "garlic", label: "🧄 Garlic" },
+                    { id: "kotastone", label: "🪨 Kota Stone" },
+                    { id: "sandstone", label: "🏛️ Sandstone" },
+                    { id: "kotadoria", label: "✨ Kota Doria" },
+                    { id: "general", label: "📦 General" },
+                  ].map((cat) => (
+                    <button
+                      key={cat.id}
+                      type="button"
+                      onClick={() => setSelectedFamily(cat.id)}
+                      style={{
+                        fontSize: "0.75rem",
+                        padding: "4px 10px",
+                        borderRadius: "6px",
+                        border: cat.id === selectedFamily ? "1.5px solid #2563eb" : "1px solid var(--border-medium, #cbd5e1)",
+                        background: cat.id === selectedFamily ? "rgba(37, 99, 235, 0.12)" : "var(--bg-surface-elevated, #ffffff)",
+                        color: cat.id === selectedFamily ? "#2563eb" : "var(--text-secondary)",
+                        fontWeight: cat.id === selectedFamily ? 750 : 600,
+                        cursor: "pointer",
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: "4px",
+                      }}
+                    >
+                      {cat.label} {cat.id === selectedFamily && "✓"}
+                    </button>
+                  ))}
+                </div>
+
+                {/* 5 Distinct Specialized Sample Sheets for Selected Category */}
+                <div
+                  style={{
+                    marginTop: "10px",
+                    background: "rgba(37, 99, 235, 0.04)",
+                    border: "1px solid rgba(37, 99, 235, 0.2)",
+                    borderRadius: "8px",
+                    padding: "8px 10px",
+                  }}
+                >
+                  <div
+                    style={{
+                      fontSize: "0.72rem",
+                      fontWeight: 750,
+                      color: "#1d4ed8",
+                      marginBottom: "6px",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "6px",
+                    }}
+                  >
+                    <span>5 Ready-to-Use Sheets for {selectedFamily.toUpperCase()}:</span>
+                    <span style={{ fontSize: "0.68rem", color: "var(--text-muted)", fontWeight: 500 }}>
+                      (Click any sheet to download .csv)
+                    </span>
+                  </div>
+                  <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
+                    {getCategorySampleSheets(selectedFamily).map((sheet) => (
+                      <a
+                        key={sheet.filename}
+                        href={`/sample_sheets/${sheet.type === "databank" ? "databank" : "product"}/${sheet.filename}`}
+                        download={sheet.filename}
+                        style={{
+                          fontSize: "0.72rem",
+                          padding: "4px 9px",
+                          borderRadius: "6px",
+                          border: "1px solid rgba(37, 99, 235, 0.35)",
+                          background: "#ffffff",
+                          color: "#1d4ed8",
+                          fontWeight: 650,
+                          textDecoration: "none",
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: "5px",
+                          boxShadow: "0 1px 2px rgba(0,0,0,0.04)",
+                          transition: "all 0.15s ease",
+                        }}
+                        title={`${sheet.description} — File: ${sheet.filename}`}
+                      >
+                        <FileSpreadsheet size={12} color="#2563eb" />
+                        <span>Sheet {sheet.sheetNumber}: {sheet.title}</span>
+                      </a>
+                    ))}
+                  </div>
                 </div>
               </div>
             </div>
@@ -275,7 +352,7 @@ export default function ProductSheetUploadModal({
             <button
               type="button"
               className="btn btn-outline"
-              onClick={handleDownloadTemplate}
+              onClick={() => handleDownloadTemplate(selectedFamily)}
               style={{
                 display: "inline-flex",
                 alignItems: "center",
@@ -289,7 +366,7 @@ export default function ProductSheetUploadModal({
                 padding: "8px 14px",
               }}
             >
-              <Download size={15} /> Download Template (.csv)
+              <Download size={15} /> Download {selectedFamily.toUpperCase()} Template (.csv)
             </button>
           </div>
 

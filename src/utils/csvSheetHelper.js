@@ -539,6 +539,70 @@ export function parseDataBankCsv(csvText, existingDataBank = null, mode = "merge
   };
 
   parsedRows.forEach((row, idx) => {
+    // Support seeding Data Bank directly from Product Catalogue CSV sheets
+    const prodName = (row.product_name || row.name || "").trim();
+    if (
+      prodName &&
+      !prodName.startsWith("#") &&
+      !row.category_section &&
+      !row.specification_item_title &&
+      (row.thickness_or_grade || row.size || row.finish || row.material || row.application || row.price)
+    ) {
+      const pPrice = Number(String(row.price || row.selling_price || 0).replace(/[^0-9.]/g, "")) || 0;
+      const pMrp = Number(String(row.mrp || 0).replace(/[^0-9.]/g, "")) || (pPrice > 0 ? Math.round(pPrice * 1.35) : 0);
+      const pUnit = (row.unit || "").trim();
+      const pRange = pPrice > 0 ? `₹${pPrice}${pUnit ? " / " + pUnit : ""}` : "";
+
+      const gradeVal = (row.thickness_or_grade || row.grade || row.thickness || prodName).trim();
+      if (gradeVal && !baseBank.specifications.thicknesses.some((x) => x.value.toLowerCase() === gradeVal.toLowerCase())) {
+        baseBank.specifications.thicknesses.push({
+          value: gradeVal,
+          chipLabel: gradeVal.slice(0, 18),
+          label: `${gradeVal}${pPrice > 0 ? ` — ₹${pPrice}` : ""}`,
+          price: pPrice,
+          mrp: pMrp,
+          priceRange: pRange,
+        });
+        counts.thicknesses++;
+      }
+
+      const sizeVal = (row.size || row.dimensions || "").trim();
+      if (sizeVal && !baseBank.specifications.sizes.some((x) => x.value.toLowerCase() === sizeVal.toLowerCase())) {
+        baseBank.specifications.sizes.push({ value: sizeVal, chipLabel: sizeVal.slice(0, 18), label: sizeVal });
+        counts.sizes++;
+      }
+
+      const finishVal = (row.finish || row.surface_finish || "").trim();
+      if (finishVal && !baseBank.specifications.finishes.some((x) => x.value.toLowerCase() === finishVal.toLowerCase())) {
+        baseBank.specifications.finishes.push({ value: finishVal, chipLabel: finishVal.slice(0, 18), label: finishVal });
+        counts.finishes++;
+      }
+
+      const matVal = (row.material || row.materialcomposition || "").trim();
+      if (matVal && !baseBank.specifications.materials.some((x) => x.value.toLowerCase() === matVal.toLowerCase())) {
+        baseBank.specifications.materials.push({ value: matVal, chipLabel: matVal.slice(0, 18), label: matVal });
+        counts.materials++;
+      }
+
+      const appVal = (row.application || row.commercial_use || "").trim();
+      if (appVal && !baseBank.specifications.applications.some((x) => x.value.toLowerCase() === appVal.toLowerCase())) {
+        baseBank.specifications.applications.push({ value: appVal, chipLabel: appVal.slice(0, 18), label: appVal });
+        counts.applications++;
+      }
+
+      const descVal = (row.short_description || row.description || "").trim();
+      if (descVal && !baseBank.paragraphs.some((x) => x.title.toLowerCase() === prodName.toLowerCase())) {
+        baseBank.paragraphs.push({
+          id: `p_csv_${Date.now()}_${idx}`,
+          title: prodName,
+          category: (row.category || "Product Story").trim(),
+          text: descVal,
+        });
+        counts.paragraphs++;
+      }
+      return;
+    }
+
     // Determine section and item value across human-friendly and developer column aliases
     const firstKey = Object.keys(row)[0];
     const section = (
@@ -1297,3 +1361,233 @@ export function exportProductsToCsv(products = [], categoryFamily = "general") {
 
   return csvLines.join("\r\n");
 }
+
+/**
+ * Registry of all 25 Specialized Sample Sheets (5 Distinct Sheets per Category)
+ * Strictly zero mentions of MOQ across all sheets.
+ */
+export const ALL_CATEGORY_SAMPLE_SHEETS = {
+  garlic: [
+    {
+      sheetNumber: 1,
+      title: "Export Jumbo Caliber",
+      filename: "01_Garlic_Specialty_Sheet1_Export_Jumbo_Catalogue.csv",
+      type: "products",
+      badge: "Export Grade",
+      description: "5 Export-grade garlic products (50-65mm Jumbo, Ek-Pothi, Cured Sheath)",
+    },
+    {
+      sheetNumber: 2,
+      title: "Mandi Wholesale Lots",
+      filename: "01_Garlic_Specialty_Sheet2_Mandi_Wholesale_Catalogue.csv",
+      type: "products",
+      badge: "Mandi Trade",
+      description: "5 Mandi wholesale trade lots (Medium A 40-50mm, Black Basalt Desi)",
+    },
+    {
+      sheetNumber: 3,
+      title: "Processing & Dehydration",
+      filename: "01_Garlic_Specialty_Sheet3_Processing_Dehydration_Catalogue.csv",
+      type: "products",
+      badge: "Processing",
+      description: "5 Food processing calibers (Goli 30-40mm, Flake & Powder grades)",
+    },
+    {
+      sheetNumber: 4,
+      title: "Retail & Value-Packs",
+      filename: "01_Garlic_Specialty_Sheet4_Retail_ValuePacks_Catalogue.csv",
+      type: "products",
+      badge: "Retail Pack",
+      description: "5 Retail consumer formats (Peeled Cloves, Braided Garlic Ropes)",
+    },
+    {
+      sheetNumber: 5,
+      title: "Garlic Data Bank (Specs & Copy)",
+      filename: "01_Garlic_Specialty_Sheet5_DataBank_Specifications.csv",
+      type: "databank",
+      badge: "Data Bank",
+      description: "45 Pre-filled specification items across 9 marketing & technical sections",
+    },
+  ],
+  kotastone: [
+    {
+      sheetNumber: 1,
+      title: "Mirror Polished Blue Flooring",
+      filename: "02_Kota_Stone_Sheet1_Mirror_Polished_Blue_Catalogue.csv",
+      type: "products",
+      badge: "Flooring Slabs",
+      description: "5 Mirror-finish commercial stone slabs (600x600, 1200x600, Calibrated)",
+    },
+    {
+      sheetNumber: 2,
+      title: "Honed Satin Green Slabs",
+      filename: "02_Kota_Stone_Sheet2_Honed_Satin_Green_Catalogue.csv",
+      type: "products",
+      badge: "Honed / Leather",
+      description: "5 Matte honed & leathered green limestone tiles for interiors & steps",
+    },
+    {
+      sheetNumber: 3,
+      title: "Rough Hand-Cut Paving",
+      filename: "02_Kota_Stone_Sheet3_Rough_Split_Paving_Catalogue.csv",
+      type: "products",
+      badge: "Exterior Paver",
+      description: "5 Natural split heavy pavers & cobbles for exterior driveways & ramps",
+    },
+    {
+      sheetNumber: 4,
+      title: "Yellow-Brown Heritage Tiles",
+      filename: "02_Kota_Stone_Sheet4_Yellow_Brown_Heritage_Catalogue.csv",
+      type: "products",
+      badge: "Heritage Earth",
+      description: "5 Golden brown calibrated stones & cobblestones for courtyards",
+    },
+    {
+      sheetNumber: 5,
+      title: "Kota Stone Data Bank (Specs & Copy)",
+      filename: "02_Kota_Stone_Sheet5_DataBank_Specifications.csv",
+      type: "databank",
+      badge: "Data Bank",
+      description: "45 Stone quarry specifications, thickness presets, and marketing copy",
+    },
+  ],
+  sandstone: [
+    {
+      sheetNumber: 1,
+      title: "Architectural Wall Facades",
+      filename: "03_Sandstone_Sheet1_Architectural_Facade_Catalogue.csv",
+      type: "products",
+      badge: "Wall Cladding",
+      description: "5 Dholpur Beige & Mint White architectural rainscreen panels & battens",
+    },
+    {
+      sheetNumber: 2,
+      title: "Imperial Agra Red Monoliths",
+      filename: "03_Sandstone_Sheet2_Imperial_Agra_Red_Catalogue.csv",
+      type: "products",
+      badge: "Agra Red",
+      description: "5 Historical Agra Red ashlar blocks, kerbstones, and monolithic steps",
+    },
+    {
+      sheetNumber: 3,
+      title: "Outdoor Landscape Paving",
+      filename: "03_Sandstone_Sheet3_Outdoor_Landscape_Paving_Catalogue.csv",
+      type: "products",
+      badge: "Patio Paving",
+      description: "5 Autumn Brown & Modak Golden patio slabs, pool coping, and steps",
+    },
+    {
+      sheetNumber: 4,
+      title: "Hand-Carved Heritage Jali",
+      filename: "03_Sandstone_Sheet4_Hand_Carved_Jali_Mandir_Craft_Catalogue.csv",
+      type: "products",
+      badge: "Artisan Craft",
+      description: "5 Master artisan pierced jalis, floral wall murals, and fluted pillars",
+    },
+    {
+      sheetNumber: 5,
+      title: "Sandstone Data Bank (Specs & Copy)",
+      filename: "03_Sandstone_Sheet5_DataBank_Specifications.csv",
+      type: "databank",
+      badge: "Data Bank",
+      description: "45 Sandstone dimensional presets, edge finishes, and heritage stories",
+    },
+  ],
+  kotadoria: [
+    {
+      sheetNumber: 1,
+      title: "Royal Gold Zari Bridal Sarees",
+      filename: "04_Kota_Doria_Sheet1_Royal_Gold_Zari_Bridal_Catalogue.csv",
+      type: "products",
+      badge: "Bridal Zari",
+      description: "5 Pure silk-cotton wedding sarees with real metallic zari borders",
+    },
+    {
+      sheetNumber: 2,
+      title: "Hand-Block Sanganeri Sarees",
+      filename: "04_Kota_Doria_Sheet2_HandBlock_Sanganeri_Catalogue.csv",
+      type: "products",
+      badge: "Hand-Block",
+      description: "5 Hand-block printed Bagru and Ajrakh artisan khat weave sarees",
+    },
+    {
+      sheetNumber: 3,
+      title: "Silk Tissue & Zari Dupattas",
+      filename: "04_Kota_Doria_Sheet3_Silk_Tissue_Dupattas_Catalogue.csv",
+      type: "products",
+      badge: "Silk Dupatta",
+      description: "5 Lightweight gossamer dupattas, stoles, and leheriya festive wraps",
+    },
+    {
+      sheetNumber: 4,
+      title: "Unstitched 3-Piece Salwar Suits",
+      filename: "04_Kota_Doria_Sheet4_Unstitched_Salwar_Suits_Catalogue.csv",
+      type: "products",
+      badge: "Salwar Suits",
+      description: "5 Luxury unstitched suits with matching cotton silk pants & dupattas",
+    },
+    {
+      sheetNumber: 5,
+      title: "Kota Doria Data Bank (Specs & Copy)",
+      filename: "04_Kota_Doria_Sheet5_DataBank_Specifications.csv",
+      type: "databank",
+      badge: "Data Bank",
+      description: "45 Handloom pit-loom weaving presets, khat counts, and craft stories",
+    },
+  ],
+  general: [
+    {
+      sheetNumber: 1,
+      title: "Smart Audio & IoT Electronics",
+      filename: "05_General_Enterprise_Sheet1_Smart_Electronics_Catalogue.csv",
+      type: "products",
+      badge: "Smart Tech",
+      description: "5 Smart electronic products (ANC Headphones, USB-C Mics, IoT Hubs)",
+    },
+    {
+      sheetNumber: 2,
+      title: "Modern Living & Oak Furniture",
+      filename: "05_General_Enterprise_Sheet2_Modern_Furniture_Catalogue.csv",
+      type: "products",
+      badge: "Furniture",
+      description: "5 Solid wood designer furniture items (Lounge chairs, Platform beds)",
+    },
+    {
+      sheetNumber: 3,
+      title: "Botanical Organic Cosmetics",
+      filename: "05_General_Enterprise_Sheet3_Organic_Cosmetics_Catalogue.csv",
+      type: "products",
+      badge: "Cosmetics",
+      description: "5 Clean organic skincare items (Vitamin C Serum, Mineral Sunscreen)",
+    },
+    {
+      sheetNumber: 4,
+      title: "Luxury Apparel & Accessories",
+      filename: "05_General_Enterprise_Sheet4_Luxury_Apparel_Catalogue.csv",
+      type: "products",
+      badge: "Luxury Wear",
+      description: "5 Premium fashion items (Mulberry Silk Scarves, Cashmere Overcoats)",
+    },
+    {
+      sheetNumber: 5,
+      title: "General Enterprise Data Bank",
+      filename: "05_General_Enterprise_Sheet5_DataBank_Specifications.csv",
+      type: "databank",
+      badge: "Data Bank",
+      description: "45 Commercial presets, sustainable certifications, and brand copy",
+    },
+  ],
+};
+
+/**
+ * Returns the 5 specialized sheets for any given category family.
+ */
+export function getCategorySampleSheets(family = "general") {
+  const fam = (family || "general").toLowerCase().replace(/[^a-z]/g, "");
+  if (fam.includes("garlic")) return ALL_CATEGORY_SAMPLE_SHEETS.garlic;
+  if (fam.includes("kotastone") || fam.includes("stone") || (fam.includes("kota") && !fam.includes("doria"))) return ALL_CATEGORY_SAMPLE_SHEETS.kotastone;
+  if (fam.includes("sandstone")) return ALL_CATEGORY_SAMPLE_SHEETS.sandstone;
+  if (fam.includes("doria") || fam.includes("handloom") || fam.includes("fabric") || fam.includes("saree")) return ALL_CATEGORY_SAMPLE_SHEETS.kotadoria;
+  return ALL_CATEGORY_SAMPLE_SHEETS.general;
+}
+

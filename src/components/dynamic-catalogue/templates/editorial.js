@@ -1,6 +1,100 @@
 /* Editorial catalogue templates (12 luxury lookbook layouts) adapted from odop-kritika */
 const E = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-const bgi = (u, pos) => `background-image:url(${u});background-position:${pos || 'center'}`;
+
+const resolveImg = it => {
+  if (!it) return '';
+  if (typeof it === 'string') return it.trim();
+  if (typeof it === 'object') {
+    if (it.img && typeof it.img === 'string' && it.img.trim()) return it.img.trim();
+    if (it.image && typeof it.image === 'string' && it.image.trim()) return it.image.trim();
+    if (it.imageUrl && typeof it.imageUrl === 'string' && it.imageUrl.trim()) return it.imageUrl.trim();
+    if (it._src && typeof it._src === 'string' && it._src.trim()) return it._src.trim();
+    if (it.url && typeof it.url === 'string' && it.url.trim()) return it.url.trim();
+    if (it.photo && typeof it.photo === 'string' && it.photo.trim()) return it.photo.trim();
+    if (it.thumbnail && typeof it.thumbnail === 'string' && it.thumbnail.trim()) return it.thumbnail.trim();
+    if (it.image && typeof it.image === 'object' && it.image.url) return String(it.image.url).trim();
+    if (Array.isArray(it.images) && it.images.length > 0) {
+      const f = it.images[0];
+      if (typeof f === 'string' && f.trim()) return f.trim();
+      if (f && typeof f === 'object' && (f.url || f.img)) return String(f.url || f.img).trim();
+    }
+    if (typeof it.angle1 === 'string' && it.angle1.trim()) return it.angle1.trim();
+  }
+  return '';
+};
+
+const GARLIC_FALLBACKS = [
+  '/assets/garlic/garlic-01.jpeg',
+  '/assets/garlic/garlic-02.jpeg',
+  '/assets/garlic/garlic-03.jpeg',
+  '/assets/garlic/garlic-04.jpeg',
+  '/assets/garlic/garlic-05.jpeg',
+  '/assets/garlic/garlic-06.jpeg',
+  '/assets/garlic/garlic-07.jpeg',
+  '/assets/garlic/garlic-08.jpeg',
+  '/assets/garlic/garlic-09.jpeg',
+  '/assets/garlic/garlic-10.jpeg',
+  '/assets/garlic/garlic-11.jpeg',
+  '/assets/garlic/garlic-12.jpeg',
+  '/assets/garlic/garlic-13.jpeg',
+];
+const STONE_FALLBACKS = [
+  '/assets/kota-stone/Blue-Kota-Stone-Tiles-1.jpg',
+  '/assets/kota-stone/Brown-Kota-Stone-Tiles-2.jpg',
+  '/assets/kota-stone/Kota-Stone-Tiles-3.jpg',
+  '/assets/kota-stone/blue-kota-stone-1.jpg',
+  '/assets/kota-stone/blue-kota-stone-2.jpg',
+  '/assets/kota-stone/blue-kota-stone-3.jpg',
+  '/assets/kota-stone/Designer-Kota-Stone-Tiles.jpg',
+];
+const SAND_FALLBACKS = [
+  '/assets/sand-stone/Agra-Red-Sandstone-Sandblasted.jpg',
+  '/assets/sand-stone/Teakwood-Sandstone-Honed.jpg',
+  '/assets/sand-stone/Rainbow-Sandstone-Honed.jpg',
+  '/assets/sand-stone/Dholpur-Beige-Sandstone.jpg',
+  '/assets/sand-stone/Autumn-Brown-Sandstone-1024x1024.jpg',
+];
+const DORIA_FALLBACKS = [
+  '/assets/kota-doria/0X2A0389_db4c4b42-1d9b-405b-9ea0-664b5017af38.jpg',
+  '/assets/kota-doria/0Q8A3880_97438f9f-513a-428a-99a4-3952c7ce0619.jpg',
+  '/assets/kota-doria/0X2A0415.jpg',
+  '/assets/kota-doria/3E9A1251.jpg',
+];
+
+const categoryFallbackImg = (c, idx = 0) => {
+  const p = ((c && c.info && (c.info.odopProduct || c.info.product || c.info.industry || c.info.ent)) || '').toLowerCase();
+  const firstCat = ((c && c.items && c.items[0] && (c.items[0].category || c.items[0].subcategory || c.items[0].name)) || '').toLowerCase();
+  const combo = (p + ' ' + firstCat).toLowerCase();
+  const safeIdx = Math.max(0, Number(idx) || 0);
+
+  if (combo.includes('garlic') || combo.includes('lahsun') || combo.includes('agro') || combo.includes('mandi')) {
+    return GARLIC_FALLBACKS[safeIdx % GARLIC_FALLBACKS.length];
+  }
+  if (combo.includes('sandstone') || combo.includes('carving') || combo.includes('bundi') || combo.includes('sand')) {
+    return SAND_FALLBACKS[safeIdx % SAND_FALLBACKS.length];
+  }
+  if (combo.includes('kota stone') || combo.includes('limestone') || combo.includes('stone') || combo.includes('granite') || combo.includes('jhalawar')) {
+    return STONE_FALLBACKS[safeIdx % STONE_FALLBACKS.length];
+  }
+  if (combo.includes('doria') || combo.includes('saree') || combo.includes('fabric') || combo.includes('handloom') || combo.includes('textile')) {
+    return DORIA_FALLBACKS[safeIdx % DORIA_FALLBACKS.length];
+  }
+  return GARLIC_FALLBACKS[safeIdx % GARLIC_FALLBACKS.length];
+};
+
+const bgi = (u, pos, fallback) => {
+  const url = typeof u === 'object' ? resolveImg(u) : (u || '');
+  const primary = url || fallback || '';
+  const safeFallback = fallback || (typeof categoryFallbackImg === 'function' ? categoryFallbackImg() : '/assets/garlic/garlic-01.jpeg');
+  if (!primary && !safeFallback) return 'background-color:#f1f5f9;';
+  const cleanPrimary = String(primary || safeFallback).replace(/'/g, '%27');
+  const cleanFallback = String(safeFallback).replace(/'/g, '%27');
+  if (cleanPrimary && cleanFallback && cleanPrimary !== cleanFallback) {
+    return `background-image:url('${cleanPrimary}'),url('${cleanFallback}');background-position:${pos || 'center'};background-size:cover;background-repeat:no-repeat;`;
+  }
+  return `background-image:url('${cleanPrimary}');background-position:${pos || 'center'};background-size:cover;background-repeat:no-repeat;`;
+};
+
 const spec = it => [it.colour, it.material, it.size].filter(Boolean).join(' · ');
 const pn = n => String(n).padStart(2, '0');
 const hx = c => [1, 3, 5].map(i => parseInt(c.slice(i, i + 2), 16));
@@ -45,6 +139,8 @@ const sentences = s => (s || '').split(/(?<=[.!?])\s+/).filter(Boolean);
 
 function cover(c, t){
   const i = c.info, big = fsz(i.ent, 46, 32, 18);
+  const fbImg = categoryFallbackImg(c);
+  const heroPhoto = c.hero || resolveImg(c.items[0]) || fbImg;
   const odopBanner = `
     <div style="position:absolute;left:46px;right:46px;top:14px;background:linear-gradient(90deg, #1e3a8a, #1e40af);color:#ffffff;padding:5px 12px;border-radius:6px;display:flex;align-items:center;gap:8px;z-index:40;border:1px solid #3b82f6;">
       <span style="font-size:16px">🏛️</span>
@@ -54,46 +150,73 @@ function cover(c, t){
       </div>
     </div>
   `;
-  if (t.cover === 'bleed') return `${odopBanner}<div class="e-bleedph" style="${bgi(c.hero)}"></div>
+  if (t.cover === 'bleed') return `${odopBanner}<div class="e-bleedph" style="${bgi(heroPhoto, 'center', fbImg)}"></div>
     <div class="e-bleedcard"><div class="e-run2"><span>VOLUME I</span><span>${E(cap(i.district || 'COLLECTION'))}</span><span>${c.year}</span></div>
     <div class="e-brand" style="font-size:${big}px">${E(cap(i.ent))}</div><div class="e-rule"></div><div class="e-tag">${E(c.tagline)}</div>
     <div class="e-bot">THE ${E(cap(i.odopProduct || i.product || 'PRODUCT'))} EDIT · CATALOGUE<br><span>${E(c.useShort)}</span></div></div>`;
   if (t.cover === 'frame') return `${odopBanner}<div class="e-frame"></div><div class="e-run2" style="position:absolute;left:46px;right:46px;top:44px"><span>VOLUME I</span><span>CRAFTED IN ${E(cap(i.district || 'INDIA'))}</span><span>${c.year}</span></div>
-    <div class="e-fphoto" style="${bgi(c.hero)}"></div><div class="e-brand" style="top:760px;font-size:${big}px">${E(cap(i.ent))}</div>
+    <div class="e-fphoto" style="${bgi(heroPhoto, 'center', fbImg)}"></div><div class="e-brand" style="top:760px;font-size:${big}px">${E(cap(i.ent))}</div>
     <div class="e-sub" style="top:850px">${E(cap(i.odopProduct || i.product || 'COLLECTION'))}</div><div class="e-rule" style="top:890px"></div><div class="e-tag" style="top:915px">${E(c.tagline)}</div>
     <div class="e-bot" style="bottom:62px">THE ${E(cap(i.odopProduct || i.product || 'PRODUCT'))} EDIT · CATALOGUE<br><span>${E(c.useShort)}</span></div>`;
   return `${odopBanner}<div class="e-frame"></div><div class="e-run2" style="position:absolute;left:46px;right:46px;top:44px"><span>VOLUME I</span><span>SIGNATURE COLLECTION</span><span>${c.year}</span></div>
-    <div class="e-arch"><div style="${bgi(c.hero)}"></div></div><div class="e-brand" style="top:690px;font-size:${big}px">${E(cap(i.ent))}</div>
+    <div class="e-arch"><div style="${bgi(heroPhoto, 'center', fbImg)}"></div></div><div class="e-brand" style="top:690px;font-size:${big}px">${E(cap(i.ent))}</div>
     <div class="e-sub" style="top:768px">${E(cap(i.district || ''))} · ${E(cap(i.odopProduct || i.product || 'CATALOGUE'))}</div><div class="e-rule" style="top:812px"></div>
     <div class="e-tag" style="top:836px">${E(c.tagline)}</div><div class="e-bot" style="bottom:70px">THE ${E(cap(i.odopProduct || i.product || 'PRODUCT'))} EDIT · CATALOGUE<br><span>${E(c.useShort)}</span></div>`;
 }
 
 function story(c, t, no){
-  const s = sentences(c.info.desc), half = Math.ceil(s.length / 2) || 1;
-  const col1 = s.slice(0, half).join(' ') || c.info.desc || 'Premium craftsmanship and dedication to quality defines our approach.', col2 = s.slice(half).join(' ') || (c.info.use ? 'Designed for: ' + c.info.use + '.' : 'Every product is created to the highest standards.');
-  const idx = c.items.slice(0, 4);
-  const storyTitle = c.copy.storyTitle || ['Curated with Care,', 'Made to Endure.'];
-  const values = c.copy.values || [['Quality', 'Meticulous inspection of every unit.'], ['Integrity', 'Clear specifications, no surprises.'], ['Support', 'Dedicated post-delivery assistance.']];
+  const fbImg = categoryFallbackImg(c);
+  const targetItem = c.items[1] || c.items[0] || {};
+  const photoUrl = resolveImg(targetItem) || resolveImg(c.items[0]) || c.hero || fbImg;
+
+  const s = sentences(c.info.desc).filter(x => x.trim().length > 8);
+  let col1 = '', col2 = '';
+  if (s.length >= 2) {
+    const half = Math.ceil(s.length / 2);
+    col1 = s.slice(0, half).join(' ');
+    col2 = s.slice(half).join(' ');
+  } else if (s.length === 1) {
+    col1 = s[0];
+    col2 = c.info.use ? ('Designed for: ' + c.info.use + '.') : (c.copy.legacy ? c.copy.legacy.replace(/\{ent\}/g, c.info.ent) : 'Every product conforms to stringent regional benchmarks.');
+  } else {
+    col1 = c.info.desc || (c.copy.isText ? c.copy.isText.replace(/\{ent\}/g, c.info.ent) : 'Authentic craft and dedication to certified quality defines our enterprise.');
+    col2 = c.info.use ? ('Primary applications: ' + c.info.use + '.') : (c.copy.coverLine || 'Supplied directly across India with careful protective packaging.');
+  }
+  if (!col1) col1 = c.copy.isText ? c.copy.isText.replace(/\{ent\}/g, c.info.ent) : 'Authentic cultivation and dedicated grading defines our enterprise.';
+  if (!col2) col2 = c.copy.coverLine ? c.copy.coverLine.replace(/\{ent\}/g, c.info.ent) : (c.info.use ? ('Primary applications: ' + c.info.use + '.') : 'Supplied directly across India with careful protective packaging.');
+
+  const idx = (c.items && c.items.length) ? c.items.slice(0, 4) : [{ name: c.info.odopProduct || 'Signature Product', price: '₹ On Request' }];
+  const storyTitle = (c.copy && c.copy.storyTitle) || (t.story) || ['Curated with Care,', 'Made to Endure.'];
+  const values = (c.copy && c.copy.values) || [
+    ['Quality', 'Meticulous inspection of every unit before dispatch.'],
+    ['Integrity', 'Authentic regional materials, transparent specifications.'],
+    ['Support', 'Dedicated direct assistance and safe transport coordination.']
+  ];
+
   return `${run(c, 'OUR STORY', no)}${eyebrow(E(cap(c.info.district || 'SIGNATURE')) + ' · PRODUCT RANGE', 'top:92px')}
-    <h2 class="e-h" style="position:absolute;left:46px;top:114px;width:640px;font-size:46px">${E(storyTitle[0])} <i>${E(storyTitle[1])}</i></h2>
-    <div class="e-cols"><p>${E(col1)}</p><p>${E(col2)}</p></div>
-    <div class="e-wide" style="${bgi(((c.items[1] || c.items[0]) || {}).img)}"></div><div class="e-capt" style="top:700px">${E(((c.items[1] || c.items[0]) || {}).name || '')}, ${E(c.info.district || 'Collection')}.</div>
-    <div class="e-idxh"><span>The range</span><em>${c.items.length} PIECES IN THIS EDIT</em></div>
-    <div class="e-idx">${idx.map((it, k) => `<div class="${k === 0 ? 'on' : ''}"><b>${E((it.name || '').split(' ').slice(0, 3).join(' '))}</b><small>${E(it.price || '')}</small><u>${k === 0 ? 'NOW OPEN' : 'SEE INSIDE'}</u></div>`).join('')}</div>
-    <div class="e-vals">${values.map(v => `<div><i>${E(v[0])}</i><span>${E(v[1])}</span></div>`).join('')}</div>`;
+    <h2 class="e-h" style="position:absolute;left:46px;top:114px;width:640px;font-size:46px;line-height:1.08">${E(storyTitle[0])} <i>${E(storyTitle[1])}</i></h2>
+    <div class="e-cols" style="position:absolute;left:46px;right:46px;top:250px;display:grid;grid-template-columns:1fr 1fr;gap:34px;font-size:11.5px;line-height:1.85;color:var(--muted);min-height:50px;"><p>${E(col1)}</p><p>${E(col2)}</p></div>
+    <div class="e-wide" style="position:absolute;left:46px;right:46px;top:375px;height:290px;border-radius:6px;overflow:hidden;box-shadow:0 8px 24px rgba(0,0,0,0.09);background:#f1f5f9;border:1px solid var(--line);${bgi(photoUrl, 'center', fbImg)}"></div>
+    <div class="e-capt" style="position:absolute;left:46px;top:675px;font-family:'Cormorant Garamond',serif;font-style:italic;font-size:12px;color:var(--muted)">${E(targetItem.name || c.info.odopProduct || c.info.ent || 'Signature Range')}, ${E(c.info.district || 'India')}.</div>
+    <div class="e-idxh" style="position:absolute;left:46px;right:46px;top:730px;display:flex;justify-content:space-between;align-items:baseline"><span>The range</span><em>${c.items.length} PIECES IN THIS EDIT</em></div>
+    <div class="e-idx" style="position:absolute;left:46px;right:46px;top:780px;display:grid;grid-template-columns:repeat(4,1fr);gap:18px">${idx.map((it, k) => `<div class="${k === 0 ? 'on' : ''}"><b>${E((it.name || '').split(' ').slice(0, 3).join(' '))}</b><small>${E(it.price || '')}</small><u>${k === 0 ? 'NOW OPEN' : 'SEE INSIDE'}</u></div>`).join('')}</div>
+    <div class="e-vals" style="position:absolute;left:46px;right:46px;top:915px;display:grid;grid-template-columns:repeat(3,1fr);gap:26px;border-top:1px solid var(--line);padding-top:18px">${values.map(v => `<div><i>${E(v[0])}</i><span>${E(v[1])}</span></div>`).join('')}</div>`;
 }
 
 function hero(c, t, no, it, chapter){
   if (!it) return '';
+  const fbImg = categoryFallbackImg(c);
+  const itImg = resolveImg(it) || fbImg;
   const L = t.heroSide === 'L', imgX = L ? 46 : 794 - 46 - 320, txX = L ? 396 : 46, d = (c.items[1] || c.items[0] || it);
-  const heroTitle = c.copy.heroTitle || ['Pure Form,', 'Distinctive Character.'];
+  const dImg = resolveImg(d) || fbImg;
+  const heroTitle = c.copy.heroTitle || t.hero || ['Pure Form,', 'Distinctive Character.'];
   return `${run(c, 'THE ' + E(cap(c.info.product || 'SIGNATURE')) + ' EDIT', no)}
-    <div class="e-hph" style="left:${imgX}px;${bgi(it.img)}"></div><div class="e-capt" style="left:${imgX}px;top:752px;width:320px">${E(it.name)}, ${E(c.info.district || '')}.</div>
+    <div class="e-hph" style="left:${imgX}px;${bgi(itImg, 'center', fbImg)}"></div><div class="e-capt" style="left:${imgX}px;top:752px;width:320px">${E(it.name)}, ${E(c.info.district || '')}.</div>
     <div class="e-facts" style="left:${imgX}px">${[['SIZE', it.size], ['MATERIAL', it.material], ['COLOUR', it.colour]].filter(r => r[1]).map(r => `<div><u>${r[0]}</u>${E(r[1])}</div>`).join('')}</div>
     <div class="e-hx" style="left:${txX}px">${eyebrow(pn(chapter) + ' · ' + E(cap(c.info.district || 'EXCLUSIVE')))}
       <h2 class="e-h" style="font-size:42px;margin-top:8px">${E(heroTitle[0])}<br><i>${E(heroTitle[1])}</i></h2>
       ${para(sentences(c.info.desc).slice(0, 2).join(' ') || c.info.desc || 'Refined details created with precision and care.')}
-      <div class="e-inset" style="${bgi(d.img, 'center 30%')}"></div><div class="e-capt" style="position:static;margin-top:8px">A closer look: ${E(d.name)}.</div></div>
+      <div class="e-inset" style="${bgi(dImg, 'center 30%', fbImg)}"></div><div class="e-capt" style="position:static;margin-top:8px">A closer look: ${E(d.name)}.</div></div>
     <div class="e-sig" style="left:${txX}px"><div class="e-eye">THE SIGNATURE PIECE</div><div class="e-signm">${E(it.name)}</div><div class="e-sigsp">${E(spec(it))}</div>
       <div class="e-sigrow"><span class="e-sigpr">${E(it.price)}</span><em>${E(cap(c.info.product || 'IN STOCK'))}</em></div></div>
     <div class="e-pfoot"><span>${E(cap(c.info.district || 'INDIA'))}</span><span>${E(c.info.mobile || '')}</span></div>`;
@@ -101,32 +224,46 @@ function hero(c, t, no, it, chapter){
 
 function grid2(c, t, no, items, title){
   return `${run(c, E(cap(c.info.product || 'PRODUCTS')) + ' · ' + E(cap(title)), no)}<h2 class="e-gt">${E(title)}</h2><div class="e-gtag">${E(cap((c.info.use || 'Premium Range').split(',').slice(0, 2).join(' · ')))}</div>
-    <div class="e-g2">${items.map(it => `<div><div class="e-gp" style="${bgi(it.img)}"></div><div class="e-gn"><span>${E(it.name)}</span><b>${E(it.price)}</b></div><div class="e-gs">${E(spec(it))}</div></div>`).join('')}</div>
+    <div class="e-g2">${items.map((it, idx) => {
+      const fb = categoryFallbackImg(c, idx + 1);
+      const imgUrl = resolveImg(it) || fb;
+      return `<div><div class="e-gp" style="${bgi(imgUrl, 'center', fb)}"></div><div class="e-gn"><span>${E(it.name)}</span><b>${E(it.price)}</b></div><div class="e-gs">${E(spec(it))}</div></div>`;
+    }).join('')}</div>
     <div class="e-pfoot"><span>${E(cap(c.info.ent))}</span><span>${E(c.info.mobile || '')}</span></div>`;
 }
 
 function grid3(c, t, no, items, title){
   return `${run(c, E(cap(c.info.product || 'PRODUCTS')) + ' · ' + E(cap(title)), no)}<h2 class="e-gt">${E(title)}</h2><div class="e-gtag">${E(cap(c.info.district || 'COLLECTION'))}</div>
-    <div class="e-g3">${items.map(it => `<div><div class="e-gp3" style="${bgi(it.img)}"></div><div class="e-gn3">${E(it.name)}</div><div class="e-gs">${E(spec(it))}</div><div class="e-gpr">${E(it.price)}</div></div>`).join('')}</div>
+    <div class="e-g3">${items.map((it, idx) => {
+      const fb = categoryFallbackImg(c, idx + 1);
+      const imgUrl = resolveImg(it) || fb;
+      return `<div><div class="e-gp3" style="${bgi(imgUrl, 'center', fb)}"></div><div class="e-gn3">${E(it.name)}</div><div class="e-gs">${E(spec(it))}</div><div class="e-gpr">${E(it.price)}</div></div>`;
+    }).join('')}</div>
     <div class="e-pfoot"><span>${E(cap(c.info.ent))}</span><span>${E(c.info.mobile || '')}</span></div>`;
 }
 
 function dense(c, t, no, items){
   const n = items.length, few = n <= 4, cols = few ? Math.max(2, n) : 4, ph = few ? 560 : 280;
   const rows = few ? [items] : [items.slice(0, 4), items.slice(4, 8)].filter(r => r.length);
-  const denseTitle = c.copy.denseTitle || ['The Collection,', 'Form & Function.'];
+  const denseTitle = c.copy.denseTitle || t.dense || ['The Collection,', 'Form & Function.'];
   return `${run(c, E(cap(c.info.product || 'CATALOGUE')), no)}${eyebrow(E(cap(c.info.product || 'COLLECTION')) + ' · MORE', 'top:92px')}
     <h2 class="e-h" style="position:absolute;left:46px;right:46px;top:108px;font-size:38px;white-space:nowrap">${E(denseTitle[0])} <i>${E(denseTitle[1])}</i></h2>
     <div class="e-dtx">${E(c.info.use ? 'Made for: ' + c.info.use + '.' : '')}</div>
-    ${rows.map((r, k) => `<div class="e-g4" style="top:${200 + k * 440}px;grid-template-columns:repeat(${cols},1fr);gap:${few ? 22 : 16}px">${r.map(it => `<div><div class="e-gp4" style="height:${ph}px;${bgi(it.img)}"></div><div class="e-gn4">${E(it.name)}</div><div class="e-gs">${E(spec(it))}</div><div class="e-gpr">${E(it.price)}</div></div>`).join('')}</div>`).join('')}
+    ${rows.map((r, k) => `<div class="e-g4" style="top:${200 + k * 440}px;grid-template-columns:repeat(${cols},1fr);gap:${few ? 22 : 16}px">${r.map((it, idx) => {
+      const fb = categoryFallbackImg(c, k * 4 + idx + 1);
+      const imgUrl = resolveImg(it) || fb;
+      return `<div><div class="e-gp4" style="height:${ph}px;${bgi(imgUrl, 'center', fb)}"></div><div class="e-gn4">${E(it.name)}</div><div class="e-gs">${E(spec(it))}</div><div class="e-gpr">${E(it.price)}</div></div>`;
+    }).join('')}</div>`).join('')}
     <div class="e-pfoot"><span>${E(cap(c.info.ent))}</span><span>${E(c.info.mobile || '')}</span></div>`;
 }
 
 function care(c, t, no){
+  const fbImg = categoryFallbackImg(c);
   const it = c.items[c.items.length - 1] || c.items[0] || {};
+  const itImg = resolveImg(it) || fbImg;
   const promise = c.copy.promise || { title: ['Packed with Care,', 'Delivered on Schedule.'], text: 'Every order is thoroughly inspected before dispatch. We take pride in clean packing and transparent service.' };
   const careList = c.copy.care || [['Customer Care', 'Contact our support team for any custom requests or order queries.'], ['Quality Guarantee', 'If an item is not as specified, notify us within 7 days.'], ['Natural Nuances', 'Finishes and colors may show subtle natural variations.']];
-  return `${run(c, 'THE PROMISE', no)}<div class="e-cph" style="${bgi(it.img)}"></div>
+  return `${run(c, 'THE PROMISE', no)}<div class="e-cph" style="${bgi(itImg, 'center', fbImg)}"></div>
     <div class="e-cx">${eyebrow('YOUR ORDER')}<h2 class="e-h" style="font-size:40px;margin-top:8px">${E(promise.title[0])}<br><i>${E(promise.title[1])}</i></h2>${para(promise.text)}</div>
     <div class="e-vals" style="top:700px">${careList.map(v => `<div><i>${E(v[0])}</i><span>${E(v[1])}</span></div>`).join('')}</div>
     <div class="e-pfoot"><span>${E(cap(c.info.ent))}</span><span>${E(c.info.mobile || '')}</span></div>`;
@@ -138,7 +275,6 @@ function closing(c, t, no){
     <div class="e-rule" style="position:static;margin:22px auto"></div><div class="e-tag" style="position:static">${E(c.tagline)}</div>
     <div class="e-endinfo">${[i.person && `<b>${E(i.person)}</b>`, i.mobile && `☎ ${E(i.mobile)}`, i.wa && i.wa !== i.mobile ? `WhatsApp ${E(i.wa)}` : (i.mobile ? 'WhatsApp on the same number' : ''), i.email && `✉ ${E(i.email)}`, i.addr && `⌂ ${E(i.addr)}`, i.gst && `GSTIN ${E(i.gst)}`].filter(Boolean).map(x => `<div>${x}</div>`).join('')}</div>
     ${(i.socials || []).length ? `<div class="e-soc">${i.socials.map(s => `<span class="soc" data-url="${E(s[1])}"><b>${s[0]}</b> ${E(c.socialLabel ? c.socialLabel(s[1]) : s[1])}</span>`).join('')}</div>` : ''}
-    ${c.qr ? `<div class="e-qr"><a href="${E(c.info?.link || c.info?.website || (c.info?.mobile ? `https://wa.me/${String(c.info.mobile).replace(/\D/g, '')}` : '#'))}" target="_blank" rel="noopener noreferrer" data-qr-url="${E(c.info?.link || c.info?.website || '')}" style="text-decoration:none; color:inherit; display:flex; flex-direction:column; align-items:center;"><img class="qrimg" src="${c.qr}"><div>Scan to connect<br>${E(c.pf || 'with us')}</div><span class="qr-click-btn" style="display:inline-block; font-size:11px; font-weight:700; color:var(--acc, #2563eb); text-decoration:underline; margin-top:4px;">Click here ↗</span></a></div>` : ''}
     <div class="e-note">Prices in INR · ${c.year} · subject to change</div></div>`;
 }
 
@@ -151,8 +287,9 @@ function plan(t, n){
 const pageCount = (t, n) => 2 + plan(t, n).length + 2;
 
 function render(t, ctx){
-  const th = t.theme, items = (ctx.items || []).map((it, n) => Object.assign({ _n: n + 1 }, it)), copy = ctx.copy || (window.getCopy && window.getCopy(ctx.info)) || {};
-  const c = Object.assign({}, ctx, { items, year: new Date().getFullYear(), hero: ctx.heroImg || (items[0] && items[0].img) || '',
+  const th = t.theme, items = (ctx.items || []).map((it, n) => Object.assign({ _n: n + 1 }, it)), copy = ctx.copy || (typeof window !== 'undefined' && window.getCopy && window.getCopy(ctx.info)) || {};
+  const fbImg = categoryFallbackImg(ctx);
+  const c = Object.assign({}, ctx, { items, year: new Date().getFullYear(), hero: ctx.heroImg || resolveImg(items[0]) || fbImg,
     copy, tagline: copy.tagline || (ctx.info && ctx.info.tagline) || 'Refined aesthetics and timeless value.',
     useShort: (ctx.info.use || '').split(',').slice(0, 3).join(' · ') });
   const style = `--bg:${th.bg};--ink:${th.ink};--muted:${th.muted};--acc:${th.acc};--gold:${th.gold};--line:${th.line};--soft:${th.soft};background-color:${th.bg}`;
@@ -204,7 +341,7 @@ const CSS = `
 .ed .e-bleedcard .e-bot{position:static;margin-top:44px}
 .ed .e-cols{position:absolute;left:46px;right:46px;top:262px;display:grid;grid-template-columns:1fr 1fr;gap:34px;font-size:11.5px;line-height:1.85;color:var(--muted)}
 .ed .e-cols p{margin:0;display:-webkit-box;-webkit-line-clamp:5;-webkit-box-orient:vertical;overflow:hidden}
-.ed .e-wide{position:absolute;left:46px;right:46px;top:392px;height:290px;background-size:cover;background-position:center}
+.ed .e-wide{position:absolute;left:46px;right:46px;top:392px;height:290px;background-size:cover;background-position:center;border-radius:6px;box-shadow:0 8px 24px rgba(0,0,0,0.09);background-color:var(--soft,#f1f5f9);border:1px solid var(--line)}
 .ed .e-idxh{position:absolute;left:46px;right:46px;top:760px;display:flex;justify-content:space-between;align-items:baseline}
 .ed .e-idxh span{font-family:'Cormorant Garamond',serif;font-size:26px}
 .ed .e-idxh em{font-style:normal;font-size:8.5px;letter-spacing:.24em;color:var(--gold)}

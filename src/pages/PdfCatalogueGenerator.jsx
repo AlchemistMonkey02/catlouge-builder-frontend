@@ -424,18 +424,6 @@ export default function PdfCatalogueGenerator() {
 
       let chosenCompanyId = "";
       let companyList = (compRes && compRes.data) ? [...compRes.data] : [];
-      try {
-        const localOverrides = JSON.parse(localStorage.getItem("catalogue_local_companies") || "{}");
-        const overrideIds = Object.keys(localOverrides);
-        if (overrideIds.length > 0) {
-          companyList = companyList.map((c) => (localOverrides[c._id] ? { ...c, ...localOverrides[c._id] } : c));
-          overrideIds.forEach((id) => {
-            if (!companyList.some((c) => c._id === id)) {
-              companyList.push(localOverrides[id]);
-            }
-          });
-        }
-      } catch (_) {}
 
       if (companyList.length > 0) {
         const priorityKeywords = [
@@ -476,12 +464,6 @@ export default function PdfCatalogueGenerator() {
 
       if (prodRes.data?.products) {
         let prods = [...prodRes.data.products];
-        try {
-          const localProdOverrides = JSON.parse(localStorage.getItem("catalogue_local_products") || "{}");
-          if (Object.keys(localProdOverrides).length > 0) {
-            prods = prods.map((p) => (localProdOverrides[p._id] ? { ...p, ...localProdOverrides[p._id] } : p));
-          }
-        } catch (_) {}
         setAllProducts(prods);
 
         // Filter products for chosen company with strict category compatibility
@@ -738,27 +720,12 @@ export default function PdfCatalogueGenerator() {
         setCompanies((prev) => [...prev, mergedNew]);
         setSelectedCompanyId(finalId);
         handleSelectCompany(mergedNew);
-        try {
-          const localOverrides = JSON.parse(localStorage.getItem("catalogue_local_companies") || "{}");
-          localOverrides[finalId] = mergedNew;
-          localStorage.setItem("catalogue_local_companies", JSON.stringify(localOverrides));
-        } catch (_) {}
         setIsCompanyModalOpen(false);
         return;
       } catch (err) {
-        console.warn("Server creation warning, using local entry:", err);
+        console.warn("Server creation error:", err);
+        alert("Failed to create company on server: " + (err.response?.data?.message || err.message));
       }
-
-      // Fallback local addition
-      setCompanies((prev) => [...prev, optimisticNew]);
-      setSelectedCompanyId(tempId);
-      handleSelectCompany(optimisticNew);
-      try {
-        const localOverrides = JSON.parse(localStorage.getItem("catalogue_local_companies") || "{}");
-        localOverrides[tempId] = optimisticNew;
-        localStorage.setItem("catalogue_local_companies", JSON.stringify(localOverrides));
-      } catch (_) {}
-      setIsCompanyModalOpen(false);
     } catch (err) {
       alert("Failed to create company: " + err.message);
     }
@@ -1481,15 +1448,20 @@ export default function PdfCatalogueGenerator() {
                             href={qrLinks[item.key]}
                             target="_blank"
                             rel="noopener noreferrer"
+                            className="qr-click-btn"
                             style={{
-                              fontSize: "0.75rem",
-                              color: item.accentColor,
+                              fontSize: "0.72rem",
+                              color: "#ffffff",
+                              background: item.accentColor || "var(--primary, #2563eb)",
                               fontWeight: 700,
-                              textDecoration: "underline",
-                              margin: "4px 0 2px",
+                              padding: "2px 10px",
+                              borderRadius: "99px",
+                              textDecoration: "none",
+                              margin: "6px 0 3px",
                               display: "inline-flex",
                               alignItems: "center",
                               gap: "3px",
+                              boxShadow: "0 1px 4px rgba(0,0,0,0.15)"
                             }}
                           >
                             Click here ↗
@@ -2306,6 +2278,28 @@ export default function PdfCatalogueGenerator() {
                         <div style={{ fontSize: "0.72rem", fontWeight: 800, color: "#111111", marginTop: "4px", letterSpacing: "0.05em" }}>
                           SCAN DIGITAL PROFILE
                         </div>
+                        <a
+                          href={qrLinks.businessProfile || "#"}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="qr-click-btn"
+                          style={{
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: "3px",
+                            fontSize: "0.74rem",
+                            fontWeight: 700,
+                            color: "#ffffff",
+                            background: "#2563eb",
+                            padding: "3px 12px",
+                            borderRadius: "99px",
+                            textDecoration: "none",
+                            marginTop: "4px",
+                            boxShadow: "0 2px 6px rgba(0,0,0,0.15)"
+                          }}
+                        >
+                          Click here ↗
+                        </a>
                       </div>
                     </div>
                   )}
@@ -2339,7 +2333,26 @@ export default function PdfCatalogueGenerator() {
                             <div style={{ fontWeight: 800, fontSize: "0.95rem", color: "#111111", letterSpacing: "0.08em", marginTop: "8px" }}>
                               {box.title}
                             </div>
-                            <a href={box.link || "#"} target="_blank" rel="noopener noreferrer" style={{ fontSize: "0.80rem", color: "var(--primary, #2563eb)", textDecoration: "underline", fontWeight: 700, margin: "3px 0 2px" }}>
+                            <a
+                              href={box.link || "#"}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="qr-click-btn"
+                              style={{
+                                display: "inline-flex",
+                                alignItems: "center",
+                                gap: "3px",
+                                fontSize: "0.75rem",
+                                color: "#ffffff",
+                                background: "var(--primary, #2563eb)",
+                                padding: "3px 12px",
+                                borderRadius: "99px",
+                                textDecoration: "none",
+                                fontWeight: 700,
+                                margin: "6px 0 3px",
+                                boxShadow: "0 2px 6px rgba(0,0,0,0.12)"
+                              }}
+                            >
                               Click here ↗
                             </a>
                             <a href={box.link || "#"} target="_blank" rel="noopener noreferrer" style={{ fontSize: "0.72rem", color: "#333333", textDecoration: "underline", fontWeight: 600 }}>

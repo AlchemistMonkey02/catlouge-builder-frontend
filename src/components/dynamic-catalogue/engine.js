@@ -200,9 +200,68 @@ if (typeof window !== 'undefined') {
   };
 }
 
-export async function prepareItems(products, fam = '') {
+export async function prepareItems(products, fam = '', templateUid = '') {
   const out = [];
   const list = products && products.length ? products : [];
+
+  // Determine effective category for image fallbacks and specs
+  let effCat = (fam || '').toLowerCase();
+  if (!effCat || effCat === 'editorial' || effCat === 'simple' || effCat === 'stonecat') {
+    if (templateUid) {
+      const tu = templateUid.toLowerCase();
+      if (tu.includes('garlic') || tu.includes('ed-gl') || tu.includes('gl-')) effCat = 'garlic';
+      else if (tu.includes('kotastone') || tu.includes('ed-ks') || tu.includes('ks-')) effCat = 'kotastone';
+      else if (tu.includes('sandstone') || tu.includes('ed-ss') || tu.includes('ss-')) effCat = 'sandstone';
+      else if (tu.includes('kotadoria') || tu.includes('ed-kd') || tu.includes('kd-')) effCat = 'kotadoria';
+    }
+    if (!effCat || effCat === 'editorial' || effCat === 'simple' || effCat === 'stonecat') {
+      const firstProd = list[0] || {};
+      const cStr = ((firstProd.category || '') + ' ' + (firstProd.subcategory || '') + ' ' + (firstProd.name || '')).toLowerCase();
+      if (cStr.includes('garlic') || cStr.includes('lahsun') || cStr.includes('agro')) effCat = 'garlic';
+      else if (cStr.includes('sand')) effCat = 'sandstone';
+      else if (cStr.includes('stone') || cStr.includes('kota stone')) effCat = 'kotastone';
+      else if (cStr.includes('doria') || cStr.includes('saree') || cStr.includes('silk')) effCat = 'kotadoria';
+    }
+  }
+
+  // Pre-define verified local fallback pools for each category
+  const garlicPool = [
+    '/assets/garlic/garlic-01.jpeg',
+    '/assets/garlic/garlic-02.jpeg',
+    '/assets/garlic/garlic-03.jpeg',
+    '/assets/garlic/garlic-04.jpeg',
+    '/assets/garlic/garlic-05.jpeg',
+    '/assets/garlic/garlic-06.jpeg',
+    '/assets/garlic/garlic-07.jpeg',
+    '/assets/garlic/garlic-08.jpeg',
+    '/assets/garlic/garlic-09.jpeg',
+    '/assets/garlic/garlic-10.jpeg',
+    '/assets/garlic/garlic-11.jpeg',
+    '/assets/garlic/garlic-12.jpeg',
+    '/assets/garlic/garlic-13.jpeg',
+  ];
+  const stonePool = [
+    '/assets/kota-stone/Blue-Kota-Stone-Tiles-1.jpg',
+    '/assets/kota-stone/Brown-Kota-Stone-Tiles-2.jpg',
+    '/assets/kota-stone/Kota-Stone-Tiles-3.jpg',
+    '/assets/kota-stone/blue-kota-stone-1.jpg',
+    '/assets/kota-stone/blue-kota-stone-2.jpg',
+    '/assets/kota-stone/blue-kota-stone-3.jpg',
+    '/assets/kota-stone/Designer-Kota-Stone-Tiles.jpg',
+  ];
+  const sandPool = [
+    '/assets/sand-stone/Agra-Red-Sandstone-Sandblasted.jpg',
+    '/assets/sand-stone/Teakwood-Sandstone-Honed.jpg',
+    '/assets/sand-stone/Rainbow-Sandstone-Honed.jpg',
+    '/assets/sand-stone/Dholpur-Beige-Sandstone.jpg',
+    '/assets/sand-stone/Autumn-Brown-Sandstone-1024x1024.jpg',
+  ];
+  const doriaPool = [
+    '/assets/kota-doria/0X2A0389_db4c4b42-1d9b-405b-9ea0-664b5017af38.jpg',
+    '/assets/kota-doria/0Q8A3880_97438f9f-513a-428a-99a4-3952c7ce0619.jpg',
+    '/assets/kota-doria/0X2A0415.jpg',
+    '/assets/kota-doria/3E9A1251.jpg',
+  ];
 
   for (let k = 0; k < list.length; k++) {
     const v = list[k];
@@ -210,13 +269,23 @@ export async function prepareItems(products, fam = '') {
 
     // c) Product photographs: Primary image resolution with multi-source fallback
     let src = '';
-    if (typeof v === 'string') {
-      src = v;
+    if (typeof v === 'string' && v.trim()) {
+      src = v.trim();
     } else if (v && typeof v === 'object') {
-      if (typeof v.img === 'string' && v.img) {
-        src = v.img;
-      } else if (typeof v.image === 'string' && v.image) {
-        src = v.image;
+      if (typeof v.img === 'string' && v.img.trim()) {
+        src = v.img.trim();
+      } else if (typeof v.image === 'string' && v.image.trim()) {
+        src = v.image.trim();
+      } else if (typeof v.imageUrl === 'string' && v.imageUrl.trim()) {
+        src = v.imageUrl.trim();
+      } else if (typeof v.photo === 'string' && v.photo.trim()) {
+        src = v.photo.trim();
+      } else if (typeof v.thumbnail === 'string' && v.thumbnail.trim()) {
+        src = v.thumbnail.trim();
+      } else if (typeof v.url === 'string' && v.url.trim()) {
+        src = v.url.trim();
+      } else if (typeof v._src === 'string' && v._src.trim()) {
+        src = v._src.trim();
       } else if (v.image && typeof v.image === 'object') {
         src = typeof v.image.url === 'string' ? v.image.url : (typeof v.image.img === 'string' ? v.image.img : '');
       } else if (Array.isArray(v.images) && v.images.length > 0) {
@@ -225,48 +294,32 @@ export async function prepareItems(products, fam = '') {
         else if (first && typeof first === 'object') {
           src = typeof first.url === 'string' ? first.url : (typeof first.img === 'string' ? first.img : '');
         }
-      } else if (typeof v.angle1 === 'string' && v.angle1) {
-        src = v.angle1;
+      } else if (typeof v.angle1 === 'string' && v.angle1.trim()) {
+        src = v.angle1.trim();
       }
     }
     if (typeof src !== 'string') src = '';
 
-    // Enforce strict category image alignment
+    // Enforce strict category image alignment & guarantee valid non-empty photo
     const srcLower = src.toLowerCase();
-    if (fam === 'garlic') {
+    if (effCat.includes('garlic')) {
       if (srcLower.includes('kota-doria') || srcLower.includes('stone') || !src) {
-        const garlicFallbacks = [
-          '/assets/garlic/garlic-01.jpeg',
-          '/assets/garlic/garlic-02.jpeg',
-          '/assets/garlic/garlic-03.jpeg',
-          '/assets/garlic/garlic-04.jpeg',
-        ];
-        src = garlicFallbacks[k % garlicFallbacks.length];
+        src = garlicPool[k % garlicPool.length];
       }
-    } else if (fam === 'kotastone') {
+    } else if (effCat.includes('kotastone') || effCat.includes('stonecat')) {
       if (srcLower.includes('kota-doria') || srcLower.includes('garlic') || (srcLower.includes('sand-stone') && !srcLower.includes('kota')) || !src) {
-        const stoneFallbacks = [
-          '/assets/kota-stone/Blue-Kota-Stone-Tiles-1.jpg',
-          '/assets/kota-stone/Brown-Kota-Stone-Tiles-2.jpg',
-          '/assets/kota-stone/Kota-Stone-Tiles-3.jpg',
-          '/assets/kota-stone/blue kota stone 1.jpg',
-        ];
-        src = stoneFallbacks[k % stoneFallbacks.length];
+        src = stonePool[k % stonePool.length];
       }
-    } else if (fam === 'sandstone') {
+    } else if (effCat.includes('sandstone')) {
       if (srcLower.includes('kota-doria') || srcLower.includes('garlic') || srcLower.includes('kota-stone') || !src) {
-        const sandFallbacks = [
-          '/assets/sand-stone/Agra-Red-Sandstone-Sandblasted.jpg',
-          '/assets/sand-stone/Teakwood-Sandstone-Honed.jpg',
-          '/assets/sand-stone/Rainbow-Sandstone-Honed.jpg',
-          '/assets/sand-stone/Dholpur-Beige-Sandstone.jpg',
-        ];
-        src = sandFallbacks[k % sandFallbacks.length];
+        src = sandPool[k % sandPool.length];
       }
-    } else if (fam === 'kotadoria') {
+    } else if (effCat.includes('kotadoria') || effCat.includes('doria')) {
       if (srcLower.includes('garlic') || srcLower.includes('stone') || !src) {
-        src = '/assets/kota-doria/0X2A0389_db4c4b42-1d9b-405b-9ea0-664b5017af38.jpg';
+        src = doriaPool[k % doriaPool.length];
       }
+    } else if (!src) {
+      src = garlicPool[k % garlicPool.length];
     }
 
     // d) Product name
@@ -430,6 +483,7 @@ export async function prepareItems(products, fam = '') {
       thickness,
       img: fitted || src,
       image: src,
+      imageUrl: src,
       _src: src,
       _fit: v.fit || 'auto'
     });
@@ -468,7 +522,7 @@ export async function fitPages(pages, items, templateUid) {
           if (isImg) {
             url = e.getAttribute('src') || '';
           } else {
-            const m = /url\(["']?(data:image[^"')]+|https?:[^"')]+)["']?\)/.exec(e.getAttribute('style') || '');
+            const m = /url\(["']?([^"')]+)["']?\)/.exec(e.getAttribute('style') || '');
             url = m ? m[1] : '';
           }
           const it = url && bySq.get(url);
@@ -478,8 +532,10 @@ export async function fitPages(pages, items, templateUid) {
           const ar = b.width / b.height;
           if (Math.abs(Math.log(ar)) < 0.12) continue;
           const nu = await fitImg(it._src, it._fit, ar);
-          if (isImg) e.setAttribute('src', nu);
-          else e.setAttribute('style', e.getAttribute('style').split(url).join(nu));
+          if (nu) {
+            if (isImg) e.setAttribute('src', nu);
+            else e.setAttribute('style', e.getAttribute('style').split(url).join(nu));
+          }
         }
       }
       const children = (host && host.children) ? Array.from(host.children) : [];
@@ -548,10 +604,19 @@ export function qrPageHtml(info, sel, qrList) {
 
   const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
-  const cards = list.map(c => `<div class="soc" data-url="${esc(c.url || c.link)}" style="width:${cardW}px;background:#fff;border-radius:14px;padding:20px 18px 16px;text-align:center;box-sizing:border-box;box-shadow:0 4px 14px rgba(0,0,0,0.06);margin-bottom:8px">
-      <img class="qrx" src="${c.img || c.qr}" alt="" style="display:block;width:${q}px;height:${q}px;margin:0 auto">
-      <div style="font:700 ${q > 240 ? 18 : 15}px/1.2 Montserrat,sans-serif;color:#1f2433;margin-top:12px;letter-spacing:.3px">${esc(c.label || c.title)}</div>
-      <div style="font:400 11px/1.4 Montserrat,sans-serif;color:#6b7280;margin-top:4px">${esc(c.note || c.subtitle || 'Scan to view link')}</div></div>`).join('');
+  const cards = list.map(c => {
+    const targetUrl = c.url || c.link || (info.mobile ? `https://wa.me/${String(info.mobile).replace(/\D/g, '')}` : '#');
+    return `<div class="soc" data-url="${esc(targetUrl)}" style="width:${cardW}px;background:#fff;border-radius:14px;padding:20px 18px 16px;text-align:center;box-sizing:border-box;box-shadow:0 4px 14px rgba(0,0,0,0.06);margin-bottom:8px">
+      <a href="${esc(targetUrl)}" target="_blank" rel="noopener noreferrer" style="text-decoration:none;color:inherit;display:block;">
+        <img class="qrx qrimg" src="${c.img || c.qr}" alt="" style="display:block;width:${q}px;height:${q}px;margin:0 auto">
+        <div style="font:700 ${q > 240 ? 18 : 15}px/1.2 Montserrat,sans-serif;color:#1f2433;margin-top:12px;letter-spacing:.3px">${esc(c.label || c.title)}</div>
+        <div style="margin-top:6px;">
+          <span class="qr-click-btn" style="display:inline-flex;align-items:center;gap:3px;font-size:11px;font-weight:700;color:#ffffff;background:${acc || '#2563eb'};padding:3px 12px;border-radius:99px;text-decoration:none;box-shadow:0 2px 6px rgba(0,0,0,0.15);">Click here ↗</span>
+        </div>
+        <div style="font:400 11px/1.4 Montserrat,sans-serif;color:#6b7280;margin-top:6px">${esc(c.note || c.subtitle || 'Scan to view link')}</div>
+      </a>
+    </div>`;
+  }).join('');
 
   const contact = [info.mobile ? '+91 ' + info.mobile : '', info.email, info.addr].filter(Boolean).map(esc).join('  ·  ');
 
@@ -605,16 +670,16 @@ export async function buildCatalogue({
   } else if (compProd.includes('doria') || compInd.includes('doria') || compName.includes('threads') || compDist.includes('kota') || firstCat.includes('doria')) {
     matchedDistrict = company?.district || 'Kota, Rajasthan';
     matchedOdop = 'Kota Doria';
-  } else if (fam.includes('sandstone')) {
+  } else if (fam.includes('sandstone') || (templateUid && (templateUid.includes('ss-') || templateUid.includes('ed-ss')))) {
     matchedDistrict = 'Bundi, Rajasthan';
     matchedOdop = 'Sandstone';
-  } else if (fam.includes('garlic')) {
+  } else if (fam.includes('garlic') || (templateUid && (templateUid.includes('garlic-') || templateUid.includes('ed-gl')))) {
     matchedDistrict = 'Baran, Rajasthan';
     matchedOdop = 'Garlic';
-  } else if (fam.includes('kotastone') || fam.includes('stonecat')) {
+  } else if (fam.includes('kotastone') || fam.includes('stonecat') || (templateUid && (templateUid.includes('ks-') || templateUid.includes('ed-ks')))) {
     matchedDistrict = 'Jhalawar, Rajasthan';
     matchedOdop = 'Kota Stone';
-  } else if (fam.includes('kotadoria')) {
+  } else if (fam.includes('kotadoria') || (templateUid && (templateUid.includes('kd-') || templateUid.includes('ed-kd')))) {
     matchedDistrict = 'Kota, Rajasthan';
     matchedOdop = 'Kota Doria';
   }
@@ -798,7 +863,7 @@ export async function buildCatalogue({
   };
 
   const copy = getCopy(info, textOverrides);
-  const items = await prepareItems(products, fam);
+  const items = await prepareItems(products, (matchedOdop || fam).toLowerCase(), templateUid);
 
   // Compile QR list
   const qrs = [];
