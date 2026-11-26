@@ -372,7 +372,7 @@ export default function LiveCatalogueViewer() {
     return (
       <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", padding: "20px", background: "#0b0f19" }}>
         <div className="card" style={{ maxWidth: "480px", textAlign: "center", padding: "2.5rem", background: "rgba(30, 41, 59, 0.8)", borderRadius: "16px", border: "1px solid rgba(255,255,255,0.1)" }}>
-          <div style={{ fontSize: "3rem", marginBottom: "1rem" }}>📖</div>
+          <div style={{ fontSize: "3rem", marginBottom: "1rem" }}></div>
           <h2 style={{ fontSize: "1.4rem", fontWeight: 800, marginBottom: "0.5rem", color: "#f8fafc" }}>Digital Publication Unavailable</h2>
           <p style={{ color: "#94a3b8", marginBottom: "1.5rem" }}>{error || "This catalogue link is not available or has been unpublished."}</p>
           <Link to="/" className="btn btn-primary" style={{ display: "inline-flex", alignItems: "center", gap: "8px" }}>

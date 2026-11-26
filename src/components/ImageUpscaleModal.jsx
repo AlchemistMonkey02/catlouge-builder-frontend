@@ -377,7 +377,7 @@ export default function ImageUpscaleModal({
                     boxShadow: viewMode === "upscaled" ? "0 1px 4px rgba(16, 185, 129, 0.3)" : "none",
                   }}
                 >
-                  💎 {scaleFactor}x Clean HD
+                   {scaleFactor}x Clean HD
                 </button>
               </div>
             </div>
@@ -457,7 +457,7 @@ export default function ImageUpscaleModal({
                     <Zap size={10} /> Actively Upscaled ({scaleFactor}x Clean HD)
                   </>
                 ) : (
-                  <>📷 Original Source</>
+                  <> Original Source</>
                 )}
               </div>
 
@@ -482,7 +482,7 @@ export default function ImageUpscaleModal({
               >
                 <span>Input: {dimensions.width}×{dimensions.height} px</span>
                 <span style={{ color: "#38bdf8", fontWeight: 800 }}>
-                  ➔ {upscaledResult?.width || targetWidth}×{upscaledResult?.height || targetHeight} px
+                   {upscaledResult?.width || targetWidth}×{upscaledResult?.height || targetHeight} px
                 </span>
               </div>
             </div>
@@ -591,7 +591,7 @@ export default function ImageUpscaleModal({
                   }}
                 >
                   <div style={{ fontWeight: 800, fontSize: "0.85rem", color: "var(--text-primary, #0f172a)", marginBottom: "3px" }}>
-                    🌿 1x Natural Polish
+                     1x Natural Polish
                   </div>
                   <p style={{ margin: 0, fontSize: "0.72rem", color: "var(--text-secondary, #64748b)", lineHeight: 1.3 }}>
                     Balances contrast, colors and clean lighting without changing image dimensions.
@@ -611,7 +611,7 @@ export default function ImageUpscaleModal({
                   }}
                 >
                   <div style={{ fontWeight: 800, fontSize: "0.85rem", color: "var(--text-primary, #0f172a)", marginBottom: "3px" }}>
-                    📁 Keep Raw Original
+                     Keep Raw Original
                   </div>
                   <p style={{ margin: 0, fontSize: "0.72rem", color: "var(--text-secondary, #64748b)", lineHeight: 1.3 }}>
                     Use the raw uploaded file directly with zero changes.
@@ -643,7 +643,7 @@ export default function ImageUpscaleModal({
                     fontWeight: 750,
                   }}
                 >
-                  Active: {clarityProfile === "clean_hd" ? "💎 Clean HD" : clarityProfile === "crisp" ? "⚡ Crisp Detail" : "🌿 Soft Natural"}
+                  Active: {clarityProfile === "clean_hd" ? " Clean HD" : clarityProfile === "crisp" ? " Crisp Detail" : " Soft Natural"}
                 </span>
               </div>
 
@@ -661,7 +661,7 @@ export default function ImageUpscaleModal({
                   }}
                 >
                   <div style={{ fontWeight: 800, fontSize: "0.8rem", color: "#059669", display: "flex", alignItems: "center", gap: "4px" }}>
-                    💎 Clean HD
+                     Clean HD
                   </div>
                   <div style={{ fontSize: "0.7rem", color: "var(--text-secondary)", marginTop: "2px", lineHeight: 1.25 }}>
                     Denoises surfaces &amp; removes grain; clean crisp edges.
@@ -681,7 +681,7 @@ export default function ImageUpscaleModal({
                   }}
                 >
                   <div style={{ fontWeight: 800, fontSize: "0.8rem", color: "#7c3aed", display: "flex", alignItems: "center", gap: "4px" }}>
-                    ⚡ Crisp Detail
+                     Crisp Detail
                   </div>
                   <div style={{ fontSize: "0.7rem", color: "var(--text-secondary)", marginTop: "2px", lineHeight: 1.25 }}>
                     High micro-contrast for threads, stone cuts &amp; fine lines.
@@ -701,7 +701,7 @@ export default function ImageUpscaleModal({
                   }}
                 >
                   <div style={{ fontWeight: 800, fontSize: "0.8rem", color: "#2563eb", display: "flex", alignItems: "center", gap: "4px" }}>
-                    🌿 Soft Natural
+                     Soft Natural
                   </div>
                   <div style={{ fontSize: "0.7rem", color: "var(--text-secondary)", marginTop: "2px", lineHeight: 1.25 }}>
                     Gentle organic look with zero artificial sharpening.
@@ -733,7 +733,7 @@ export default function ImageUpscaleModal({
                     style={{ accentColor: "#10b981", width: "16px", height: "16px" }}
                   />
                   <span>
-                    <strong>🧹 Clean Noise &amp; Compression Artifacts</strong> — Eliminates camera sensor grain &amp; gritty JPEG compression lines.
+                    <strong> Clean Noise &amp; Compression Artifacts</strong> — Eliminates camera sensor grain &amp; gritty JPEG compression lines.
                   </span>
                 </label>
 
@@ -759,7 +759,7 @@ export default function ImageUpscaleModal({
                     style={{ accentColor: "var(--primary)", width: "16px", height: "16px" }}
                   />
                   <span>
-                    <strong>☀️ Natural Sunlit Vibrance</strong> — Restores fresh natural colors to garlic bulbs, stone veining, and handlooms.
+                    <strong> Natural Sunlit Vibrance</strong> — Restores fresh natural colors to garlic bulbs, stone veining, and handlooms.
                   </span>
                 </label>
 
@@ -785,7 +785,7 @@ export default function ImageUpscaleModal({
                     style={{ accentColor: "var(--primary)", width: "16px", height: "16px" }}
                   />
                   <span>
-                    <strong>🔍 Clean Edge Contour Sharpener</strong> — Sharpens outer boundaries and textures without adding digital noise.
+                    <strong> Clean Edge Contour Sharpener</strong> — Sharpens outer boundaries and textures without adding digital noise.
                   </span>
                 </label>
               </div>
@@ -802,7 +802,7 @@ export default function ImageUpscaleModal({
                   fontWeight: 600,
                 }}
               >
-                ⚠️ {previewError}
+                 {previewError}
               </div>
             )}
           </div>
@@ -839,7 +839,7 @@ export default function ImageUpscaleModal({
             }}
             title="Open full AI Studio to isolate cutout, add luxury shadows, stages & lighting"
           >
-            <Palette size={16} /> Edit &amp; Compose in AI Studio ➔
+            <Palette size={16} /> Edit &amp; Compose in AI Studio 
           </button>
 
           <div style={{ display: "flex", gap: "0.6rem" }}>
@@ -881,8 +881,8 @@ export default function ImageUpscaleModal({
                   <Check size={16} strokeWidth={2.8} />
                   <span>
                     {scaleFactor > 0
-                      ? `✓ Apply ${scaleFactor}x Clean HD to Catalogue`
-                      : "✓ Apply Original to Catalogue"}
+                      ? ` Apply ${scaleFactor}x Clean HD to Catalogue`
+                      : " Apply Original to Catalogue"}
                   </span>
                 </>
               )}

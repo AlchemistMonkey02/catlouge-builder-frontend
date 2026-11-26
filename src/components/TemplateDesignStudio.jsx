@@ -163,7 +163,7 @@ export const DEFAULT_DESIGN_CONFIG = {
     subtitle: "CONTACT US",
     tagline:
       "Access real-time slab inventory, custom designs, architectural spec sheets & direct enquiry portal.",
-    ctaBadge: "✦ OFFICIAL DIGITAL SHOWCASE & REAL-TIME CATALOGUE ✦",
+    ctaBadge: " OFFICIAL DIGITAL SHOWCASE & REAL-TIME CATALOGUE ",
   },
 };
 
@@ -215,7 +215,7 @@ export const PRESET_CONFIG_MAP = {
       title: "",
       subtitle: "Bespoke Luxury Autumn / Spring Collection",
       edition: "HAUTE LUXURY EDITION",
-      badgeText: "✦ PRIVATE CLIENT SHOWCASE ✦",
+      badgeText: " PRIVATE CLIENT SHOWCASE ",
       coverImage: "/assets/reference/p1_1.jpg",
       style: "editorial_hero",
     },
@@ -250,7 +250,7 @@ export const PRESET_CONFIG_MAP = {
       title: "",
       subtitle: "Limited Drop • Cyber Streetwear & Modern Goods",
       edition: "DROP 01 // 2026 EDITION",
-      badgeText: "⚡ LIMITED RELEASE",
+      badgeText: " LIMITED RELEASE",
       coverImage: "/assets/reference/p1_1.jpg",
       style: "bold_block",
     },
@@ -320,7 +320,7 @@ export const PRESET_CONFIG_MAP = {
       title: "",
       subtitle: "The Sustainable, Earthy & Organic Collection",
       edition: "BOTANICAL HARVEST 2026",
-      badgeText: "🌿 HANDCRAFTED ARTISAN",
+      badgeText: " HANDCRAFTED ARTISAN",
       coverImage: "/assets/reference/p1_1.jpg",
       style: "minimal_frame",
     },
@@ -681,12 +681,12 @@ export default function TemplateDesignStudio({
             }}
           >
             {[
-              { id: "pages", label: "📖 Pages & Structure", icon: FileText },
-              { id: "typography", label: "🔤 Fonts & Accents", icon: Type },
-              { id: "colors", label: "🎨 Colors & Theme", icon: Palette },
-              { id: "layout", label: "📐 Layout & Grid", icon: Layout },
-              { id: "fields", label: "🏷️ Card & Fields", icon: Tag },
-              { id: "custom", label: `✨ My Versions (${customTemplates.length})`, icon: Sparkles },
+              { id: "pages", label: " Pages & Structure", icon: FileText },
+              { id: "typography", label: " Fonts & Accents", icon: Type },
+              { id: "colors", label: " Colors & Theme", icon: Palette },
+              { id: "layout", label: " Layout & Grid", icon: Layout },
+              { id: "fields", label: " Card & Fields", icon: Tag },
+              { id: "custom", label: ` My Versions (${customTemplates.length})`, icon: Sparkles },
             ].map((tab) => {
               const Icon = tab.icon;
               const isActive = activeTab === tab.id;
@@ -1772,7 +1772,7 @@ export default function TemplateDesignStudio({
                       >
                         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "6px" }}>
                           <span style={{ fontWeight: 800, fontSize: "0.92rem", color: "var(--text-primary)" }}>
-                            🎨 {ct.name}
+                             {ct.name}
                           </span>
                           <button
                             type="button"
@@ -1813,7 +1813,7 @@ export default function TemplateDesignStudio({
                           className={`btn btn-sm ${isSelected ? "btn-primary" : "btn-outline"}`}
                           style={{ width: "100%", fontSize: "0.76rem", fontWeight: 700 }}
                         >
-                          {isSelected ? "✓ Active Template" : "Apply This Design"}
+                          {isSelected ? " Active Template" : "Apply This Design"}
                         </button>
                       </div>
                     );

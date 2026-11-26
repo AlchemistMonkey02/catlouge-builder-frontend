@@ -701,7 +701,7 @@ export function SmartPresetInput({
               whiteSpace: "nowrap"
             }}
           >
-            {matchedPreset ? "✓ Pre-filled" : "✏️ Custom"}
+            {matchedPreset ? " Pre-filled" : " Custom"}
           </span>
         )}
       </div>
@@ -804,7 +804,7 @@ export function SmartPresetInput({
                 }}
                 title={p.price ? `Auto-calculates price: ₹${p.price}` : "1-click select"}
               >
-                {isSelected && <span style={{ fontSize: "0.65rem" }}>✓</span>}
+                {isSelected && <span style={{ fontSize: "0.65rem" }}></span>}
                 <span>{p.chipLabel || p.value}</span>
                 {p.price !== undefined && (
                   <span style={{
@@ -955,7 +955,7 @@ export default function CompanyCatalogueManager() {
       };
       await updateCompanyDataBank(company._id, updatedDataBank);
       setCompany((prev) => ({ ...prev, dataBank: updatedDataBank }));
-      setDataBankToast(`✓ Saved "${strVal}" to ${company.name} Data Bank!`);
+      setDataBankToast(` Saved "${strVal}" to ${company.name} Data Bank!`);
       setTimeout(() => setDataBankToast(null), 3500);
     } catch (err) {
       alert("Failed to save to Data Bank: " + err.message);
@@ -1106,7 +1106,7 @@ export default function CompanyCatalogueManager() {
       } catch (err) {
         console.warn("Product image server update:", err.message);
       }
-      setDataBankToast(`✓ Image upscaled to Super Clarity (${stats?.scale || "2x"} HD)!`);
+      setDataBankToast(` Image upscaled to Super Clarity (${stats?.scale || "2x"} HD)!`);
       setTimeout(() => setDataBankToast(null), 4000);
       return;
     }
@@ -1453,7 +1453,7 @@ export default function CompanyCatalogueManager() {
                   {company.name}
                 </h2>
                 <span style={{ fontSize: "0.75rem", background: "rgba(99, 102, 241, 0.12)", color: "var(--primary)", padding: "2px 8px", borderRadius: "4px", verticalAlign: "middle", fontWeight: 700 }}>
-                  📍 District: {company.district || (company.odopProduct === "Garlic" ? "Baran, Rajasthan" : company.odopProduct === "Kota Stone" ? "Jhalawar, Rajasthan" : company.odopProduct === "Sandstone" ? "Bundi, Rajasthan" : "Kota, Rajasthan")}
+                   District: {company.district || (company.odopProduct === "Garlic" ? "Baran, Rajasthan" : company.odopProduct === "Kota Stone" ? "Jhalawar, Rajasthan" : company.odopProduct === "Sandstone" ? "Bundi, Rajasthan" : "Kota, Rajasthan")}
                 </span>
                 <span className="status-pill approved">Active Catalogue</span>
                 <button
@@ -1730,13 +1730,13 @@ export default function CompanyCatalogueManager() {
                           title="Click to preview high-definition image"
                           style={{
                             position: "relative",
-                            width: "48px",
-                            height: "48px",
-                            borderRadius: "var(--radius-sm)",
+                            width: "60px",
+                            height: "60px",
+                            borderRadius: "10px",
                             overflow: "hidden",
                             cursor: "pointer",
                             border: "1px solid var(--border-subtle)",
-                            boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
+                            boxShadow: "var(--shadow-sm)",
                             display: "block",
                             background: "var(--bg-surface-elevated)",
                           }}
@@ -1791,31 +1791,17 @@ export default function CompanyCatalogueManager() {
                           {p.name}
                         </div>
                         <div style={{ fontSize: "0.78rem", color: "var(--text-muted)", marginTop: "2px" }}>
-                          {p.size ? `📏 ${p.size} • ` : ""}{p.material || p.materialComposition || ""}
+                          {p.size ? ` ${p.size} • ` : ""}{p.material || p.materialComposition || ""}
                         </div>
                         {p.finish && (
                           <div style={{ fontSize: "0.72rem", color: "var(--text-secondary)", marginTop: "1px" }}>
-                            ✨ {p.finish}
+                             {p.finish}
                           </div>
                         )}
                       </td>
                       <td>
-                        <span
-                          style={{
-                            padding: "3px 8px",
-                            borderRadius: "var(--radius-full)",
-                            background: "var(--bg-surface-elevated)",
-                            border: "1px solid var(--border-subtle)",
-                            fontSize: "0.78rem",
-                            fontWeight: 600,
-                            color: "var(--text-secondary)",
-                            display: "inline-block",
-                          }}
-                        >
-                          {p.category}
-                        </span>
-                        <div style={{ fontSize: "0.72rem", color: "#166534", fontWeight: 700, marginTop: "3px" }}>
-                          📍 {p.district || (
+                        <div style={{ fontSize: "0.78rem", color: "#166534", fontWeight: 700 }}>
+                           {p.district || (
                             (p.category || "").toLowerCase().includes("garlic") ? "Baran, Rajasthan" :
                             (p.category || "").toLowerCase().includes("kota stone") ? "Jhalawar, Rajasthan" :
                             (p.category || "").toLowerCase().includes("sand") ? "Bundi, Rajasthan" :
@@ -1842,7 +1828,7 @@ export default function CompanyCatalogueManager() {
                         <div style={{ display: "inline-flex", gap: "0.4rem", alignItems: "center" }}>
                           <button
                             className="btn btn-outline btn-sm"
-                            title="👁️ Preview full resolution image"
+                            title=" Preview full resolution image"
                             onClick={() =>
                               openImagePreview(displayImg, p.name, {
                                 sku: p.sku,
@@ -1878,7 +1864,7 @@ export default function CompanyCatalogueManager() {
                           </button>
                           <button
                             className="btn btn-outline btn-sm"
-                            title="✨ Upscale & Enhance to Super Clarity HD"
+                            title=" Upscale & Enhance to Super Clarity HD"
                             onClick={() => {
                               setPendingUploadImage(displayImg);
                               setUpscaleTargetProductId(p._id);
@@ -2003,9 +1989,9 @@ export default function CompanyCatalogueManager() {
                     ? (categoryFamily === "garlic" ? "Edit Garlic Produce" :
                        categoryFamily === "sandstone" || categoryFamily === "kotastone" ? "Edit Stone Product" :
                        categoryFamily === "kotadoria" ? "Edit Kota Doria Handloom" : "Edit Product")
-                    : (categoryFamily === "garlic" ? "🧄 Add Garlic Produce to Catalogue" :
-                       categoryFamily === "sandstone" || categoryFamily === "kotastone" ? "🧱 Add Stone Product to Catalogue" :
-                       categoryFamily === "kotadoria" ? "🥻 Add Kota Doria Handloom to Catalogue" : "Add Product to Catalogue")}
+                    : (categoryFamily === "garlic" ? " Add Garlic Produce to Catalogue" :
+                       categoryFamily === "sandstone" || categoryFamily === "kotastone" ? " Add Stone Product to Catalogue" :
+                       categoryFamily === "kotadoria" ? " Add Kota Doria Handloom to Catalogue" : "Add Product to Catalogue")}
                 </h3>
               </div>
               <button className="btn btn-outline btn-sm" onClick={() => setIsProductModalOpen(false)}>
@@ -2050,10 +2036,10 @@ export default function CompanyCatalogueManager() {
                       Registered Company ODOP Category
                     </div>
                     <div style={{ fontSize: "0.95rem", fontWeight: 800, color: "var(--text-primary)" }}>
-                      {categoryFamily === "garlic" ? "🧄 Garlic Specialty" :
-                       categoryFamily === "sandstone" ? "🧱 Sand Stone Specialty" :
-                       categoryFamily === "kotastone" ? "🏛️ Kota Stone Specialty" :
-                       categoryFamily === "kotadoria" ? "🥻 Kota Doria Handloom" :
+                      {categoryFamily === "garlic" ? " Garlic Specialty" :
+                       categoryFamily === "sandstone" ? " Sand Stone Specialty" :
+                       categoryFamily === "kotastone" ? " Kota Stone Specialty" :
+                       categoryFamily === "kotadoria" ? " Kota Doria Handloom" :
                        (productForm.category || "General Specialty")}
                       <span style={{ fontWeight: 600, color: "var(--text-secondary)", fontSize: "0.82rem", marginLeft: "6px" }}>
                         ({company?.name || "Registered Enterprise"})
@@ -2074,7 +2060,7 @@ export default function CompanyCatalogueManager() {
                       borderRadius: "6px"
                     }}
                   >
-                    📍 Registered District: <strong>{company?.district || productForm.district || "Rajasthan"}</strong>
+                     Registered District: <strong>{company?.district || productForm.district || "Rajasthan"}</strong>
                   </span>
                   <span
                     style={{
@@ -2087,7 +2073,7 @@ export default function CompanyCatalogueManager() {
                       borderRadius: "6px"
                     }}
                   >
-                    ✓ Linked at Company Registration
+                     Linked at Company Registration
                   </span>
                 </div>
               </div>
@@ -2128,7 +2114,7 @@ export default function CompanyCatalogueManager() {
                     <div style={{ fontSize: "0.82rem", fontWeight: 750, color: "var(--text-primary)", display: "flex", alignItems: "center", gap: "6px" }}>
                       <span>{company?.name || "Company"} Data Bank</span>
                       <span style={{ fontSize: "0.66rem", fontWeight: 700, padding: "1px 6px", borderRadius: "4px", background: "rgba(16, 185, 129, 0.12)", color: "#16a34a" }}>
-                        ✓ Connected
+                         Connected
                       </span>
                     </div>
                     <div style={{ fontSize: "0.71rem", color: "var(--text-secondary)", marginTop: "1px" }}>
@@ -2162,7 +2148,7 @@ export default function CompanyCatalogueManager() {
                       }}
                       defaultValue=""
                     >
-                      <option value="" disabled>⚡ Autofill Title from Data Bank...</option>
+                      <option value="" disabled> Autofill Title from Data Bank...</option>
                       {(company?.dataBank?.headings || []).map((h, i) => (
                         <option key={i} value={h.text}>{h.text} ({h.category || "Headline"})</option>
                       ))}
@@ -2212,7 +2198,7 @@ export default function CompanyCatalogueManager() {
                     onClick={() => setDataBankToast(null)}
                     style={{ background: "none", border: "none", color: "#059669", cursor: "pointer", fontWeight: 800 }}
                   >
-                    ✕
+                    
                   </button>
                 </div>
               )}
@@ -2222,11 +2208,11 @@ export default function CompanyCatalogueManager() {
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "4px" }}>
                   <label style={{ fontSize: "0.8rem", fontWeight: 650, color: "var(--text-secondary)" }}>
                     {categoryFamily === "garlic"
-                      ? "🧄 Garlic Variety / Produce Name *"
+                      ? " Garlic Variety / Produce Name *"
                       : categoryFamily === "sandstone" || categoryFamily === "kotastone"
-                      ? "🧱 Stone Product Title / Sizing Name *"
+                      ? " Stone Product Title / Sizing Name *"
                       : categoryFamily === "kotadoria"
-                      ? "🥻 Handloom Design Title / Motif Name *"
+                      ? " Handloom Design Title / Motif Name *"
                       : "Product Title / Name *"}
                   </label>
                 </div>
@@ -2437,7 +2423,7 @@ export default function CompanyCatalogueManager() {
                   boxShadow: "0 2px 6px rgba(16, 185, 129, 0.12)"
                 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                    <span style={{ fontSize: "1rem" }}>⚡</span>
+                    <span style={{ fontSize: "1rem" }}></span>
                     <span>{priceNotice}</span>
                   </div>
                   <button
@@ -2446,7 +2432,7 @@ export default function CompanyCatalogueManager() {
                     style={{ background: "transparent", border: "none", color: "#065f46", cursor: "pointer", fontSize: "0.85rem", padding: "0 4px", fontWeight: 700 }}
                     title="Dismiss"
                   >
-                    ✕
+                    
                   </button>
                 </div>
               )}
@@ -2612,7 +2598,7 @@ export default function CompanyCatalogueManager() {
 
                 {upscaleStats && (
                   <div style={{ marginTop: "6px", fontSize: "0.74rem", color: "#166534", fontWeight: 600, display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "6px" }}>
-                    <span>✓ Image optimized: {upscaleStats.from} ➔ {upscaleStats.to} ({upscaleStats.scale} Super-Resolution applied)</span>
+                    <span> Image optimized: {upscaleStats.from}  {upscaleStats.to} ({upscaleStats.scale} Super-Resolution applied)</span>
                     <button
                       type="button"
                       onClick={() =>
@@ -2634,7 +2620,7 @@ export default function CompanyCatalogueManager() {
                         fontSize: "0.74rem",
                       }}
                     >
-                      View HD Preview ➔
+                      View HD Preview 
                     </button>
                   </div>
                 )}
@@ -2662,7 +2648,7 @@ export default function CompanyCatalogueManager() {
                       : "Four Mandatory Product Specification Points"}
                   </label>
                   <span style={{ fontSize: "0.72rem", color: "#15803d", background: "rgba(22, 163, 74, 0.08)", border: "1px solid rgba(22, 163, 74, 0.2)", padding: "2px 8px", borderRadius: "6px", fontWeight: 700 }}>
-                    ✓ Auto-Formatted for Catalogue
+                     Auto-Formatted for Catalogue
                   </span>
                 </div>
 
@@ -2673,7 +2659,7 @@ export default function CompanyCatalogueManager() {
                       <div>
                         <SmartPresetInput
                           label="1. Bulb Caliber / Sizing Diameter *"
-                          icon={<span style={{ fontSize: "0.9rem" }}>🧄</span>}
+                          icon={<span style={{ fontSize: "0.9rem" }}></span>}
                           placeholder="e.g. 50 - 65 mm (Grade A+ Large)"
                           value={productForm.size || ""}
                           onChange={(val) => setProductForm((prev) => ({ ...prev, size: val }))}
@@ -2691,13 +2677,13 @@ export default function CompanyCatalogueManager() {
                               setPriceNotice(`Price auto-adjusted to ₹${preset.price}/kg based on ${preset.chipLabel || preset.value}`);
                             }
                           }}
-                          customHelpText="⚡ Select grade to auto-calculate price, or type custom."
+                          customHelpText=" Select grade to auto-calculate price, or type custom."
                         />
                       </div>
                       <div>
                         <SmartPresetInput
                           label="2. Moisture Content & Quality Standard *"
-                          icon={<span style={{ fontSize: "0.9rem" }}>💧</span>}
+                          icon={<span style={{ fontSize: "0.9rem" }}></span>}
                           placeholder="e.g. Moisture < 65%, Sun-Cured Clean White"
                           value={productForm.material || productForm.materialComposition || ""}
                           onChange={(val) => setProductForm((prev) => ({ ...prev, material: val, materialComposition: val }))}
@@ -2707,7 +2693,7 @@ export default function CompanyCatalogueManager() {
                             { value: "Standard Mandi Sun-Cured, High Allicin", chipLabel: "Standard Mandi", label: "Standard Mandi Sun-Cured, High Allicin" },
                           ]}
                           onSaveToDataBank={(val) => handleSaveSpecToDataBank("materials", val)}
-                          customHelpText="💡 Pick quality standard or type custom."
+                          customHelpText=" Pick quality standard or type custom."
                         />
                       </div>
                     </div>
@@ -2716,25 +2702,25 @@ export default function CompanyCatalogueManager() {
                       <div>
                         <SmartPresetInput
                           label="3. Curing & Skin Finish *"
-                          icon={<span style={{ fontSize: "0.9rem" }}>✨</span>}
+                          icon={<span style={{ fontSize: "0.9rem" }}></span>}
                           placeholder="e.g. Sun-Cured Export Clean White Skin"
                           value={productForm.finish || productForm.color || ""}
                           onChange={(val) => setProductForm((prev) => ({ ...prev, finish: val, color: val }))}
                           presets={effectivePresets.finishes}
                           onSaveToDataBank={(val) => handleSaveSpecToDataBank("finishes", val)}
-                          customHelpText="💡 Pick curing finish or type custom."
+                          customHelpText=" Pick curing finish or type custom."
                         />
                       </div>
                       <div>
                         <SmartPresetInput
                           label="4. Variety, Packaging & Commercial Use *"
-                          icon={<span style={{ fontSize: "0.9rem" }}>🎯</span>}
+                          icon={<span style={{ fontSize: "0.9rem" }}></span>}
                           placeholder="e.g. Malwa Desi in 25kg Aerated Red Mesh Bags"
                           value={productForm.application || productForm.useApplication || ""}
                           onChange={(val) => setProductForm((prev) => ({ ...prev, application: val, useApplication: val }))}
                           presets={effectivePresets.applications}
                           onSaveToDataBank={(val) => handleSaveSpecToDataBank("applications", val)}
-                          customHelpText="💡 Pick packaging or type custom."
+                          customHelpText=" Pick packaging or type custom."
                         />
                       </div>
                     </div>
@@ -2748,19 +2734,19 @@ export default function CompanyCatalogueManager() {
                       <div>
                         <SmartPresetInput
                           label="1. Plan Dimensions / Tile Size (L × W) *"
-                          icon={<span style={{ fontSize: "0.9rem" }}>📐</span>}
+                          icon={<span style={{ fontSize: "0.9rem" }}></span>}
                           placeholder="e.g. 2×2 ft (600×600 mm) / Custom Size"
                           value={productForm.size || ""}
                           onChange={(val) => setProductForm((prev) => ({ ...prev, size: val }))}
                           presets={effectivePresets.sizes}
                           onSaveToDataBank={(val) => handleSaveSpecToDataBank("sizes", val)}
-                          customHelpText="💡 Pick standard tile dimensions or type custom size."
+                          customHelpText=" Pick standard tile dimensions or type custom size."
                         />
                       </div>
                       <div>
                         <SmartPresetInput
                           label="2. Stone Thickness & Gauging Calibration *"
-                          icon={<span style={{ fontSize: "0.9rem" }}>📏</span>}
+                          icon={<span style={{ fontSize: "0.9rem" }}></span>}
                           placeholder="e.g. 20 - 25 mm Gauged / Custom Thickness"
                           value={productForm.thickness || ""}
                           onChange={(val) => setProductForm((prev) => ({ ...prev, thickness: val }))}
@@ -2778,7 +2764,7 @@ export default function CompanyCatalogueManager() {
                               setPriceNotice(`Rate auto-adjusted to ₹${preset.price}/sq.ft based on ${preset.chipLabel || preset.value}`);
                             }
                           }}
-                          customHelpText="⚡ Select thickness to auto-update rate, or type custom thickness."
+                          customHelpText=" Select thickness to auto-update rate, or type custom thickness."
                         />
                       </div>
                     </div>
@@ -2787,19 +2773,19 @@ export default function CompanyCatalogueManager() {
                       <div>
                         <SmartPresetInput
                           label="3. Surface Finish & Edge Treatment *"
-                          icon={<span style={{ fontSize: "0.9rem" }}>✨</span>}
+                          icon={<span style={{ fontSize: "0.9rem" }}></span>}
                           placeholder="e.g. Mirror Polish / Honed Satin / Hand-Chiseled"
                           value={productForm.finish || productForm.color || ""}
                           onChange={(val) => setProductForm((prev) => ({ ...prev, finish: val, color: val }))}
                           presets={effectivePresets.finishes}
                           onSaveToDataBank={(val) => handleSaveSpecToDataBank("finishes", val)}
-                          customHelpText="💡 Pick texture finish or type custom."
+                          customHelpText=" Pick texture finish or type custom."
                         />
                       </div>
                       <div>
                         <SmartPresetInput
                           label="4. Rock Material & Commercial Application *"
-                          icon={<span style={{ fontSize: "0.9rem" }}>🎯</span>}
+                          icon={<span style={{ fontSize: "0.9rem" }}></span>}
                           placeholder="e.g. Natural Limestone / Heavy Traffic Flooring"
                           value={productForm.material || productForm.materialComposition || productForm.application || ""}
                           onChange={(val) => setProductForm((prev) => ({
@@ -2811,7 +2797,7 @@ export default function CompanyCatalogueManager() {
                           }))}
                           presets={effectivePresets.applications?.length ? effectivePresets.applications : effectivePresets.materials}
                           onSaveToDataBank={(val) => handleSaveSpecToDataBank("applications", val)}
-                          customHelpText="💡 Pick stone application or type custom."
+                          customHelpText=" Pick stone application or type custom."
                         />
                       </div>
                     </div>
@@ -2825,7 +2811,7 @@ export default function CompanyCatalogueManager() {
                       <div>
                         <SmartPresetInput
                           label="1. Fabric Length & Cut Dimensions *"
-                          icon={<span style={{ fontSize: "0.9rem" }}>📏</span>}
+                          icon={<span style={{ fontSize: "0.9rem" }}></span>}
                           placeholder="e.g. 6.5 Metres with 80cm Running Blouse"
                           value={productForm.size || ""}
                           onChange={(val) => setProductForm((prev) => ({ ...prev, size: val }))}
@@ -2843,13 +2829,13 @@ export default function CompanyCatalogueManager() {
                               setPriceNotice(`Price auto-adjusted to ₹${preset.price} based on ${preset.chipLabel || preset.value}`);
                             }
                           }}
-                          customHelpText="⚡ Select cut length to auto-set price, or type custom."
+                          customHelpText=" Select cut length to auto-set price, or type custom."
                         />
                       </div>
                       <div>
                         <SmartPresetInput
                           label="2. Fabric Weight & Yarn Count *"
-                          icon={<span style={{ fontSize: "0.9rem" }}>⚖️</span>}
+                          icon={<span style={{ fontSize: "0.9rem" }}></span>}
                           placeholder="e.g. Lightweight 280-320 grams / 80s × 100s Count"
                           value={productForm.fabricWeight || ""}
                           onChange={(val) => setProductForm((prev) => ({ ...prev, fabricWeight: val }))}
@@ -2859,7 +2845,7 @@ export default function CompanyCatalogueManager() {
                             { value: "Medium 350-380 grams (Pure Cotton Handloom)", chipLabel: "350-380g Pure Cotton", label: "Medium 350-380 grams (Pure Cotton Handloom)" },
                           ]}
                           onSaveToDataBank={(val) => handleSaveSpecToDataBank("materials", val)}
-                          customHelpText="💡 Pick yarn count weight or type custom."
+                          customHelpText=" Pick yarn count weight or type custom."
                         />
                       </div>
                     </div>
@@ -2868,19 +2854,19 @@ export default function CompanyCatalogueManager() {
                       <div>
                         <SmartPresetInput
                           label="3. Weave Grid (Khat) & Zari Border *"
-                          icon={<span style={{ fontSize: "0.9rem" }}>✨</span>}
+                          icon={<span style={{ fontSize: "0.9rem" }}></span>}
                           placeholder="e.g. Traditional Square Khat Grid with Tested Gold Zari"
                           value={productForm.finish || productForm.color || ""}
                           onChange={(val) => setProductForm((prev) => ({ ...prev, finish: val, color: val }))}
                           presets={effectivePresets.finishes}
                           onSaveToDataBank={(val) => handleSaveSpecToDataBank("finishes", val)}
-                          customHelpText="💡 Pick weave motif or type custom."
+                          customHelpText=" Pick weave motif or type custom."
                         />
                       </div>
                       <div>
                         <SmartPresetInput
                           label="4. Fiber Composition, Occasion & Care *"
-                          icon={<span style={{ fontSize: "0.9rem" }}>🎯</span>}
+                          icon={<span style={{ fontSize: "0.9rem" }}></span>}
                           placeholder="e.g. Pure Mulberry Silk & Cotton / Dry Clean Only"
                           value={productForm.material || productForm.materialComposition || productForm.application || ""}
                           onChange={(val) => setProductForm((prev) => ({
@@ -2892,7 +2878,7 @@ export default function CompanyCatalogueManager() {
                           }))}
                           presets={effectivePresets.applications}
                           onSaveToDataBank={(val) => handleSaveSpecToDataBank("applications", val)}
-                          customHelpText="💡 Pick composition & care or type custom."
+                          customHelpText=" Pick composition & care or type custom."
                         />
                       </div>
                     </div>
@@ -2906,7 +2892,7 @@ export default function CompanyCatalogueManager() {
                       <div>
                         <SmartPresetInput
                           label="1. Size / Specification *"
-                          icon={<span style={{ fontSize: "0.9rem" }}>📏</span>}
+                          icon={<span style={{ fontSize: "0.9rem" }}></span>}
                           placeholder="e.g. Dimensions, Capacity, Size"
                           value={productForm.size || ""}
                           onChange={(val) => setProductForm((prev) => ({ ...prev, size: val }))}
@@ -2916,13 +2902,13 @@ export default function CompanyCatalogueManager() {
                             { value: "Compact / Portable Size", chipLabel: "Compact", label: "Compact / Portable Size" },
                           ]}
                           onSaveToDataBank={(val) => handleSaveSpecToDataBank("sizes", val)}
-                          customHelpText="💡 Pick standard size or type custom."
+                          customHelpText=" Pick standard size or type custom."
                         />
                       </div>
                       <div>
                         <SmartPresetInput
                           label="2. Material Composition *"
-                          icon={<span style={{ fontSize: "0.9rem" }}>🧵</span>}
+                          icon={<span style={{ fontSize: "0.9rem" }}></span>}
                           placeholder="e.g. Material, Fabric, Metal"
                           value={productForm.material || productForm.materialComposition || ""}
                           onChange={(val) => setProductForm((prev) => ({ ...prev, material: val, materialComposition: val }))}
@@ -2931,7 +2917,7 @@ export default function CompanyCatalogueManager() {
                             { value: "Premium Certified Organic Component", chipLabel: "Organic", label: "Premium Certified Organic Component" },
                           ]}
                           onSaveToDataBank={(val) => handleSaveSpecToDataBank("materials", val)}
-                          customHelpText="💡 Pick material or type custom."
+                          customHelpText=" Pick material or type custom."
                         />
                       </div>
                     </div>
@@ -2939,7 +2925,7 @@ export default function CompanyCatalogueManager() {
                     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.75rem", marginBottom: "0.75rem" }}>
                       <div>
                         <label style={{ fontSize: "0.8rem", fontWeight: 650, color: "var(--text-secondary)", display: "block", marginBottom: "4px" }}>
-                          ✨ 3. Surface Finish / Color *
+                           3. Surface Finish / Color *
                         </label>
                         <input
                           type="text"
@@ -2952,7 +2938,7 @@ export default function CompanyCatalogueManager() {
                       </div>
                       <div>
                         <label style={{ fontSize: "0.8rem", fontWeight: 650, color: "var(--text-secondary)", display: "block", marginBottom: "4px" }}>
-                          🎯 4. Use / Application *
+                           4. Use / Application *
                         </label>
                         <input
                           type="text"
@@ -2971,7 +2957,7 @@ export default function CompanyCatalogueManager() {
                 <div>
                   <SmartPresetInput
                     label="Price Range (₹)"
-                    icon={<span style={{ fontSize: "0.9rem" }}>💰</span>}
+                    icon={<span style={{ fontSize: "0.9rem" }}></span>}
                     placeholder="e.g. ₹55 – ₹95 / sq.ft"
                     value={productForm.priceRange || ""}
                     onChange={(val) => setProductForm((prev) => ({ ...prev, priceRange: val }))}
@@ -2985,11 +2971,11 @@ export default function CompanyCatalogueManager() {
               <div>
                 <label style={{ fontSize: "0.8rem", fontWeight: 650, color: "var(--text-secondary)", display: "block", marginBottom: "4px" }}>
                   {categoryFamily === "garlic"
-                    ? "🧄 Produce & Harvest Description"
+                    ? " Produce & Harvest Description"
                     : categoryFamily === "sandstone" || categoryFamily === "kotastone"
-                    ? "🧱 Stone Architectural & Geological Description"
+                    ? " Stone Architectural & Geological Description"
                     : categoryFamily === "kotadoria"
-                    ? "🥻 Handloom Heritage & Craft Description"
+                    ? " Handloom Heritage & Craft Description"
                     : "Product Description"}
                 </label>
                 <textarea
@@ -3112,11 +3098,11 @@ export default function CompanyCatalogueManager() {
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.5rem" }}>
                   <label style={{ fontSize: "0.8rem", fontWeight: 700, color: "var(--text-secondary)" }}>
                     {categoryFamily === "garlic"
-                      ? "🧄 Harvest Quality & Storage Highlights"
+                      ? " Harvest Quality & Storage Highlights"
                       : categoryFamily === "sandstone" || categoryFamily === "kotastone"
-                      ? "🧱 Architectural Performance Highlights"
+                      ? " Architectural Performance Highlights"
                       : categoryFamily === "kotadoria"
-                      ? "🥻 Master Weaver Craftsmanship Highlights"
+                      ? " Master Weaver Craftsmanship Highlights"
                       : "Key Feature Highlights (Bullets)"}
                   </label>
                   <button type="button" className="btn btn-outline btn-sm" onClick={handleAddBullet}>
@@ -3156,11 +3142,11 @@ export default function CompanyCatalogueManager() {
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.5rem" }}>
                   <label style={{ fontSize: "0.8rem", fontWeight: 700, color: "var(--text-secondary)" }}>
                     {categoryFamily === "garlic"
-                      ? "🧄 Agro & Mandi Testing Parameters"
+                      ? " Agro & Mandi Testing Parameters"
                       : categoryFamily === "sandstone" || categoryFamily === "kotastone"
-                      ? "🧱 Geological & Physical Test Parameters"
+                      ? " Geological & Physical Test Parameters"
                       : categoryFamily === "kotadoria"
-                      ? "🥻 Handloom & Textile Specifications"
+                      ? " Handloom & Textile Specifications"
                       : "Technical Specifications"}
                   </label>
                   <button type="button" className="btn btn-outline btn-sm" onClick={handleAddSpecRow}>
@@ -3304,7 +3290,7 @@ export default function CompanyCatalogueManager() {
         categoryFamily={categoryFamily}
         onProductsImported={(newProducts) => {
           setProducts((prev) => [...prev, ...newProducts]);
-          setDataBankToast(`✓ Successfully imported ${newProducts.length} products from sheet!`);
+          setDataBankToast(` Successfully imported ${newProducts.length} products from sheet!`);
           setTimeout(() => setDataBankToast(null), 5000);
         }}
       />

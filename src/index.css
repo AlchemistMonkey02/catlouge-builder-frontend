@@ -503,6 +503,36 @@ h1, h2, h3, h4, h5, h6 {
   transform: translateY(-2px);
 }
 
+/* Clean Data Tables */
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+thead th {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  background: var(--bg-surface-elevated);
+  padding: 0.85rem 0.9rem;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+tbody tr {
+  transition: background-color var(--transition-fast);
+}
+
+tbody tr:hover {
+  background-color: var(--bg-card-hover);
+}
+
+tbody td {
+  padding: 0.9rem 0.9rem;
+  vertical-align: middle;
+}
+
 /* Dashboard KPI Grid */
 .kpi-grid {
   display: grid;

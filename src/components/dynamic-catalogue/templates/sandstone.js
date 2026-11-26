@@ -103,7 +103,7 @@ const TEMPLATES = [
 const head = (c, label, no) => `
   <div class="ss-head">
     <div class="ss-head-brand">
-      <span class="ss-stone-icon">🏛️</span>
+      <span class="ss-stone-icon"></span>
       <strong>${E(c.info.ent || 'NATURAL SANDSTONE')}</strong>
       <span class="ss-head-district" style="font-size:10px; color:var(--muted); font-weight:600; margin-left:8px;">&bull; District: ${E(c.info.district || 'Bundi, Rajasthan')} [ODOP: ${E(c.info.odopProduct || 'Sandstone')}]</span>
     </div>
@@ -114,8 +114,8 @@ const head = (c, label, no) => `
 
 const foot = c => `
   <div class="ss-foot">
-    <span><b>${E(c.info.ent || '')}</b> &bull; 📍 District: ${E(c.info.district || 'Bundi, Rajasthan')} &bull; 🏷️ ODOP: ${E(c.info.odopProduct || 'Sandstone')}</span>
-    <span>💬 WhatsApp: <b>${E(fmtWa(c.info.whatsapp || c.info.mobile))}</b> ${c.info.email ? `&bull; ${E(c.info.email)}` : ''}</span>
+    <span><b>${E(c.info.ent || '')}</b> &bull;  District: ${E(c.info.district || 'Bundi, Rajasthan')} &bull;  ODOP: ${E(c.info.odopProduct || 'Sandstone')}</span>
+    <span> WhatsApp: <b>${E(fmtWa(c.info.whatsapp || c.info.mobile))}</b> ${c.info.email ? `&bull; ${E(c.info.email)}` : ''}</span>
   </div>
 `;
 
@@ -134,14 +134,14 @@ function contactPage(c, no) {
 
       <div class="ss-contact-details-grid">
         <div class="ss-detail-card">
-          <h3>🏛️ Quarry &amp; Processing Yards</h3>
+          <h3> Quarry &amp; Processing Yards</h3>
           <p><strong>Enterprise:</strong> ${E(i.ent || 'Heritage Sandstone Works')}</p>
           <p><strong>Quarry Base:</strong> ${E(i.addr || 'Stone Industrial Area, Jodhpur / Dholpur / Kota')}</p>
           ${i.gst ? `<p><strong>GST / Mining ID:</strong> ${E(i.gst)}</p>` : ''}
         </div>
 
         <div class="ss-detail-card">
-          <h3>📐 Project Desk &amp; Quotations</h3>
+          <h3> Project Desk &amp; Quotations</h3>
           <p><strong>Consultant:</strong> ${E(i.person || 'Chief Stone Specialist')}</p>
           <p><strong>Direct Line:</strong> ${E(i.mobile || '+91 98765 43210')}</p>
           ${i.email ? `<p><strong>Email:</strong> ${E(i.email)}</p>` : ''}
@@ -161,7 +161,7 @@ function t1_cover(c, t) {
   return `
     <div class="ss1-cover">
       <div class="ss-odop-gov-banner">
-        <span class="ss-gov-emblem">🏛️</span>
+        <span class="ss-gov-emblem"></span>
         <div class="ss-gov-text">
           <strong>GOVERNMENT OF INDIA &bull; ONE DISTRICT ONE PRODUCT (ODOP) INITIATIVE</strong>
           <span>DISTRICT: <b>${E(i.district || 'Bundi, Rajasthan')}</b> &bull; ODOP PRODUCT: <b>${E(i.odopProduct || 'Sandstone')}</b></span>
@@ -180,9 +180,9 @@ function t1_cover(c, t) {
       <div class="ss1-arch-footer">
         <p class="ss1-lead">${E(i.desc || 'Celebrated across royal palaces, historic forts, and luxury modern retreats. Prized for its glowing desert gold hue, fine grain consistency, and centuries-long weather resistance.')}</p>
         <div class="ss1-pills">
-          <span>✓ Hand-Selected Slabs</span>
-          <span>✓ Zero Weather Discoloration</span>
-          <span>✓ Hand-Carved Arch Specialists</span>
+          <span> Hand-Selected Slabs</span>
+          <span> Zero Weather Discoloration</span>
+          <span> Hand-Carved Arch Specialists</span>
         </div>
       </div>
     </div>
@@ -236,19 +236,19 @@ function renderSandstoneProductCard(it, idx, c, prefix = 'snd') {
         
         <div class="ss-odop-spec-matrix">
           <div class="ss-odop-spec-item" title="${E(specSize)}">
-            <span class="ss-odop-spec-lbl">📏 Size:</span>
+            <span class="ss-odop-spec-lbl"> Size:</span>
             <span class="ss-odop-spec-val">${E(specSize)}</span>
           </div>
           <div class="ss-odop-spec-item" title="${E(specMaterial)}">
-            <span class="ss-odop-spec-lbl">🏛️ Material:</span>
+            <span class="ss-odop-spec-lbl"> Material:</span>
             <span class="ss-odop-spec-val">${E(specMaterial)}</span>
           </div>
           <div class="ss-odop-spec-item" title="${E(specFinish)}">
-            <span class="ss-odop-spec-lbl">✨ Finish:</span>
+            <span class="ss-odop-spec-lbl"> Finish:</span>
             <span class="ss-odop-spec-val">${E(specFinish)}</span>
           </div>
           <div class="ss-odop-spec-item" title="${E(specApp)}">
-            <span class="ss-odop-spec-lbl">🎯 Use:</span>
+            <span class="ss-odop-spec-lbl"> Use:</span>
             <span class="ss-odop-spec-val">${E(specApp)}</span>
           </div>
         </div>
@@ -260,7 +260,7 @@ function renderSandstoneProductCard(it, idx, c, prefix = 'snd') {
           </div>
           <div class="ss-odop-contact-block">
             <span class="ss-odop-craft">${E(cardCraft)}</span>
-            <span class="ss-odop-wa">💬 WA: ${E(fmtWa(c.info.whatsapp || c.info.mobile))}</span>
+            <span class="ss-odop-wa"> WA: ${E(fmtWa(c.info.whatsapp || c.info.mobile))}</span>
           </div>
         </div>
       </div>
@@ -383,9 +383,9 @@ function t4_cover(c, t) {
         <div class="ss4-rock-text">
           <p class="ss4-p">${E(i.desc || 'Hand-chiseled by hereditary stone masons. Rich relief textures with dramatic organic shadow play, bringing tactile earthiness to modern villa boundary walls, fireplaces, and resort facades.')}</p>
           <div class="ss4-chisel-points">
-            <div>⚒️ 100% Solid Natural Split</div>
-            <div>⚒️ Interlocking Z-Panels Available</div>
-            <div>⚒️ Zero Maintenance Natural Finish</div>
+            <div> 100% Solid Natural Split</div>
+            <div> Interlocking Z-Panels Available</div>
+            <div> Zero Maintenance Natural Finish</div>
           </div>
         </div>
       </div>

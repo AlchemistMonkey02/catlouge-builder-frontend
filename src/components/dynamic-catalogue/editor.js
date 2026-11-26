@@ -560,7 +560,7 @@ function ensureBox(pv) {
     '<i data-h="n" class="dz-edge dz-edge-n" title="Drag top edge to resize height ↕"><span>↕</span></i>' +
     '<i data-h="s" class="dz-edge dz-edge-s" title="Drag bottom edge to resize height ↕"><span>↕</span></i>' +
     // Move pill
-    '<div data-h="move" class="dz-move-handle" title="Drag to reposition anywhere on the page">✢ Drag to Move</div>';
+    '<div data-h="move" class="dz-move-handle" title="Drag to reposition anywhere on the page"> Drag to Move</div>';
   pv.appendChild(box);
 }
 
@@ -595,7 +595,7 @@ function place() {
       swapBtn = document.createElement('div');
       swapBtn.className = 'dz-swap-handle';
       swapBtn.dataset.act = 'swap-photo-handle';
-      swapBtn.innerHTML = '🔄 Swap Image';
+      swapBtn.innerHTML = ' Swap Image';
       swapBtn.title = 'Click to swap this image with another photo';
       box.appendChild(swapBtn);
     }
@@ -930,9 +930,9 @@ function drawPanel() {
   p.classList.toggle('hidden', !on);
   p.style.display = on ? 'block' : 'none';
   if (!on) { drawBar(); return; }
-  p.innerHTML = '<div class="ep-line"><b>✏️ Interactive Customizer Active</b><span class="ep-hint">' +
+  p.innerHTML = '<div class="ep-line"><b> Interactive Customizer Active</b><span class="ep-hint">' +
     (sel ? 'Selected: <b>' + safe(sel.photo ? 'Photo' : labelOf(sel.el)) + '</b>. Type inline to edit text, or use toolbar below.' : 'Click ANY headline, text, or photo on any page to edit directly.') + '</span></div>' +
-    '<div class="ep-line"><button type="button" data-act="undo" ' + (undo.length ? '' : 'disabled') + '>↶ Undo</button><button type="button" data-act="resetall">Reset all</button><button type="button" data-act="done" class="done">✔ Done</button></div>';
+    '<div class="ep-line"><button type="button" data-act="undo" ' + (undo.length ? '' : 'disabled') + '>↶ Undo</button><button type="button" data-act="resetall">Reset all</button><button type="button" data-act="done" class="done"> Done</button></div>';
   drawBar();
 }
 
@@ -1067,7 +1067,7 @@ function drawBar() {
   if (photo) {
     h += '<div class="bar-row" style="margin-bottom:8px;">' +
       '<button type="button" data-act="openswapmodal" style="width:100%;background:linear-gradient(135deg,#8b5cf6,#6d28d9);color:#ffffff;font-weight:800;font-size:12px;padding:6px 14px;border:none;border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;box-shadow:0 3px 10px rgba(109,40,217,0.4);">' +
-        '🔄 Swap Image (Photo Bank & Products)' +
+        ' Swap Image (Photo Bank & Products)' +
       '</button>' +
     '</div>';
     const cs = getComputedStyle(sel.el);
@@ -1081,7 +1081,7 @@ function drawBar() {
       '<div class="bar-row"><span>Size</span><input type="range" id="bSize" min="30" max="200" value="' + curScale + '" title="Make photo smaller or bigger"><em id="bSizeV">' + curScale + '%</em></div>' +
       '<div class="bar-row"><span>Photo</span><select id="bPhoto" title="Swap with another product photo"><option value="">Keep current photo</option>' +
       items.map((it, i) => '<option value="' + i + '" ' + (ed.photo === i ? 'selected' : '') + '>Item ' + (i + 1) + ': ' + safe((it.name || '').slice(0, 26)) + '</option>').join('') + '</select></div>' +
-      '<div class="bar-row"><span>Custom</span><button type="button" data-act="uploadphoto" style="font-size:11px;padding:3px 8px;border-radius:6px;border:1px solid #3b82f6;background:#eff6ff;color:#1d4ed8;font-weight:700;cursor:pointer;">📁 Upload File</button><input type="file" id="dzPhotoFile" accept="image/*" style="display:none;" /></div>';
+      '<div class="bar-row"><span>Custom</span><button type="button" data-act="uploadphoto" style="font-size:11px;padding:3px 8px;border-radius:6px;border:1px solid #3b82f6;background:#eff6ff;color:#1d4ed8;font-weight:700;cursor:pointer;"> Upload File</button><input type="file" id="dzPhotoFile" accept="image/*" style="display:none;" /></div>';
   } else {
     const curFont = ed.fontFamily || '';
     const cs = getComputedStyle(sel.el);
@@ -1160,7 +1160,7 @@ function drawBar() {
         '<em id="bSizeV">' + curScale + '%</em>' +
       '</div>';
   }
-  h += '<div class="bar-row bar-end"><button type="button" data-act="cloneel" style="color:#2563eb;font-weight:700;background:#eff6ff;border-color:rgba(37,99,235,0.25);" title="Duplicate/Clone this element on the page">⎘ Duplicate</button><button type="button" data-act="deleteel" style="color:#ef4444;font-weight:700;background:#fef2f2;border-color:rgba(239,68,68,0.25);" title="Delete this element from the page">🗑 Delete</button><button type="button" data-act="hide">' + (ed.hide ? 'Show again' : 'Hide') + '</button><button type="button" data-act="resetone">Reset element</button><button type="button" data-act="close" title="Deselect">✕</button></div>';
+  h += '<div class="bar-row bar-end"><button type="button" data-act="cloneel" style="color:#2563eb;font-weight:700;background:#eff6ff;border-color:rgba(37,99,235,0.25);" title="Duplicate/Clone this element on the page">⎘ Duplicate</button><button type="button" data-act="deleteel" style="color:#ef4444;font-weight:700;background:#fef2f2;border-color:rgba(239,68,68,0.25);" title="Delete this element from the page"> Delete</button><button type="button" data-act="hide">' + (ed.hide ? 'Show again' : 'Hide') + '</button><button type="button" data-act="resetone">Reset element</button><button type="button" data-act="close" title="Deselect"></button></div>';
   bar.innerHTML = h;
   bar.style.display = 'block';
   positionBar();

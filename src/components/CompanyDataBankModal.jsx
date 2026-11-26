@@ -55,8 +55,8 @@ export function getCategoryDataBankConfig(company) {
   const configs = {
     garlic: {
       family: "garlic",
-      icon: "🧄",
-      corridorBadge: `✓ ODOP Garlic Corridor Connected (${locLabel})`,
+      icon: "",
+      corridorBadge: ` ODOP Garlic Corridor Connected (${locLabel})`,
       thicknessTitle: "Produce Grading, Bulb Caliber & Mandi Rate Presets",
       thicknessSubtitle:
         `Select bulb caliber/grade to auto-calculate wholesale Mandi selling rate (${sym}/kg), list price, and price range.`,
@@ -71,19 +71,19 @@ export function getCategoryDataBankConfig(company) {
       mrpPlaceholder: `Mandi MRP ${sym}`,
       rangePlaceholder: `Range e.g. ${sym}200 – ${sym}260 / kg`,
 
-      sizesTitle: "📐 Saved Bulb Calibers & Sizing Dimensions",
+      sizesTitle: " Saved Bulb Calibers & Sizing Dimensions",
       sizesSubtitle: "Bulb diameter ranges, clove counts, and mandi grading calipers",
       sizePlaceholder: "e.g. 50 - 65 mm (Grade A+ Large Bulbs)",
 
-      finishesTitle: "✨ Curing Standards & Outer Skin Finishes",
+      finishesTitle: " Curing Standards & Outer Skin Finishes",
       finishesSubtitle: "Natural sun-curing, root trimming, and clove skin protection",
       finishPlaceholder: "e.g. Sun-Cured Clean White Skin, Clean Cut Roots",
 
-      materialsTitle: "🎯 Cultivar Varieties & Mandi Agro Standards",
+      materialsTitle: " Cultivar Varieties & Mandi Agro Standards",
       materialsSubtitle: "Organic provenance, allicin content standards, and certification",
       materialPlaceholder: "e.g. 100% Organically Grown Malwa Garlic (Moisture < 65%)",
 
-      priceRangesTitle: "💰 Mandi Rates & Reference Price Ranges",
+      priceRangesTitle: " Mandi Rates & Reference Price Ranges",
       priceRangesSubtitle: "Wholesale auction benchmarks, grading rates, and seasonal market price ranges",
       priceRangePlaceholder: "e.g. ₹180 – ₹240 / kg (Grade A Cured)",
 
@@ -113,8 +113,8 @@ export function getCategoryDataBankConfig(company) {
 
     kotastone: {
       family: "kotastone",
-      icon: "🏛️",
-      corridorBadge: `✓ ODOP Kota Stone Corridor Connected (${locLabel})`,
+      icon: "",
+      corridorBadge: ` ODOP Kota Stone Corridor Connected (${locLabel})`,
       thicknessTitle: "Stone Thickness & Quarry Calibration Rate Presets",
       thicknessSubtitle:
         `Select stone thickness/gauging to auto-calculate quarry rate (${sym}/sq.ft), list MRP, and price range.`,
@@ -129,19 +129,19 @@ export function getCategoryDataBankConfig(company) {
       mrpPlaceholder: `List MRP ${sym}`,
       rangePlaceholder: `Range e.g. ${sym}55 – ${sym}85 / sq.ft`,
 
-      sizesTitle: "📐 Saved Tile Plan Sizes & Slab Dimensions",
+      sizesTitle: " Saved Tile Plan Sizes & Slab Dimensions",
       sizesSubtitle: "Precision sawn tile dimensions, pavement slabs, and grand formats",
       sizePlaceholder: "e.g. 2×2 ft (600×600 mm) Square Tile",
 
-      finishesTitle: "✨ Surface Finishes & Edge Treatments",
+      finishesTitle: " Surface Finishes & Edge Treatments",
       finishesSubtitle: "Diamond machine honing, mirror polish, river wash, and chisel cuts",
       finishPlaceholder: "e.g. Mirror High Polish (Diamond Machine Honed)",
 
-      materialsTitle: "🎯 Limestone Geological Formations & Commercial Applications",
+      materialsTitle: " Limestone Geological Formations & Commercial Applications",
       materialsSubtitle: "Indurated limestone beds, compressive strength, and high-traffic uses",
       materialPlaceholder: "e.g. Natural Indurated Limestone / Heavy Traffic Corridors",
 
-      priceRangesTitle: "💰 Quarry Rates & Reference Price Ranges",
+      priceRangesTitle: " Quarry Rates & Reference Price Ranges",
       priceRangesSubtitle: "Direct quarry rates, slab benchmarks, and calibrated tile price ranges",
       priceRangePlaceholder: "e.g. ₹85 – ₹140 / sq.ft (Calibrated Heavy)",
 
@@ -171,8 +171,8 @@ export function getCategoryDataBankConfig(company) {
 
     sandstone: {
       family: "sandstone",
-      icon: "🪨",
-      corridorBadge: `✓ ODOP Sandstone Corridor Connected (${locLabel})`,
+      icon: "",
+      corridorBadge: ` ODOP Sandstone Corridor Connected (${locLabel})`,
       thicknessTitle: "Sandstone Thickness & Calibrated Rate Presets",
       thicknessSubtitle:
         `Select calibrated thickness to auto-calculate square-foot rate (${sym}/sq.ft), list MRP, and price range.`,
@@ -187,21 +187,21 @@ export function getCategoryDataBankConfig(company) {
       mrpPlaceholder: `List MRP ${sym}`,
       rangePlaceholder: `Range e.g. ${sym}110 – ${sym}180 / sq.ft`,
 
-      sizesTitle: "📐 Saved Facade & Paving Slab Dimensions",
+      sizesTitle: " Saved Facade & Paving Slab Dimensions",
       sizesSubtitle: "Large format architectural slabs, cladding tiles, and CNC jali panels",
       sizePlaceholder: "e.g. 600×900 mm Architectural Sawn Slab",
 
-      finishesTitle: "✨ Surface Textures & Rockface Treatments",
+      finishesTitle: " Surface Textures & Rockface Treatments",
       finishesSubtitle: "Sandblasted satin, hand-chiseled rockface, flamed, and honed",
       finishPlaceholder: "e.g. Sandblasted / Honed Satin Matte",
 
-      materialsTitle: "🎯 Quartzite Sandstone Varieties & Facade Applications",
+      materialsTitle: " Quartzite Sandstone Varieties & Facade Applications",
       materialsSubtitle:
         "Dholpur Beige, Jodhpur Gold, Agra Red, and thermal insulated cladding",
       materialPlaceholder:
         "e.g. Natural Quartzite Sandstone / Exterior Facades & Cladding",
 
-      priceRangesTitle: "💰 Sawn Slab Rates & Reference Price Ranges",
+      priceRangesTitle: " Sawn Slab Rates & Reference Price Ranges",
       priceRangesSubtitle: "Architectural cladding rates, jali screens, and project lot prices",
       priceRangePlaceholder: "e.g. ₹135 – ₹190 / sq.ft (Sandblasted Honed)",
 
@@ -231,8 +231,8 @@ export function getCategoryDataBankConfig(company) {
 
     kotadoria: {
       family: "kotadoria",
-      icon: "🧵",
-      corridorBadge: `✓ ODOP Kota Doria Corridor Connected (${locLabel})`,
+      icon: "",
+      corridorBadge: ` ODOP Kota Doria Corridor Connected (${locLabel})`,
       thicknessTitle: "Fabric Length, Cut & Weaver Rate Presets",
       thicknessSubtitle:
         `Select fabric length/ensemble cut to auto-calculate saree/suit rate (${sym}), MRP, and boutique pricing.`,
@@ -247,23 +247,23 @@ export function getCategoryDataBankConfig(company) {
       mrpPlaceholder: `MRP ${sym}`,
       rangePlaceholder: `Range e.g. ${sym}2,800 – ${sym}6,500`,
 
-      sizesTitle: "📐 Saved Fabric Cuts, Saree Lengths & Yardage",
+      sizesTitle: " Saved Fabric Cuts, Saree Lengths & Yardage",
       sizesSubtitle:
         "Saree lengths with blouse pieces, dupattas, 3-piece suits, and running fabrics",
       sizePlaceholder: "e.g. 6.5 Metres (includes 80cm Running Blouse Piece)",
 
-      finishesTitle: "✨ Zari Embellishments, Khat Checks & Artisan Finishes",
+      finishesTitle: " Zari Embellishments, Khat Checks & Artisan Finishes",
       finishesSubtitle:
         "Tested gold zari borders, silver zari, Bagru hand-block prints, and Chikankari",
       finishPlaceholder: "e.g. Traditional 300+ Square Khat Grid with Tested Gold Zari",
 
-      materialsTitle: "🎯 Yarn Compositions, Weave Density & Attire Uses",
+      materialsTitle: " Yarn Compositions, Weave Density & Attire Uses",
       materialsSubtitle:
         "Mulberry silk warp, fine combed cotton weft, and wedding ensembles",
       materialPlaceholder:
         "e.g. Pure Mulberry Silk Warp, Fine Cotton Weft / Bridal Wear",
 
-      priceRangesTitle: "💰 Loom Rates & Reference Price Ranges",
+      priceRangesTitle: " Loom Rates & Reference Price Ranges",
       priceRangesSubtitle: "Handloom weaver rates, luxury bridal sarees, and boutique bundle prices",
       priceRangePlaceholder: "e.g. ₹2,450 – ₹6,500 / Saree",
 
@@ -293,8 +293,8 @@ export function getCategoryDataBankConfig(company) {
 
     general: {
       family: "general",
-      icon: "📦",
-      corridorBadge: `✓ Enterprise Brand Connected (${locLabel})`,
+      icon: "",
+      corridorBadge: ` Enterprise Brand Connected (${locLabel})`,
       thicknessTitle: "Product Sizing, Grade & Rate Presets",
       thicknessSubtitle:
         `Configure standardized sizes and grades with automated pricing rules in ${sym}.`,
@@ -309,19 +309,19 @@ export function getCategoryDataBankConfig(company) {
       mrpPlaceholder: `MRP ${sym}`,
       rangePlaceholder: `Range e.g. ${sym}1,000 – ${sym}2,500`,
 
-      sizesTitle: "📐 Saved Dimensions & Measurements",
+      sizesTitle: " Saved Dimensions & Measurements",
       sizesSubtitle: "Standard measurements, packaging formats, and sizes",
       sizePlaceholder: "e.g. Standard Size",
 
-      finishesTitle: "✨ Surface Finishes & Treatments",
+      finishesTitle: " Surface Finishes & Treatments",
       finishesSubtitle: "Colors, surface finishes, and quality treatments",
       finishPlaceholder: "e.g. Premium Matte Finish",
 
-      materialsTitle: "🎯 Materials & Commercial Applications",
+      materialsTitle: " Materials & Commercial Applications",
       materialsSubtitle: "Material composition and primary usage applications",
       materialPlaceholder: "e.g. Commercial Grade Material",
 
-      priceRangesTitle: "💰 Reference Price Ranges",
+      priceRangesTitle: " Reference Price Ranges",
       priceRangesSubtitle: "Commercial rates and trade price ranges",
       priceRangePlaceholder: "e.g. ₹1,000 – ₹2,500",
 
@@ -442,7 +442,7 @@ export default function CompanyDataBankModal({
         companyName: company.name,
       };
       const res = await updateCompanyDataBank(company._id, bankToSave);
-      showToast("✓ Company Data Bank saved successfully!");
+      showToast(" Company Data Bank saved successfully!");
       if (onSave) onSave(res.data);
     } catch (err) {
       alert("Failed to save Data Bank: " + (err.response?.data?.message || err.message));
@@ -511,7 +511,7 @@ export default function CompanyDataBankModal({
         setDataBank(defaultBank);
         if (onSave) onSave(defaultBank);
       }
-      showToast("✓ Data Bank reset to verified industry defaults!");
+      showToast(" Data Bank reset to verified industry defaults!");
     } catch (err) {
       alert("Failed to reset Data Bank: " + err.message);
     } finally {
@@ -526,7 +526,7 @@ export default function CompanyDataBankModal({
     const content = generateCategoryDataBankTemplate(targetFam, loc.currencySymbol);
     const safeCompName = (company?.name || "company").toLowerCase().replace(/[^a-z0-9]/g, "_");
     downloadCsvFile(`${safeCompName}_${targetFam}_databank_template.csv`, content);
-    showToast(`✓ Downloaded ${targetFam.toUpperCase()} Data Bank template (5 items/section)`);
+    showToast(` Downloaded ${targetFam.toUpperCase()} Data Bank template (5 items/section)`);
   };
 
   const handleExportCurrentDataBank = () => {
@@ -534,7 +534,7 @@ export default function CompanyDataBankModal({
     const content = exportCurrentDataBankToCsv(dataBank, cfg.family);
     const safeCompName = (company?.name || "company").toLowerCase().replace(/[^a-z0-9]/g, "_");
     downloadCsvFile(`${safeCompName}_${cfg.family}_databank_current.csv`, content);
-    showToast("✓ Exported current Data Bank to CSV");
+    showToast(" Exported current Data Bank to CSV");
   };
 
   const handleSheetFileSelected = (selectedFile) => {
@@ -574,7 +574,7 @@ export default function CompanyDataBankModal({
     setIsSaving(true);
     try {
       const res = await updateCompanyDataBank(company._id, newBank);
-      showToast(`✓ Applied ${sheetParsedData.totalItems} specifications & presets from sheet and saved!`);
+      showToast(` Applied ${sheetParsedData.totalItems} specifications & presets from sheet and saved!`);
       if (onSave) onSave(res.data);
       setSheetParsedData(null);
       setSheetFileName("");
@@ -1827,7 +1827,7 @@ export default function CompanyDataBankModal({
                         color: "var(--text-primary)",
                       }}
                     >
-                      📰 Catalogue Headings & Page Titles
+                       Catalogue Headings & Page Titles
                     </h4>
                     <div
                       style={{
@@ -1965,7 +1965,7 @@ export default function CompanyDataBankModal({
                         color: "var(--text-primary)",
                       }}
                     >
-                      💬 Brand Taglines & Subheadings
+                       Brand Taglines & Subheadings
                     </h4>
                     <div
                       style={{
@@ -2070,7 +2070,7 @@ export default function CompanyDataBankModal({
                         color: "var(--text-primary)",
                       }}
                     >
-                      📖 Brand Stories, Specifications & Paragraphs
+                       Brand Stories, Specifications & Paragraphs
                     </h4>
                     <div
                       style={{
@@ -2255,7 +2255,7 @@ export default function CompanyDataBankModal({
                         color: "var(--text-primary)",
                       }}
                     >
-                      📌 Reusable Key Feature Bullets
+                       Reusable Key Feature Bullets
                     </h4>
                     <div
                       style={{
@@ -2533,11 +2533,11 @@ export default function CompanyDataBankModal({
                       <>
                         <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", marginTop: "10px" }}>
                           {[
-                            { id: "garlic", label: "🧄 Garlic" },
-                            { id: "kotastone", label: "🪨 Kota Stone" },
-                            { id: "sandstone", label: "🏛️ Sandstone" },
-                            { id: "kotadoria", label: "✨ Kota Doria" },
-                            { id: "general", label: "📦 General" },
+                            { id: "garlic", label: " Garlic" },
+                            { id: "kotastone", label: " Kota Stone" },
+                            { id: "sandstone", label: " Sandstone" },
+                            { id: "kotadoria", label: " Kota Doria" },
+                            { id: "general", label: " General" },
                           ].map((cat) => (
                             <button
                               key={cat.id}
@@ -2557,7 +2557,7 @@ export default function CompanyDataBankModal({
                                 gap: "4px",
                               }}
                             >
-                              {cat.label} {cat.id === activeFamily && "✓"}
+                              {cat.label} {cat.id === activeFamily && ""}
                             </button>
                           ))}
                         </div>
@@ -2647,7 +2647,7 @@ export default function CompanyDataBankModal({
                       const loc = resolveCompanyLocation(company);
                       const csvText = generateCategoryDataBankTemplate(cfg.family, loc.currencySymbol);
                       navigator.clipboard.writeText(csvText);
-                      showToast("✓ Copied organized sheet to clipboard! You can paste directly into Excel or below.");
+                      showToast(" Copied organized sheet to clipboard! You can paste directly into Excel or below.");
                     }}
                     style={{
                       display: "inline-flex",
@@ -2760,7 +2760,7 @@ export default function CompanyDataBankModal({
                   }}
                 >
                   <div style={{ fontWeight: 800, color: "var(--text-primary)", marginBottom: "6px" }}>
-                    📊 Spreadsheet Structure &amp; Column Definitions:
+                     Spreadsheet Structure &amp; Column Definitions:
                   </div>
                   <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "10px" }}>
                     <div>
@@ -2783,7 +2783,7 @@ export default function CompanyDataBankModal({
                 <div className="card" style={{ padding: "1.2rem", background: "var(--bg-surface-elevated)" }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
                     <label style={{ fontSize: "0.85rem", fontWeight: 750, color: "var(--text-primary)" }}>
-                      📋 Paste Raw Spreadsheet Rows (CSV or Tab-Delimited from Excel)
+                       Paste Raw Spreadsheet Rows (CSV or Tab-Delimited from Excel)
                     </label>
                     {sheetUploadRawText && (
                       <button
@@ -2924,7 +2924,7 @@ export default function CompanyDataBankModal({
                             color: "#166534",
                           }}
                         >
-                          ✓ {sheetParsedData.totalItems} Items Detected
+                           {sheetParsedData.totalItems} Items Detected
                         </span>
                       </div>
                       <div style={{ fontSize: "0.78rem", color: "var(--text-secondary)", marginTop: "2px" }}>
@@ -2971,37 +2971,37 @@ export default function CompanyDataBankModal({
                   <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", marginBottom: "1rem" }}>
                     {sheetParsedData.counts.thicknesses > 0 && (
                       <span style={{ fontSize: "0.75rem", fontWeight: 700, padding: "3px 8px", borderRadius: "6px", background: "rgba(16, 185, 129, 0.12)", color: "#059669" }}>
-                        ⚡ {sheetParsedData.counts.thicknesses} Rate &amp; Grading Presets
+                         {sheetParsedData.counts.thicknesses} Rate &amp; Grading Presets
                       </span>
                     )}
                     {sheetParsedData.counts.sizes > 0 && (
                       <span style={{ fontSize: "0.75rem", fontWeight: 700, padding: "3px 8px", borderRadius: "6px", background: "rgba(99, 102, 241, 0.12)", color: "var(--primary)" }}>
-                        📐 {sheetParsedData.counts.sizes} Sizing Dimensions
+                         {sheetParsedData.counts.sizes} Sizing Dimensions
                       </span>
                     )}
                     {sheetParsedData.counts.finishes > 0 && (
                       <span style={{ fontSize: "0.75rem", fontWeight: 700, padding: "3px 8px", borderRadius: "6px", background: "rgba(245, 158, 11, 0.12)", color: "#b45309" }}>
-                        ✨ {sheetParsedData.counts.finishes} Surface Finishes
+                         {sheetParsedData.counts.finishes} Surface Finishes
                       </span>
                     )}
                     {sheetParsedData.counts.materials > 0 && (
                       <span style={{ fontSize: "0.75rem", fontWeight: 700, padding: "3px 8px", borderRadius: "6px", background: "rgba(59, 130, 246, 0.12)", color: "#2563eb" }}>
-                        🎯 {sheetParsedData.counts.materials} Materials &amp; Standards
+                         {sheetParsedData.counts.materials} Materials &amp; Standards
                       </span>
                     )}
                     {sheetParsedData.counts.applications > 0 && (
                       <span style={{ fontSize: "0.75rem", fontWeight: 700, padding: "3px 8px", borderRadius: "6px", background: "rgba(139, 92, 246, 0.12)", color: "#7c3aed" }}>
-                        📦 {sheetParsedData.counts.applications} Applications
+                         {sheetParsedData.counts.applications} Applications
                       </span>
                     )}
                     {sheetParsedData.counts.headings > 0 && (
                       <span style={{ fontSize: "0.75rem", fontWeight: 700, padding: "3px 8px", borderRadius: "6px", background: "rgba(236, 72, 153, 0.12)", color: "#db2777" }}>
-                        📰 {sheetParsedData.counts.headings} Headings
+                         {sheetParsedData.counts.headings} Headings
                       </span>
                     )}
                     {sheetParsedData.counts.paragraphs > 0 && (
                       <span style={{ fontSize: "0.75rem", fontWeight: 700, padding: "3px 8px", borderRadius: "6px", background: "rgba(20, 184, 166, 0.12)", color: "#0f766e" }}>
-                        📖 {sheetParsedData.counts.paragraphs} Stories / Paragraphs
+                         {sheetParsedData.counts.paragraphs} Stories / Paragraphs
                       </span>
                     )}
                   </div>
@@ -3057,7 +3057,7 @@ export default function CompanyDataBankModal({
               >
                 <div>
                   <div style={{ fontSize: "0.95rem", fontWeight: 750, color: "var(--text-primary)" }}>
-                    📦 Want to Batch Upload Products Directly into Catalogue?
+                     Want to Batch Upload Products Directly into Catalogue?
                   </div>
                   <div style={{ fontSize: "0.8rem", color: "var(--text-secondary)", marginTop: "2px" }}>
                     If you have a spreadsheet with complete products (SKU, title, price, size, finish, image), use the Product Sheet Uploader to import them all in seconds.
@@ -3084,7 +3084,7 @@ export default function CompanyDataBankModal({
                     background: "rgba(59, 130, 246, 0.08)",
                   }}
                 >
-                  <Upload size={14} /> Open Product Sheet Uploader ➔
+                  <Upload size={14} /> Open Product Sheet Uploader 
                 </button>
               </div>
             </div>

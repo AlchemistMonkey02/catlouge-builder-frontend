@@ -19,11 +19,11 @@ import {
 } from "../services/api";
 
 const MARKETPLACES = [
-  { id: "amazon_in", name: "Amazon India Flat File (.xlsx)", icon: "🛒", format: "xlsx" },
-  { id: "flipkart", name: "Flipkart Bulk Listing (.xlsx)", icon: "🛍️", format: "xlsx" },
-  { id: "shopify", name: "Shopify Official Product Feed (.csv)", icon: "🟢", format: "csv" },
-  { id: "generic_csv", name: "Universal Master Catalogue (.xlsx)", icon: "📊", format: "xlsx" },
-  { id: "json", name: "Structured JSON Data Feed", icon: "📦", format: "json" },
+  { id: "amazon_in", name: "Amazon India Flat File (.xlsx)", icon: "", format: "xlsx" },
+  { id: "flipkart", name: "Flipkart Bulk Listing (.xlsx)", icon: "", format: "xlsx" },
+  { id: "shopify", name: "Shopify Official Product Feed (.csv)", icon: "", format: "csv" },
+  { id: "generic_csv", name: "Universal Master Catalogue (.xlsx)", icon: "", format: "xlsx" },
+  { id: "json", name: "Structured JSON Data Feed", icon: "", format: "json" },
 ];
 
 export default function ExportPublishingCenter() {

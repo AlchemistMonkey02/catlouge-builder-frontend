@@ -580,7 +580,7 @@ export default function AiProductStudio() {
           setProductScale(108);
         }
         setActionSuccessMessage(
-          `🚀 Super-Resolution HD Applied (${scaleMultiplier}x • ${res.engine || selectedEngine} Engine)!`
+          ` Super-Resolution HD Applied (${scaleMultiplier}x • ${res.engine || selectedEngine} Engine)!`
         );
         setTimeout(() => setActionSuccessMessage(""), 5000);
       } else {
@@ -1008,7 +1008,7 @@ export default function AiProductStudio() {
           ctx.fillStyle = "#ffffff";
           ctx.font = "bold 26px 'Inter', sans-serif";
           ctx.textAlign = "center";
-          ctx.fillText("✨ Isolating Product Foreground...", targetW / 2, targetH / 2 - 10);
+          ctx.fillText(" Isolating Product Foreground...", targetW / 2, targetH / 2 - 10);
           ctx.font = "16px 'Inter', sans-serif";
           ctx.fillStyle = "rgba(255, 255, 255, 0.85)";
           ctx.fillText("Removing casual photo background & staging 3D product", targetW / 2, targetH / 2 + 25);
@@ -1175,7 +1175,7 @@ export default function AiProductStudio() {
 
           ctx.fillStyle = "#ffffff";
           ctx.font = "bold 22px 'Inter', sans-serif";
-          ctx.fillText(`✓ ${badgeText.toUpperCase()}`, 75, targetH - 82);
+          ctx.fillText(` ${badgeText.toUpperCase()}`, 75, targetH - 82);
         }
 
         // G. AMAZON 85% FRAME GUIDELINE
@@ -1210,7 +1210,7 @@ export default function AiProductStudio() {
             ctx.fillRect(30, 30, 180, 38);
             ctx.fillStyle = "#ffffff";
             ctx.font = "bold 13px 'Inter', sans-serif";
-            ctx.fillText("📷 RAW PHONE SHOT", 45, 54);
+            ctx.fillText(" RAW PHONE SHOT", 45, 54);
 
             ctx.restore();
             ctx.save();
@@ -1225,7 +1225,7 @@ export default function AiProductStudio() {
             ctx.fillRect(targetW - 220, 30, 190, 38);
             ctx.fillStyle = "#ffffff";
             ctx.font = "bold 13px 'Inter', sans-serif";
-            ctx.fillText("✨ AI STUDIO SHOOT", targetW - 205, 54);
+            ctx.fillText(" AI STUDIO SHOOT", targetW - 205, 54);
             ctx.restore();
           };
           return;
@@ -1468,7 +1468,7 @@ export default function AiProductStudio() {
           {/* Gemini Vision AI badge commented out */}
           {/*
           <span className="status-pill approved" style={{ fontSize: "0.72rem", padding: "2px 8px" }}>
-            ✨ Gemini Vision AI
+             Gemini Vision AI
           </span>
           */}
         </div>
@@ -1502,7 +1502,7 @@ export default function AiProductStudio() {
             }}
             title="Import directly into Catalogue Studio Gallery & open PDF catalogue"
           >
-            <BookOpen size={14} /> Send to Catalogue Studio ➔
+            <BookOpen size={14} /> Send to Catalogue Studio 
           </button>
 
           {/* Place directly on existing product */}
@@ -1562,12 +1562,12 @@ export default function AiProductStudio() {
           }}
         >
           <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-            <span style={{ fontSize: "1.1rem" }}>📍</span>
+            <span style={{ fontSize: "1.1rem" }}></span>
             <span style={{ fontSize: "0.86rem", color: "var(--text-primary)" }}>
               Editing Master Image for: <strong style={{ color: "#10b981" }}>{location.state.productName}</strong>
             </span>
             <span style={{ fontSize: "0.75rem", color: "var(--text-secondary)" }}>
-              (Click "✓ Save Directly to Product" to apply without downloading)
+              (Click " Save Directly to Product" to apply without downloading)
             </span>
           </div>
 
@@ -1589,7 +1589,7 @@ export default function AiProductStudio() {
               }}
             >
               {isSavingToCatalogue ? <RefreshCw size={14} className="spin" /> : <Check size={14} />}
-              <span>✓ Save Directly to Product</span>
+              <span> Save Directly to Product</span>
             </button>
             {location.state?.returnTo && (
               <button
@@ -1691,7 +1691,7 @@ export default function AiProductStudio() {
             })}
           </div>
 
-          {/* 🌟 GEMINI AI VISION DIRECTOR HERO CARD (Commented out - AI features disabled) */}
+          {/*  GEMINI AI VISION DIRECTOR HERO CARD (Commented out - AI features disabled) */}
           {/*
           {(expandAllPanels || leftActiveTab === "gemini") && (
             <div className="card">...</div>
@@ -1803,7 +1803,7 @@ export default function AiProductStudio() {
                 onClick={() => setUseCutout(false)}
                 style={{ fontSize: "0.78rem", fontWeight: 650 }}
               >
-                📸 Full Photo
+                 Full Photo
               </button>
               <button
                 type="button"
@@ -1817,7 +1817,7 @@ export default function AiProductStudio() {
                 }}
                 style={{ fontSize: "0.78rem", fontWeight: 650 }}
               >
-                ✨ AI Cutout
+                 AI Cutout
               </button>
             </div>
 
@@ -1905,7 +1905,7 @@ export default function AiProductStudio() {
                     onClick={() => setUpscaleScale(2)}
                     style={{ fontSize: "0.78rem", fontWeight: 700 }}
                   >
-                    ⚡ 2x High-Def
+                     2x High-Def
                   </button>
                   <button
                     type="button"
@@ -1913,7 +1913,7 @@ export default function AiProductStudio() {
                     onClick={() => setUpscaleScale(4)}
                     style={{ fontSize: "0.78rem", fontWeight: 700 }}
                   >
-                    💎 4x Ultra-HD
+                     4x Ultra-HD
                   </button>
                 </div>
               </div>
@@ -1965,7 +1965,7 @@ export default function AiProductStudio() {
                   onClick={() => setIsUpscaleModalOpen(true)}
                   style={{ width: "100%", justifyContent: "center", fontSize: "0.74rem", color: "#059669", borderColor: "rgba(16, 185, 129, 0.4)" }}
                 >
-                  <span>🔍 Open Visual Before/After Dialog</span>
+                  <span> Open Visual Before/After Dialog</span>
                 </button>
               </div>
 
@@ -1984,7 +1984,7 @@ export default function AiProductStudio() {
                   }}
                 >
                   <div style={{ color: "#059669", fontWeight: 650 }}>
-                    ✓ {upscaleScale}x HD Texture Sharpened
+                     {upscaleScale}x HD Texture Sharpened
                     {upscaleStats && (
                       <div style={{ fontSize: "0.68rem", opacity: 0.85, fontWeight: 400 }}>
                         {upscaleStats.from} → {upscaleStats.to} ({upscaleStats.engine || upscaleEngine})
@@ -2222,7 +2222,7 @@ export default function AiProductStudio() {
 
             <div style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
               <span className="studio-badge-pill" style={{ fontSize: "0.70rem", padding: "2px 8px" }}>
-                📐 {aspectRatio} ({aspectRatio === "1:1" ? "1200x1200" : aspectRatio === "4:5" ? "1080x1350" : aspectRatio === "3:4" ? "1200x1600" : "1920x1080"})
+                 {aspectRatio} ({aspectRatio === "1:1" ? "1200x1200" : aspectRatio === "4:5" ? "1080x1350" : aspectRatio === "3:4" ? "1200x1600" : "1920x1080"})
               </span>
             </div>
           </div>
@@ -2415,7 +2415,7 @@ export default function AiProductStudio() {
                 }}
                 title="Send photo to Dynamic Catalogue Studio gallery and launch PDF generator"
               >
-                <BookOpen size={15} /> Open in Catalogue Studio ➔
+                <BookOpen size={15} /> Open in Catalogue Studio 
               </button>
             </div>
           </div>
@@ -2944,7 +2944,7 @@ export default function AiProductStudio() {
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "2px" }}>
                   <span className="status-pill approved" style={{ fontSize: "0.68rem", padding: "2px 6px" }}>
-                    ✓ Studio Master Ready
+                     Studio Master Ready
                   </span>
                   <span style={{ fontSize: "0.74rem", color: "var(--text-muted)" }}>
                     {aspectRatio} Stage • {selectedStage.replace(/_/g, " ").toUpperCase()}
@@ -3408,7 +3408,7 @@ export default function AiProductStudio() {
           }
           setIsUpscaled(true);
           setUpscaleStats(stats);
-          setActionSuccessMessage(`🚀 Super-Resolution Applied (${stats?.scale || "2x"} HD)!`);
+          setActionSuccessMessage(` Super-Resolution Applied (${stats?.scale || "2x"} HD)!`);
           setTimeout(() => setActionSuccessMessage(""), 5000);
         }}
       />

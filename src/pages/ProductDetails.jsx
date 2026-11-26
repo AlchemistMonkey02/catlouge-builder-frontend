@@ -96,7 +96,7 @@ export default function ProductDetails() {
             }
           >
             <Sparkles size={18} />
-            <span>✨ Shoot in AI Photo Studio</span>
+            <span> Shoot in AI Photo Studio</span>
           </button>
         </div>
 
@@ -106,7 +106,7 @@ export default function ProductDetails() {
           <div className="details-brand">by {product.brand}</div>
 
           <div className="details-price">{formatPrice(product.price)}</div>
-          <div className="details-rating">★ {product.rating?.toFixed(1) ?? "0.0"} rating</div>
+          <div className="details-rating"> {product.rating?.toFixed(1) ?? "0.0"} rating</div>
 
           <p className="details-description">{product.description}</p>
 

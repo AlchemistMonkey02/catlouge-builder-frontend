@@ -1506,13 +1506,13 @@ export default function DynamicCatalogueStudio({
       el.textContent = customText || "Custom Text Element";
     } else if (type === "callout") {
       el.style.cssText = `position:absolute;left:56px;top:${topOffset}px;font-size:13.5px;font-weight:600;font-family:'Montserrat',sans-serif;color:#1e293b;background:rgba(59,130,246,0.08);border-left:4px solid ${brandColor};border-radius:6px;padding:12px 18px;cursor:move;z-index:60;max-width:480px;line-height:1.5;`;
-      el.textContent = customText || "★ Special Note: Available in custom finishes, edge profiles, and direct nationwide dispatch.";
+      el.textContent = customText || " Special Note: Available in custom finishes, edge profiles, and direct nationwide dispatch.";
     } else if (type === "price") {
       el.style.cssText = `position:absolute;left:56px;top:${topOffset}px;font-size:18px;font-weight:800;font-family:'Montserrat',sans-serif;color:#ffffff;background:#0f172a;border-radius:99px;padding:8px 22px;display:inline-block;cursor:move;z-index:60;box-shadow:0 4px 14px rgba(0,0,0,0.18);`;
       el.textContent = customText || "₹ 1,450 / sq.ft";
     } else if (type === "bullet") {
       el.style.cssText = `position:absolute;left:56px;top:${topOffset}px;font-size:13.5px;font-weight:600;font-family:'Montserrat',sans-serif;color:#059669;background:#ecfdf5;border:1.5px solid #a7f3d0;border-radius:8px;padding:8px 16px;display:inline-block;cursor:move;z-index:60;`;
-      el.textContent = customText || "✓ 100% Anti-Slip & Weatherproof Natural Stone";
+      el.textContent = customText || " 100% Anti-Slip & Weatherproof Natural Stone";
     } else if (type === "photo") {
       el.className = "custom-user-el photo-frame";
       el.style.cssText = `position:absolute;left:56px;top:${topOffset}px;width:300px;height:200px;border-radius:10px;overflow:hidden;box-shadow:0 8px 24px rgba(0,0,0,0.12);cursor:move;z-index:60;background:#f8fafc;`;
@@ -1563,13 +1563,13 @@ export default function DynamicCatalogueStudio({
   // Group templates by family with 4 primary product categories
   const categoryGroups = useMemo(() => {
     const groups = [
-      { key: "garlic", title: "🧄 Garlic Specialty (8 Templates)", desc: "Organic farm harvest, bulb sizing 40-65mm, dehydrated flakes, export specifications & B2B matrices", fam: "garlic" },
-      { key: "kotastone", title: "🏛️ Kota Stone Specialty (8 Templates)", desc: "Geometric architectural cuts, calibrated limestone, mirror polish, leather finishes & heavy paving", fam: "kotastone" },
-      { key: "sandstone", title: "🏜️ Sand Stone Specialty (8 Templates)", desc: "Royal Jodhpur gold, exotic rainbow/teakwood veins, facade cladding & ASTM tested physical properties", fam: "sandstone" },
-      { key: "kotadoria", title: "🥻 Kota Doria Specialty (10 Templates)", desc: "Royal gossamer handlooms, Parampara wholesale suite, Silken Saga celebration wedding lookbook & GI sarees", fam: "kotadoria" },
-      { key: "editorial", title: "💎 Editorial Luxury Lookbook", desc: "High-fashion magazine spreads, soft serif typography, large hero imagery", fam: "editorial" },
-      { key: "stonecat", title: "🌐 Trade & Export Catalogue", desc: "Commercial landscape spreads, technical spec matrices, mosaic swatches", fam: "stonecat" },
-      { key: "simple", title: "⚡ Modern & Clean Signatures", desc: "Versatile, structured card grids, spec rows, masonry & contact closing", fam: "simple" }
+      { key: "garlic", title: " Garlic Specialty (8 Templates)", desc: "Organic farm harvest, bulb sizing 40-65mm, dehydrated flakes, export specifications & B2B matrices", fam: "garlic" },
+      { key: "kotastone", title: " Kota Stone Specialty (8 Templates)", desc: "Geometric architectural cuts, calibrated limestone, mirror polish, leather finishes & heavy paving", fam: "kotastone" },
+      { key: "sandstone", title: " Sand Stone Specialty (8 Templates)", desc: "Royal Jodhpur gold, exotic rainbow/teakwood veins, facade cladding & ASTM tested physical properties", fam: "sandstone" },
+      { key: "kotadoria", title: " Kota Doria Specialty (10 Templates)", desc: "Royal gossamer handlooms, Parampara wholesale suite, Silken Saga celebration wedding lookbook & GI sarees", fam: "kotadoria" },
+      { key: "editorial", title: " Editorial Luxury Lookbook", desc: "High-fashion magazine spreads, soft serif typography, large hero imagery", fam: "editorial" },
+      { key: "stonecat", title: " Trade & Export Catalogue", desc: "Commercial landscape spreads, technical spec matrices, mosaic swatches", fam: "stonecat" },
+      { key: "simple", title: " Modern & Clean Signatures", desc: "Versatile, structured card grids, spec rows, masonry & contact closing", fam: "simple" }
     ];
 
     return groups.map(g => {
@@ -2310,7 +2310,7 @@ export default function DynamicCatalogueStudio({
       }
 
       setIsLiveModalOpen(true);
-      setSaveSuccessMsg("🎉 Catalogue is LIVE on Web URL!");
+      setSaveSuccessMsg(" Catalogue is LIVE on Web URL!");
       setTimeout(() => setSaveSuccessMsg(""), 4500);
       confetti({ particleCount: 90, spread: 80, origin: { y: 0.5 } });
     } catch (err) {
@@ -2466,7 +2466,7 @@ export default function DynamicCatalogueStudio({
                   gap: "4px"
                 }}
               >
-                📍 District: {catalogInfo?.district || company?.district || "Baran / Kota / Jhalawar / Bundi, Rajasthan"}
+                 District: {catalogInfo?.district || company?.district || "Baran / Kota / Jhalawar / Bundi, Rajasthan"}
               </span>
               <span
                 style={{
@@ -2482,7 +2482,7 @@ export default function DynamicCatalogueStudio({
                   gap: "4px"
                 }}
               >
-                🏛️ ODOP: {catalogInfo?.odopProduct || company?.odopProduct || "Verified Product"}
+                 ODOP: {catalogInfo?.odopProduct || company?.odopProduct || "Verified Product"}
               </span>
             </div>
             <div style={{ fontSize: "0.82rem", color: "#94a3b8", marginTop: "2px", display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
@@ -2507,7 +2507,7 @@ export default function DynamicCatalogueStudio({
                 }}
                 title="Browse and select catalogue templates"
               >
-                <Palette size={11} /> 🎨 Change Layout ({TEMPLATE_REGISTRY.length})
+                <Palette size={11} />  Change Layout ({TEMPLATE_REGISTRY.length})
               </button>
               <span>•</span>
               <button
@@ -2531,7 +2531,7 @@ export default function DynamicCatalogueStudio({
                 }}
                 title="Manage which products are included in this catalogue"
               >
-                <Boxes size={11} /> 📦 Products ({activeProducts.length})
+                <Boxes size={11} />  Products ({activeProducts.length})
               </button>
               <span>•</span>
               <span style={{ color: "#38bdf8", fontWeight: 700 }}>Single-Click ANY Text or Photo to Edit</span>
@@ -2578,7 +2578,7 @@ export default function DynamicCatalogueStudio({
             }}
             title="Browse and select catalogue layout templates"
           >
-            <Palette size={14} /> 🎨 Layouts ({TEMPLATE_REGISTRY.length})
+            <Palette size={14} />  Layouts ({TEMPLATE_REGISTRY.length})
           </button>
 
           <button
@@ -2593,7 +2593,7 @@ export default function DynamicCatalogueStudio({
               color: isEditMode ? "#ffffff" : "#94a3b8"
             }}
           >
-            <Edit3 size={14} /> {isEditMode ? "✏️ Editor: ON" : "✏️ Enable Editor"}
+            <Edit3 size={14} /> {isEditMode ? " Editor: ON" : " Enable Editor"}
           </button>
 
           <button
@@ -2646,7 +2646,7 @@ export default function DynamicCatalogueStudio({
               cursor: isPublishingLive ? "not-allowed" : "pointer"
             }}
           >
-            <Globe size={15} /> {isPublishingLive ? "Publishing Live..." : (currentLiveUrl ? "🌐 Live Link & Share" : "🌐 Make Live on URL")}
+            <Globe size={15} /> {isPublishingLive ? "Publishing Live..." : (currentLiveUrl ? " Live Link & Share" : " Make Live on URL")}
           </button>
 
           {/* DOWNLOAD MULTI-PAGE PDF BUTTON */}
@@ -2665,7 +2665,7 @@ export default function DynamicCatalogueStudio({
               gap: "6px"
             }}
           >
-            <Download size={15} /> {isExporting ? `Compiling PDF (${exportProgress.current}/${exportProgress.total})...` : "📥 Download Multi-Page PDF"}
+            <Download size={15} /> {isExporting ? `Compiling PDF (${exportProgress.current}/${exportProgress.total})...` : " Download Multi-Page PDF"}
           </button>
         </div>
       </div>
@@ -2717,7 +2717,7 @@ export default function DynamicCatalogueStudio({
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "1rem" }}>
             <div style={{ background: "rgba(255, 255, 255, 0.04)", padding: "10px 14px", borderRadius: "10px", border: "1px solid rgba(255, 255, 255, 0.06)" }}>
               <div style={{ fontWeight: 800, fontSize: "0.85rem", color: "#38bdf8", marginBottom: "4px" }}>
-                1. 🔤 Edit Directly On Canvas (Single-Click)
+                1.  Edit Directly On Canvas (Single-Click)
               </div>
               <div style={{ fontSize: "0.8rem", color: "#cbd5e1", lineHeight: 1.45 }}>
                 Click directly on <strong>ANY word, headline, specification, or price</strong> on the page. You get an active cursor to type inline immediately, plus a floating toolbar to adjust font size, bold, or color!
@@ -2726,16 +2726,16 @@ export default function DynamicCatalogueStudio({
 
             <div style={{ background: "rgba(255, 255, 255, 0.04)", padding: "10px 14px", borderRadius: "10px", border: "1px solid rgba(255, 255, 255, 0.06)" }}>
               <div style={{ fontWeight: 800, fontSize: "0.85rem", color: "#a78bfa", marginBottom: "4px" }}>
-                2. 📝 Edit in Sidebar Form ("Edit All Text")
+                2.  Edit in Sidebar Form ("Edit All Text")
               </div>
               <div style={{ fontSize: "0.8rem", color: "#cbd5e1", lineHeight: 1.45 }}>
-                Prefer typing into clean input fields? Use the <strong>"📝 Edit All Text"</strong> tab on the left! It lists every headline, phrase, and spec for that page in real-time.
+                Prefer typing into clean input fields? Use the <strong>" Edit All Text"</strong> tab on the left! It lists every headline, phrase, and spec for that page in real-time.
               </div>
             </div>
 
             <div style={{ background: "rgba(255, 255, 255, 0.04)", padding: "10px 14px", borderRadius: "10px", border: "1px solid rgba(255, 255, 255, 0.06)" }}>
               <div style={{ fontWeight: 800, fontSize: "0.85rem", color: "#34d399", marginBottom: "4px" }}>
-                3. 🖼️ Swap &amp; Shape Any Photo
+                3.  Swap &amp; Shape Any Photo
               </div>
               <div style={{ fontSize: "0.8rem", color: "#cbd5e1", lineHeight: 1.45 }}>
                 Click ANY image (including arch cutouts and stone swatches) to change shape (<strong>Arch, Rounded, Square, Circle</strong>), swap with any other product photo, or resize with drag handles!
@@ -3444,7 +3444,7 @@ export default function DynamicCatalogueStudio({
                           boxShadow: "0 2px 8px rgba(139, 92, 246, 0.35)"
                         }}
                       >
-                        <RefreshCw size={13} /> 🔄 Select &amp; Swap This Image
+                        <RefreshCw size={13} />  Select &amp; Swap This Image
                       </button>
 
                       {/* Shape Changer */}
@@ -3697,7 +3697,7 @@ export default function DynamicCatalogueStudio({
               {(dataBankFilter === "all" || dataBankFilter === "headings") && effectiveDataBank.headings?.length > 0 && (
                 <div style={{ display: "flex", flexDirection: "column", gap: "0.45rem" }}>
                   <div style={{ fontSize: "0.78rem", fontWeight: 800, color: "var(--text-primary)", display: "flex", alignItems: "center", gap: "5px" }}>
-                    📰 Pre-filled Headings &amp; Page Titles
+                     Pre-filled Headings &amp; Page Titles
                   </div>
                   {effectiveDataBank.headings.map((h, hIdx) => (
                     <div
@@ -3728,7 +3728,7 @@ export default function DynamicCatalogueStudio({
                             style={{ fontSize: "0.68rem", padding: "2px 6px" }}
                             title="Copy to clipboard"
                           >
-                            {dataBankCopiedId === `h_${hIdx}` ? "✓ Copied" : "📋 Copy"}
+                            {dataBankCopiedId === `h_${hIdx}` ? " Copied" : " Copy"}
                           </button>
                           <button
                             type="button"
@@ -3753,7 +3753,7 @@ export default function DynamicCatalogueStudio({
               {(dataBankFilter === "all" || dataBankFilter === "taglines") && effectiveDataBank.taglines?.length > 0 && (
                 <div style={{ display: "flex", flexDirection: "column", gap: "0.45rem" }}>
                   <div style={{ fontSize: "0.78rem", fontWeight: 800, color: "var(--text-primary)", display: "flex", alignItems: "center", gap: "5px" }}>
-                    💬 Brand Taglines &amp; Subheadings
+                     Brand Taglines &amp; Subheadings
                   </div>
                   {effectiveDataBank.taglines.map((t, tIdx) => (
                     <div
@@ -3783,7 +3783,7 @@ export default function DynamicCatalogueStudio({
                           }}
                           style={{ fontSize: "0.68rem", padding: "2px 6px" }}
                         >
-                          {dataBankCopiedId === `t_${tIdx}` ? "✓" : "📋"}
+                          {dataBankCopiedId === `t_${tIdx}` ? "" : ""}
                         </button>
                         <button
                           type="button"
@@ -3803,7 +3803,7 @@ export default function DynamicCatalogueStudio({
               {(dataBankFilter === "all" || dataBankFilter === "stories") && effectiveDataBank.paragraphs?.length > 0 && (
                 <div style={{ display: "flex", flexDirection: "column", gap: "0.45rem" }}>
                   <div style={{ fontSize: "0.78rem", fontWeight: 800, color: "var(--text-primary)", display: "flex", alignItems: "center", gap: "5px" }}>
-                    📖 Brand Stories &amp; Narrative Paragraphs
+                     Brand Stories &amp; Narrative Paragraphs
                   </div>
                   {effectiveDataBank.paragraphs.map((p, pIdx) => (
                     <div
@@ -3833,7 +3833,7 @@ export default function DynamicCatalogueStudio({
                             }}
                             style={{ fontSize: "0.68rem", padding: "2px 6px" }}
                           >
-                            {dataBankCopiedId === `p_${pIdx}` ? "✓ Copied" : "📋 Copy"}
+                            {dataBankCopiedId === `p_${pIdx}` ? " Copied" : " Copy"}
                           </button>
                           <button
                             type="button"
@@ -3858,12 +3858,12 @@ export default function DynamicCatalogueStudio({
                 <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
                   <div style={{ fontSize: "0.78rem", fontWeight: 800, color: "var(--text-primary)", display: "flex", alignItems: "center", gap: "5px" }}>
                     {currentFam === "garlic"
-                      ? "🧄 Produce Sizing, Calibers & Mandi Bank"
+                      ? " Produce Sizing, Calibers & Mandi Bank"
                       : currentFam === "kotadoria"
-                      ? "🧵 Fabric Lengths, Cuts & Weaver Bank"
+                      ? " Fabric Lengths, Cuts & Weaver Bank"
                       : currentFam === "sandstone" || currentFam === "kotastone"
-                      ? "📐 Stone Sizing, Thicknesses & Quarry Bank"
-                      : "📐 Sizing, Thicknesses & Pricing Bank"}
+                      ? " Stone Sizing, Thicknesses & Quarry Bank"
+                      : " Sizing, Thicknesses & Pricing Bank"}
                   </div>
 
                   {/* Thicknesses / Grades with rates */}
@@ -3871,12 +3871,12 @@ export default function DynamicCatalogueStudio({
                     <div>
                       <div style={{ fontSize: "0.72rem", fontWeight: 700, color: "var(--text-secondary)", marginBottom: "4px" }}>
                         {currentFam === "garlic"
-                          ? "🧄 Bulb Calibers & Mandi Rates:"
+                          ? " Bulb Calibers & Mandi Rates:"
                           : currentFam === "kotadoria"
-                          ? "🧵 Fabric Lengths & Weaver Rates:"
+                          ? " Fabric Lengths & Weaver Rates:"
                           : currentFam === "sandstone" || currentFam === "kotastone"
-                          ? "📏 Stone Thicknesses & Quarry Rates:"
-                          : "📏 Sizes, Grades & Rates:"}
+                          ? " Stone Thicknesses & Quarry Rates:"
+                          : " Sizes, Grades & Rates:"}
                       </div>
                       <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
                         {effectiveDataBank.specifications.thicknesses.map((th, thIdx) => (
@@ -3915,7 +3915,7 @@ export default function DynamicCatalogueStudio({
                                 }}
                                 style={{ fontSize: "0.66rem", padding: "1px 5px" }}
                               >
-                                {dataBankCopiedId === `th_${thIdx}` ? "✓" : "📋"}
+                                {dataBankCopiedId === `th_${thIdx}` ? "" : ""}
                               </button>
                               <button
                                 type="button"
@@ -3942,10 +3942,10 @@ export default function DynamicCatalogueStudio({
                     <div>
                       <div style={{ fontSize: "0.72rem", fontWeight: 700, color: "var(--text-secondary)", marginBottom: "4px" }}>
                         {currentFam === "garlic"
-                          ? "📐 Sizing & Grading Calibers:"
+                          ? " Sizing & Grading Calibers:"
                           : currentFam === "kotadoria"
-                          ? "📐 Saree Lengths & Drape Cuts:"
-                          : "📐 Plan Dimensions / Sizes:"}
+                          ? " Saree Lengths & Drape Cuts:"
+                          : " Plan Dimensions / Sizes:"}
                       </div>
                       <div style={{ display: "flex", flexWrap: "wrap", gap: "4px" }}>
                         {effectiveDataBank.specifications.sizes.map((sz, szIdx) => (
@@ -3969,10 +3969,10 @@ export default function DynamicCatalogueStudio({
                     <div>
                       <div style={{ fontSize: "0.72rem", fontWeight: 700, color: "var(--text-secondary)", marginBottom: "4px" }}>
                         {currentFam === "garlic"
-                          ? "✨ Curing & Skin Finishes:"
+                          ? " Curing & Skin Finishes:"
                           : currentFam === "kotadoria"
-                          ? "✨ Zari & Weave Finishes:"
-                          : "✨ Surface Finishes & Textures:"}
+                          ? " Zari & Weave Finishes:"
+                          : " Surface Finishes & Textures:"}
                       </div>
                       <div style={{ display: "flex", flexWrap: "wrap", gap: "4px" }}>
                         {effectiveDataBank.specifications.finishes.map((fn, fnIdx) => (
@@ -3995,7 +3995,7 @@ export default function DynamicCatalogueStudio({
                   {effectiveDataBank.specifications.priceRanges?.length > 0 && (
                     <div>
                       <div style={{ fontSize: "0.72rem", fontWeight: 700, color: "var(--text-secondary)", marginBottom: "4px" }}>
-                        💰 Price Ranges &amp; Wholesale Lots:
+                         Price Ranges &amp; Wholesale Lots:
                       </div>
                       <div style={{ display: "flex", flexWrap: "wrap", gap: "4px" }}>
                         {effectiveDataBank.specifications.priceRanges.map((pr, prIdx) => (
@@ -4048,7 +4048,7 @@ export default function DynamicCatalogueStudio({
               {/* 1. Page Operations: Add New Page, Duplicate, Delete */}
               <div style={{ padding: "10px", background: "var(--bg-surface-elevated)", borderRadius: "8px", border: "1px solid var(--border-subtle)", display: "flex", flexDirection: "column", gap: "8px" }}>
                 <div style={{ fontSize: "0.82rem", fontWeight: 800, color: "var(--text-primary)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <span>📑 Page Management:</span>
+                  <span> Page Management:</span>
                   <span style={{ fontSize: "0.72rem", color: "var(--text-secondary)" }}>Total: {pagesHtml.length} Pages</span>
                 </div>
 
@@ -4116,7 +4116,7 @@ export default function DynamicCatalogueStudio({
               {/* 2. Extra Elements to Add to Current Page */}
               <div>
                 <div style={{ fontSize: "0.82rem", fontWeight: 800, color: "var(--text-primary)", marginBottom: "4px" }}>
-                  ✨ Add Elements to Page {selectedInspectPage + 1}:
+                   Add Elements to Page {selectedInspectPage + 1}:
                 </div>
                 <div style={{ fontSize: "0.72rem", color: "var(--text-secondary)", marginBottom: "8px" }}>
                   Click any element to place it on the page. You can drag to move or type inline:
@@ -4281,7 +4281,7 @@ export default function DynamicCatalogueStudio({
                   >
                     <div>
                       <div style={{ fontWeight: 700, fontSize: "0.82rem", color: "#06b6d4" }}>
-                        Feature Pill (✓ Key Advantage)
+                        Feature Pill ( Key Advantage)
                       </div>
                       <div style={{ fontSize: "0.7rem", color: "var(--text-secondary)" }}>
                         Certification, finish, or warranty badge
@@ -4388,10 +4388,10 @@ export default function DynamicCatalogueStudio({
               <div style={{ display: "flex", gap: "4px", flexWrap: "wrap" }}>
                 {[
                   { key: "all", label: `All (${GARLIC_ASSETS.length + KOTA_STONE_ASSETS.length + KOTA_DORIA_ASSETS.length + SAND_STONE_ASSETS.length})` },
-                  { key: "garlic", label: `🧄 Garlic (${GARLIC_ASSETS.length})` },
-                  { key: "kotastone", label: `🏛️ Kota Stone (${KOTA_STONE_ASSETS.length})` },
-                  { key: "kotadoria", label: `🥻 Kota Doria (${KOTA_DORIA_ASSETS.length})` },
-                  { key: "sandstone", label: `🏜️ Sand Stone (${SAND_STONE_ASSETS.length})` }
+                  { key: "garlic", label: ` Garlic (${GARLIC_ASSETS.length})` },
+                  { key: "kotastone", label: ` Kota Stone (${KOTA_STONE_ASSETS.length})` },
+                  { key: "kotadoria", label: ` Kota Doria (${KOTA_DORIA_ASSETS.length})` },
+                  { key: "sandstone", label: ` Sand Stone (${SAND_STONE_ASSETS.length})` }
                 ].map(tab => (
                   <button
                     key={tab.key}
@@ -4527,13 +4527,13 @@ export default function DynamicCatalogueStudio({
               {/* Feature Instructions Cards */}
               <div style={{ display: "flex", flexDirection: "column", gap: "6px", fontSize: "0.78rem" }}>
                 <div style={{ padding: "8px 10px", background: "var(--bg-surface-elevated)", borderRadius: "8px", border: "1px solid var(--border-subtle)" }}>
-                  <strong style={{ color: "#38bdf8" }}>1. ✢ Drag Elements on Page:</strong> Click any text block or photo. A blue <strong>✢ Drag to Move</strong> pill handle appears. Drag it anywhere on the page to reposition!
+                  <strong style={{ color: "#38bdf8" }}>1.  Drag Elements on Page:</strong> Click any text block or photo. A blue <strong> Drag to Move</strong> pill handle appears. Drag it anywhere on the page to reposition!
                 </div>
                 <div style={{ padding: "8px 10px", background: "var(--bg-surface-elevated)", borderRadius: "8px", border: "1px solid var(--border-subtle)" }}>
-                  <strong style={{ color: "#34d399" }}>2. 🖼️ Drag Photos onto Canvas:</strong> Drag any product photo card below directly onto any photo or image frame on the canvas to swap it instantly!
+                  <strong style={{ color: "#34d399" }}>2.  Drag Photos onto Canvas:</strong> Drag any product photo card below directly onto any photo or image frame on the canvas to swap it instantly!
                 </div>
                 <div style={{ padding: "8px 10px", background: "var(--bg-surface-elevated)", borderRadius: "8px", border: "1px solid var(--border-subtle)" }}>
-                  <strong style={{ color: "#fbbf24" }}>3. 📁 Desktop Image Drop:</strong> Drag any image file from your computer folder directly onto any photo placeholder on the page!
+                  <strong style={{ color: "#fbbf24" }}>3.  Desktop Image Drop:</strong> Drag any image file from your computer folder directly onto any photo placeholder on the page!
                 </div>
               </div>
 
@@ -4591,7 +4591,7 @@ export default function DynamicCatalogueStudio({
               {/* Custom Non-Product Photos (Facility, Project, Showroom) */}
               <div>
                 <div style={{ fontSize: "0.82rem", fontWeight: 800, color: "var(--text-primary)", marginBottom: "4px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <span>🎨 Non-Product Custom Photos:</span>
+                  <span> Non-Product Custom Photos:</span>
                   <label style={{ fontSize: "0.72rem", color: "#38bdf8", cursor: "pointer", display: "flex", alignItems: "center", gap: "3px", fontWeight: 700, background: "rgba(56, 189, 248, 0.12)", padding: "2px 8px", borderRadius: "4px" }}>
                     <Upload size={11} /> + Upload &amp; Upscale
                     <input
@@ -4651,7 +4651,7 @@ export default function DynamicCatalogueStudio({
               {/* Drag to Reorder Pages Tray */}
               <div>
                 <div style={{ fontSize: "0.82rem", fontWeight: 800, color: "var(--text-primary)", marginBottom: "4px", display: "flex", alignItems: "center", gap: "6px" }}>
-                  <span>📑 Drag to Reorder Pages ({pagesHtml.length} pages):</span>
+                  <span> Drag to Reorder Pages ({pagesHtml.length} pages):</span>
                 </div>
                 <div style={{ fontSize: "0.72rem", color: "var(--text-secondary)", marginBottom: "8px" }}>
                   Drag any page chip and drop it over another page to rearrange:
@@ -4927,10 +4927,10 @@ export default function DynamicCatalogueStudio({
           >
             <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
               <span style={{ fontSize: "0.84rem", fontWeight: 800, color: "var(--text-primary)" }}>
-                📄 Multi-Page Preview ({pagesHtml.length} A4 Pages)
+                 Multi-Page Preview ({pagesHtml.length} A4 Pages)
               </span>
               <span style={{ fontSize: "0.74rem", padding: "2px 8px", borderRadius: "6px", background: "rgba(59, 130, 246, 0.15)", color: "#38bdf8", fontWeight: 700 }}>
-                💡 Click ANY text to type inline
+                 Click ANY text to type inline
               </span>
             </div>
 
@@ -5027,7 +5027,7 @@ export default function DynamicCatalogueStudio({
             }}
           >
             <span style={{ fontSize: "0.78rem", fontWeight: 800, color: "var(--text-primary)", whiteSpace: "nowrap", display: "inline-flex", alignItems: "center", gap: "4px" }}>
-              📑 Pages ({pagesHtml.length}):
+               Pages ({pagesHtml.length}):
             </span>
             <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
               {pagesHtml.map((_, pIdx) => (
@@ -5159,7 +5159,7 @@ export default function DynamicCatalogueStudio({
           }}
           title="Open left editing tools sidebar"
         >
-          <PanelLeftOpen size={15} /> 📋 Show Tools Sidebar
+          <PanelLeftOpen size={15} />  Show Tools Sidebar
         </button>
       )}
 
@@ -5292,7 +5292,7 @@ export default function DynamicCatalogueStudio({
                 gap: "8px"
               }}
             >
-              <span>👁️ Live Export Feed:</span>
+              <span> Live Export Feed:</span>
               <span style={{ color: "#38bdf8", fontWeight: 700 }}>Full-view page being compiled in pristine center view</span>
             </div>
 
@@ -5487,13 +5487,13 @@ export default function DynamicCatalogueStudio({
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
               <div style={{ display: "flex", gap: "5px", flexWrap: "wrap" }}>
                 {[
-                  { key: "sandstone", label: `🏜️ Sand Stone (${SAND_STONE_ASSETS.length})` },
+                  { key: "sandstone", label: ` Sand Stone (${SAND_STONE_ASSETS.length})` },
                   { key: "all", label: `All 101 (${SAND_STONE_ASSETS.length + KOTA_STONE_ASSETS.length + KOTA_DORIA_ASSETS.length + GARLIC_ASSETS.length})` },
-                  { key: "kotastone", label: `🏛️ Kota Stone (${KOTA_STONE_ASSETS.length})` },
-                  { key: "kotadoria", label: `🥻 Kota Doria (${KOTA_DORIA_ASSETS.length})` },
-                  { key: "garlic", label: `🧄 Garlic (${GARLIC_ASSETS.length})` },
-                  { key: "products", label: `📦 Catalogue Products (${activeProducts.length})` },
-                  { key: "upload", label: "📁 Upload / URL" }
+                  { key: "kotastone", label: ` Kota Stone (${KOTA_STONE_ASSETS.length})` },
+                  { key: "kotadoria", label: ` Kota Doria (${KOTA_DORIA_ASSETS.length})` },
+                  { key: "garlic", label: ` Garlic (${GARLIC_ASSETS.length})` },
+                  { key: "products", label: ` Catalogue Products (${activeProducts.length})` },
+                  { key: "upload", label: " Upload / URL" }
                 ].map(tab => (
                   <button
                     key={tab.key}
@@ -5698,7 +5698,7 @@ export default function DynamicCatalogueStudio({
                 </div>
                 <div>
                   <div style={{ fontWeight: 800, fontSize: "1.25rem", color: "var(--text-primary)", display: "flex", alignItems: "center", gap: "8px" }}>
-                    🎉 Catalogue is Live on Web!
+                     Catalogue is Live on Web!
                     <span style={{ fontSize: "0.72rem", padding: "2px 8px", borderRadius: "12px", background: "rgba(16, 185, 129, 0.15)", color: "#10b981", border: "1px solid #10b981", fontWeight: 700 }}>
                       PUBLIC ACCESS
                     </span>
@@ -5721,7 +5721,7 @@ export default function DynamicCatalogueStudio({
             {/* Live URL Copy Box */}
             <div style={{ marginBottom: "1.25rem" }}>
               <label style={{ display: "block", fontSize: "0.78rem", fontWeight: 700, color: "var(--text-secondary)", marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.04em" }}>
-                🌐 Shareable Public Catalogue Link
+                 Shareable Public Catalogue Link
               </label>
               <div
                 style={{
@@ -5795,7 +5795,7 @@ export default function DynamicCatalogueStudio({
                   boxShadow: "0 4px 12px rgba(37, 99, 235, 0.3)"
                 }}
               >
-                <ExternalLink size={16} /> 👁️ Open Live Viewer
+                <ExternalLink size={16} />  Open Live Viewer
               </button>
 
               <button
@@ -5822,7 +5822,7 @@ export default function DynamicCatalogueStudio({
                   cursor: "pointer"
                 }}
               >
-                <MessageCircle size={16} /> 📱 Share on WhatsApp
+                <MessageCircle size={16} />  Share on WhatsApp
               </button>
             </div>
 
@@ -5897,16 +5897,16 @@ export default function DynamicCatalogueStudio({
             {/* Viewer Features Pill List */}
             <div style={{ marginTop: "1rem", display: "flex", flexWrap: "wrap", gap: "8px", fontSize: "0.74rem", color: "var(--text-secondary)" }}>
               <span style={{ padding: "4px 8px", background: "rgba(16, 185, 129, 0.1)", borderRadius: "6px", color: "#10b981", fontWeight: 600 }}>
-                ✓ No Login Needed for Buyers
+                 No Login Needed for Buyers
               </span>
               <span style={{ padding: "4px 8px", background: "rgba(59, 130, 246, 0.1)", borderRadius: "6px", color: "#38bdf8", fontWeight: 600 }}>
-                ✓ Single Slide &amp; Continuous Scroll
+                 Single Slide &amp; Continuous Scroll
               </span>
               <span style={{ padding: "4px 8px", background: "rgba(139, 92, 246, 0.1)", borderRadius: "6px", color: "#a78bfa", fontWeight: 600 }}>
-                ✓ In-Viewer PDF Download
+                 In-Viewer PDF Download
               </span>
               <span style={{ padding: "4px 8px", background: "rgba(245, 158, 11, 0.1)", borderRadius: "6px", color: "#fbbf24", fontWeight: 600 }}>
-                ✓ 1-Click WhatsApp Inquiries
+                 1-Click WhatsApp Inquiries
               </span>
             </div>
           </div>

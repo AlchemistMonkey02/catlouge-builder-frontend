@@ -143,7 +143,7 @@ function cover(c, t){
   const heroPhoto = c.hero || resolveImg(c.items[0]) || fbImg;
   const odopBanner = `
     <div style="position:absolute;left:46px;right:46px;top:14px;background:linear-gradient(90deg, #1e3a8a, #1e40af);color:#ffffff;padding:5px 12px;border-radius:6px;display:flex;align-items:center;gap:8px;z-index:40;border:1px solid #3b82f6;">
-      <span style="font-size:16px">🏛️</span>
+      <span style="font-size:16px"></span>
       <div style="display:flex;flex-direction:column;line-height:1.2;">
         <strong style="font-size:8.5px;letter-spacing:0.06em">GOVERNMENT OF INDIA &bull; ONE DISTRICT ONE PRODUCT (ODOP) INITIATIVE</strong>
         <span style="font-size:8px;opacity:0.95">DISTRICT: <b>${E(i.district || 'Rajasthan')}</b> &bull; ODOP PRODUCT: <b>${E(i.odopProduct || i.product || 'Registered Craft')}</b></span>
@@ -273,7 +273,7 @@ function closing(c, t, no){
   const i = c.info;
   return `<div class="e-frame"></div><div class="e-endw"><div class="e-brand" style="position:static;font-size:${fsz(i.ent, 40, 28, 18)}px">${E(cap(i.ent))}</div><div class="e-sub" style="position:static;margin-top:10px">${E(cap(i.district || ''))} · ${E(cap(i.product || 'CATALOGUE'))}</div>
     <div class="e-rule" style="position:static;margin:22px auto"></div><div class="e-tag" style="position:static">${E(c.tagline)}</div>
-    <div class="e-endinfo">${[i.person && `<b>${E(i.person)}</b>`, i.mobile && `☎ ${E(i.mobile)}`, i.wa && i.wa !== i.mobile ? `WhatsApp ${E(i.wa)}` : (i.mobile ? 'WhatsApp on the same number' : ''), i.email && `✉ ${E(i.email)}`, i.addr && `⌂ ${E(i.addr)}`, i.gst && `GSTIN ${E(i.gst)}`].filter(Boolean).map(x => `<div>${x}</div>`).join('')}</div>
+    <div class="e-endinfo">${[i.person && `<b>${E(i.person)}</b>`, i.mobile && ` ${E(i.mobile)}`, i.wa && i.wa !== i.mobile ? `WhatsApp ${E(i.wa)}` : (i.mobile ? 'WhatsApp on the same number' : ''), i.email && ` ${E(i.email)}`, i.addr && `⌂ ${E(i.addr)}`, i.gst && `GSTIN ${E(i.gst)}`].filter(Boolean).map(x => `<div>${x}</div>`).join('')}</div>
     ${(i.socials || []).length ? `<div class="e-soc">${i.socials.map(s => `<span class="soc" data-url="${E(s[1])}"><b>${s[0]}</b> ${E(c.socialLabel ? c.socialLabel(s[1]) : s[1])}</span>`).join('')}</div>` : ''}
     <div class="e-note">Prices in INR · ${c.year} · subject to change</div></div>`;
 }

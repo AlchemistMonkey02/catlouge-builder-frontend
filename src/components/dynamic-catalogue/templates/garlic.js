@@ -104,7 +104,7 @@ const TEMPLATES = [
 const head = (c, label, no) => `
   <div class="g-head">
     <div class="g-head-brand">
-      <span class="g-leaf-icon">🧄</span>
+      <span class="g-leaf-icon"></span>
       <strong>${E(c.info.ent || 'PREMIUM GARLIC')}</strong>
       <span class="g-head-district" style="font-size:10px; color:var(--muted); font-weight:600; margin-left:8px;">&bull; District: ${E(c.info.district || 'Baran, Rajasthan')} [ODOP: ${E(c.info.odopProduct || 'Garlic')}]</span>
     </div>
@@ -115,8 +115,8 @@ const head = (c, label, no) => `
 
 const foot = c => `
   <div class="g-foot">
-    <span><b>${E(c.info.ent || '')}</b> &bull; 📍 District: ${E(c.info.district || 'Baran, Rajasthan')} &bull; 🏷️ ODOP: ${E(c.info.odopProduct || 'Garlic')}</span>
-    <span>💬 WhatsApp: <b>${E(fmtWa(c.info.whatsapp || c.info.mobile))}</b> ${c.info.email ? `&bull; ${E(c.info.email)}` : ''}</span>
+    <span><b>${E(c.info.ent || '')}</b> &bull;  District: ${E(c.info.district || 'Baran, Rajasthan')} &bull;  ODOP: ${E(c.info.odopProduct || 'Garlic')}</span>
+    <span> WhatsApp: <b>${E(fmtWa(c.info.whatsapp || c.info.mobile))}</b> ${c.info.email ? `&bull; ${E(c.info.email)}` : ''}</span>
   </div>
 `;
 
@@ -136,14 +136,14 @@ function contactPage(c, no) {
 
       <div class="g-contact-details-grid">
         <div class="g-detail-card">
-          <h3>📍 Operating Base &amp; Facilities</h3>
+          <h3> Operating Base &amp; Facilities</h3>
           <p><strong>Entity:</strong> ${E(i.ent || 'Agri Commodity Pvt Ltd')}</p>
           <p><strong>Address:</strong> ${E(i.addr || 'Garlic Mandi Industrial Area, Kota / Mandsaur')}</p>
           ${i.gst ? `<p><strong>GST / Mandi Code:</strong> ${E(i.gst)}</p>` : ''}
         </div>
 
         <div class="g-detail-card">
-          <h3>📞 Trade &amp; Export Desk</h3>
+          <h3> Trade &amp; Export Desk</h3>
           <p><strong>Primary Contact:</strong> ${E(i.person || 'Export Sales Director')}</p>
           <p><strong>Mobile / WhatsApp:</strong> ${E(i.mobile || '+91 98765 43210')}</p>
           ${i.email ? `<p><strong>Email:</strong> ${E(i.email)}</p>` : ''}
@@ -163,7 +163,7 @@ function t1_cover(c, t) {
   return `
     <div class="t1-cover">
       <div class="g-odop-gov-banner">
-        <span class="g-gov-emblem">🏛️</span>
+        <span class="g-gov-emblem"></span>
         <div class="g-gov-text">
           <strong>GOVERNMENT OF INDIA &bull; ONE DISTRICT ONE PRODUCT (ODOP) INITIATIVE</strong>
           <span>DISTRICT: <b>${E(i.district || 'Baran, Rajasthan')}</b> &bull; ODOP PRODUCT: <b>${E(i.odopProduct || 'Garlic')}</b></span>
@@ -171,7 +171,7 @@ function t1_cover(c, t) {
       </div>
       <div class="t1-hero" style="${bg(hero)}">
         <div class="t1-hero-overlay"></div>
-        <div class="t1-seal">${E(t.badge || i.badge || '🌱 100% ORGANIC CERTIFIED')}</div>
+        <div class="t1-seal">${E(t.badge || i.badge || ' 100% ORGANIC CERTIFIED')}</div>
         <div class="t1-hero-text">
           <span class="t1-sub">DISTRICT: ${E(cap(i.district || 'Baran, Rajasthan'))} &bull; ODOP: ${E(cap(i.odopProduct || 'Garlic'))}</span>
           <h1 class="t1-h1">${E(i.ent || 'Fresh Garlic Harvest')}</h1>
@@ -239,19 +239,19 @@ function renderGarlicProductCard(it, idx, c, prefix = 'grl') {
         
         <div class="g-odop-spec-matrix">
           <div class="g-odop-spec-item" title="${E(specSize)}">
-            <span class="g-odop-spec-lbl">📏 Size:</span>
+            <span class="g-odop-spec-lbl"> Size:</span>
             <span class="g-odop-spec-val">${E(specSize)}</span>
           </div>
           <div class="g-odop-spec-item" title="${E(specMaterial)}">
-            <span class="g-odop-spec-lbl">🌱 Material:</span>
+            <span class="g-odop-spec-lbl"> Material:</span>
             <span class="g-odop-spec-val">${E(specMaterial)}</span>
           </div>
           <div class="g-odop-spec-item" title="${E(specFinish)}">
-            <span class="g-odop-spec-lbl">✨ Finish:</span>
+            <span class="g-odop-spec-lbl"> Finish:</span>
             <span class="g-odop-spec-val">${E(specFinish)}</span>
           </div>
           <div class="g-odop-spec-item" title="${E(specApp)}">
-            <span class="g-odop-spec-lbl">🎯 Use:</span>
+            <span class="g-odop-spec-lbl"> Use:</span>
             <span class="g-odop-spec-val">${E(specApp)}</span>
           </div>
         </div>
@@ -263,7 +263,7 @@ function renderGarlicProductCard(it, idx, c, prefix = 'grl') {
           </div>
           <div class="g-odop-contact-block">
             <span class="g-odop-craft">${E(cardCraft)}</span>
-            <span class="g-odop-wa">💬 WA: ${E(fmtWa(c.info.whatsapp || c.info.mobile))}</span>
+            <span class="g-odop-wa"> WA: ${E(fmtWa(c.info.whatsapp || c.info.mobile))}</span>
           </div>
         </div>
       </div>
@@ -343,15 +343,15 @@ function t3_cover(c, t) {
       </div>
       <div class="t3-circle-wrap">
         <div class="t3-circle-img" style="${bg(hero)}"></div>
-        <div class="t3-chef-seal">🧑‍🍳 CHEF'S CHOICE</div>
+        <div class="t3-chef-seal">‍ CHEF'S CHOICE</div>
       </div>
       <h1 class="t3-title">${E(i.ent || 'Pure Cloves &amp; Dehydrated Garlic')}</h1>
       <p class="t3-sub">${E(i.desc || 'Premium peeled cloves, toasted flakes, granulated powders, and ready-to-use culinary pastes for commercial kitchens and global food manufacturers.')}</p>
       <div class="t3-culinary-strip">
-        <div>🍲 Dehydrated Flakes</div>
-        <div>🧄 Vacuum Peeled Cloves</div>
-        <div>🧂 Pure Garlic Powder</div>
-        <div>🥫 Food-Grade Paste</div>
+        <div> Dehydrated Flakes</div>
+        <div> Vacuum Peeled Cloves</div>
+        <div> Pure Garlic Powder</div>
+        <div> Food-Grade Paste</div>
       </div>
     </div>
   `;
@@ -518,9 +518,9 @@ function t7_cover(c, t) {
           <h1>${E(i.ent || 'Cold-Chain Garlic Exports')}</h1>
           <p>${E(i.desc || 'End-to-end refrigerated export shipping ensuring dormancy preservation, zero sprouting, and maximum shelf life at destination ports in Europe, Middle East, and Southeast Asia.')}</p>
           <div class="t7-ports">
-            <div>⚓ Mundra Port</div>
-            <div>⚓ Nhava Sheva (JNPT)</div>
-            <div>⚓ Chennai Port</div>
+            <div> Mundra Port</div>
+            <div> Nhava Sheva (JNPT)</div>
+            <div> Chennai Port</div>
           </div>
         </div>
       </div>
@@ -550,17 +550,17 @@ function t8_cover(c, t) {
   return `
     <div class="t8-cover">
       <div class="t8-guild-banner">
-        <span>🌱 GROWER GUILD &bull; DIRECT PRODUCER ALLIANCE</span>
+        <span> GROWER GUILD &bull; DIRECT PRODUCER ALLIANCE</span>
       </div>
       <div class="t8-hero-split">
         <div class="t8-left">
-          <div class="t8-guild-crest">🧄</div>
+          <div class="t8-guild-crest"></div>
           <h1>${E(i.ent || 'Artisanal Garlic Guild')}</h1>
           <p>${E(i.desc || 'Connecting progressive garlic growers directly with commercial culinary buyers. Transparent fair pricing, pesticide-free practices, and verified harvest lot traceability.')}</p>
           <div class="t8-badges">
-            <span>✓ Direct Farmer Gate</span>
-            <span>✓ Chemical-Free Curing</span>
-            <span>✓ Braided Stalk Bundles</span>
+            <span> Direct Farmer Gate</span>
+            <span> Chemical-Free Curing</span>
+            <span> Braided Stalk Bundles</span>
           </div>
         </div>
         <div class="t8-right" style="${bg(hero)}">

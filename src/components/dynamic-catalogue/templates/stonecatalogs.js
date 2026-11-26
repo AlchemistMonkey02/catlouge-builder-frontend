@@ -114,7 +114,7 @@ const x3 = {
   section: c => `<div class="m-secph" style="${bg(c.hero)}"></div><div class="m-sect">${E(cap(c.info.product || 'CATALOGUE'))}</div><div class="m-secsub">${E((c.info.desc || '').split('. ')[0])}.</div>`,
   mosaic: (c, items, no) => `<div class="m-mos">${items.map((it, k) => `<div class="t${items.length % 2 && k === items.length - 1 ? ' wide' : ''}" style="${bg(it.img)}"><span>${E(cap(it.name))}</span></div>`).join('')}</div><div class="m-no">${pn(no)}</div>`,
   specs: c => `<div class="m-dark"><div class="m-sp"><h3>SPECIFICATIONS</h3>${[['SIZES', [...new Set(c.items.map(i => i.size).filter(Boolean))].slice(0, 3).join(' · ') || 'on request'], ['THICKNESS', (c.items[0] && c.items[0].thickness) || 'standard calibrated'], ['FINISHES', [...new Set(c.items.map(i => i.finish || i.material).filter(Boolean))].slice(0, 3).join(', ') || 'natural, polished, custom'], ['APPLICATIONS', c.info.use || 'commercial & residential']].map(r => `<div><b>${r[0]}</b><span>${E(r[1])}</span></div>`).join('')}</div>
-    <h3 class="m-cu">CONTACT US</h3><div class="m-cbox"><div><p>⌂ ${E(c.info.addr || 'India')}</p><p>☎ ${E(c.info.person || '')}: ${E(c.info.mobile || '')}</p><p>@ ${E(c.info.email || '')}</p>${c.info.gst ? `<p>GSTIN ${E(c.info.gst)}</p>` : ''}</div></div></div>`
+    <h3 class="m-cu">CONTACT US</h3><div class="m-cbox"><div><p>⌂ ${E(c.info.addr || 'India')}</p><p> ${E(c.info.person || '')}: ${E(c.info.mobile || '')}</p><p>@ ${E(c.info.email || '')}</p>${c.info.gst ? `<p>GSTIN ${E(c.info.gst)}</p>` : ''}</div></div></div>`
 };
 
 function pageCount(t, n){

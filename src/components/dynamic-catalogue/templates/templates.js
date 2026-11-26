@@ -80,7 +80,7 @@ const story = (c, no) => `${run(c, 'OUR STORY', no)}<div class="t-lab" style="to
 const closing = (c, no) => `${run(c, 'CONTACT', no)}<div class="t-endwrap"><div class="t-endbrand" style="font-size:${fsz(c.info.ent, 40, 28, 20)}px">${E(c.info.ent).toUpperCase()}</div>
   <div class="t-endsub">${E(c.info.product || 'CATALOGUE').toUpperCase()} · ${E(c.info.district || '').toUpperCase()}</div><div class="t-rule1" style="position:static;margin:18px auto"></div>
   <div class="t-endtag">${E(c.tagline)}</div>
-  <div class="t-endrow"><div class="t-endinfo">${[c.info.person && `<b>${E(c.info.person)}</b>`, c.info.mobile && `☎ ${E(c.info.mobile)}`, c.info.wa && c.info.wa !== c.info.mobile ? `WhatsApp ${E(c.info.wa)}` : (c.info.mobile ? 'WhatsApp on same number' : ''), c.info.email && `✉ ${E(c.info.email)}`, c.info.addr && `⌂ ${E(c.info.addr)}`, c.info.gst && `GSTIN ${E(c.info.gst)}`].filter(Boolean).map(x => `<div>${x}</div>`).join('')}
+  <div class="t-endrow"><div class="t-endinfo">${[c.info.person && `<b>${E(c.info.person)}</b>`, c.info.mobile && ` ${E(c.info.mobile)}`, c.info.wa && c.info.wa !== c.info.mobile ? `WhatsApp ${E(c.info.wa)}` : (c.info.mobile ? 'WhatsApp on same number' : ''), c.info.email && ` ${E(c.info.email)}`, c.info.addr && `⌂ ${E(c.info.addr)}`, c.info.gst && `GSTIN ${E(c.info.gst)}`].filter(Boolean).map(x => `<div>${x}</div>`).join('')}
     ${(c.info.socials || []).length ? `<div class="t-endsoc">${c.info.socials.map(s => `<span class="soc" data-url="${E(s[1])}"><b>${s[0]}</b> ${E(c.socialLabel ? c.socialLabel(s[1]) : s[1])}</span>`).join('')}</div>` : ''}</div></div>
   <div class="t-endnote">Prices are indicative and subject to change. ${c.year}.</div></div>`;
 

@@ -116,7 +116,7 @@ const TEMPLATES = [
 const head = (c, label, no) => `
   <div class="ks-head">
     <div class="ks-head-brand">
-      <span>🏛️</span>
+      <span></span>
       <strong>${E(c.info.ent || 'KOTA BLUE-GREEN LIMESTONE')}</strong>
       <span class="ks-head-district" style="font-size:10px; color:var(--muted); font-weight:600; margin-left:8px;">&bull; District: ${E(c.info.district || 'Jhalawar, Rajasthan')} [ODOP: ${E(c.info.odopProduct || 'Kota Stone')}]</span>
     </div>
@@ -127,8 +127,8 @@ const head = (c, label, no) => `
 
 const foot = c => `
   <div class="ks-foot">
-    <span><b>${E(c.info.ent || '')}</b> &bull; 📍 District: ${E(c.info.district || 'Jhalawar, Rajasthan')} &bull; 🏷️ ODOP: ${E(c.info.odopProduct || 'Kota Stone')}</span>
-    <span>💬 WhatsApp: <b>${E(fmtWa(c.info.whatsapp || c.info.mobile))}</b> ${c.info.email ? `&bull; ${E(c.info.email)}` : ''}</span>
+    <span><b>${E(c.info.ent || '')}</b> &bull;  District: ${E(c.info.district || 'Jhalawar, Rajasthan')} &bull;  ODOP: ${E(c.info.odopProduct || 'Kota Stone')}</span>
+    <span> WhatsApp: <b>${E(fmtWa(c.info.whatsapp || c.info.mobile))}</b> ${c.info.email ? `&bull; ${E(c.info.email)}` : ''}</span>
   </div>
 `;
 
@@ -147,14 +147,14 @@ function contactPage(c, no) {
 
       <div class="ks-contact-details-grid">
         <div class="ks-detail-card">
-          <h3>🏛️ Quarry &amp; Processing Base</h3>
+          <h3> Quarry &amp; Processing Base</h3>
           <p><strong>Entity:</strong> ${E(i.ent || 'Kota Stone Processing Pvt Ltd')}</p>
           <p><strong>Address:</strong> ${E(i.addr || 'Stone Industrial Area, Ramganjmandi, Kota, Rajasthan')}</p>
           ${i.gst ? `<p><strong>GSTIN:</strong> ${E(i.gst)}</p>` : ''}
         </div>
 
         <div class="ks-detail-card">
-          <h3>📞 Trade &amp; Dispatch Desk</h3>
+          <h3> Trade &amp; Dispatch Desk</h3>
           <p><strong>Manager:</strong> ${E(i.person || 'Chief Quarry Dispatch Officer')}</p>
           <p><strong>Phone / WhatsApp:</strong> ${E(i.mobile || '+91 98765 43210')}</p>
           ${i.email ? `<p><strong>Email:</strong> ${E(i.email)}</p>` : ''}
@@ -174,7 +174,7 @@ function t1_cover(c, t) {
   return `
     <div class="ks1-cover">
       <div class="ks-odop-gov-banner">
-        <span class="ks-gov-emblem">🏛️</span>
+        <span class="ks-gov-emblem"></span>
         <div class="ks-gov-text">
           <strong>GOVERNMENT OF INDIA &bull; ONE DISTRICT ONE PRODUCT (ODOP) INITIATIVE</strong>
           <span>DISTRICT: <b>${E(i.district || 'Jhalawar, Rajasthan')}</b> &bull; ODOP PRODUCT: <b>${E(i.odopProduct || 'Kota Stone')}</b></span>
@@ -245,19 +245,19 @@ function renderKotaStoneProductCard(it, idx, c, prefix = 'kts') {
         
         <div class="ks-odop-spec-matrix">
           <div class="ks-odop-spec-item" title="${E(specSize)}">
-            <span class="ks-odop-spec-lbl">📏 Size:</span>
+            <span class="ks-odop-spec-lbl"> Size:</span>
             <span class="ks-odop-spec-val">${E(specSize)}</span>
           </div>
           <div class="ks-odop-spec-item" title="${E(specMaterial)}">
-            <span class="ks-odop-spec-lbl">🏛️ Material:</span>
+            <span class="ks-odop-spec-lbl"> Material:</span>
             <span class="ks-odop-spec-val">${E(specMaterial)}</span>
           </div>
           <div class="ks-odop-spec-item" title="${E(specFinish)}">
-            <span class="ks-odop-spec-lbl">✨ Finish:</span>
+            <span class="ks-odop-spec-lbl"> Finish:</span>
             <span class="ks-odop-spec-val">${E(specFinish)}</span>
           </div>
           <div class="ks-odop-spec-item" title="${E(specApp)}">
-            <span class="ks-odop-spec-lbl">🎯 Use:</span>
+            <span class="ks-odop-spec-lbl"> Use:</span>
             <span class="ks-odop-spec-val">${E(specApp)}</span>
           </div>
         </div>
@@ -269,7 +269,7 @@ function renderKotaStoneProductCard(it, idx, c, prefix = 'kts') {
           </div>
           <div class="ks-odop-contact-block">
             <span class="ks-odop-craft">${E(cardCraft)}</span>
-            <span class="ks-odop-wa">💬 WA: ${E(fmtWa(c.info.whatsapp || c.info.mobile))}</span>
+            <span class="ks-odop-wa"> WA: ${E(fmtWa(c.info.whatsapp || c.info.mobile))}</span>
           </div>
         </div>
       </div>
@@ -352,9 +352,9 @@ function t3_cover(c, t) {
       <div class="ks3-lead-wrap">
         <p class="ks3-lead">${E(i.desc || 'Drawing inspiration from royal Rajasthan courtyards. Warm earthy limestone slabs that stay cool under blistering summer sun, providing peaceful cloisters and shaded garden verandas.')}</p>
         <div class="ks3-pattern-tags">
-          <span>🌿 Herringbone Paving</span>
-          <span>🌿 Natural Cleft Walkways</span>
-          <span>🌿 Courtyard Basketweave</span>
+          <span> Herringbone Paving</span>
+          <span> Natural Cleft Walkways</span>
+          <span> Courtyard Basketweave</span>
         </div>
       </div>
     </div>
@@ -439,9 +439,9 @@ function t5_cover(c, t) {
       <div class="ks5-body">
         <p class="ks5-lead">${E(i.desc || 'Harmonizing natural organic garden pathways with barefoot poolside luxury. Naturally honed Kota stone surfaces that absorb minimal solar heat and maintain safe anti-skid grip even when saturated.')}</p>
         <div class="ks5-pills">
-          <div>🏊‍♂️ Salt &amp; Chlorine Proof</div>
-          <div>🌿 Stepped Grass Path Slabs</div>
-          <div>💧 Bullnose Pool Edges</div>
+          <div>‍ Salt &amp; Chlorine Proof</div>
+          <div> Stepped Grass Path Slabs</div>
+          <div> Bullnose Pool Edges</div>
         </div>
       </div>
     </div>
@@ -519,9 +519,9 @@ function t7_cover(c, t) {
           <h1>${E(i.ent || 'Chequered Ramps &amp; Hand-Cut Cobbles')}</h1>
           <p>${E(i.desc || 'Heavy duty hand-cut cobblestones and grooved chequered tiles designed for steep basement ramps, driveway entrances, and heavy vehicular zones requiring permanent tire traction.')}</p>
           <div class="ks7-chips">
-            <div>🛡️ Anti-Skid Grooved Chequers</div>
-            <div>🛡️ 100x100x60mm Chiseled Cobbles</div>
-            <div>🛡️ 100% Weatherproof Natural Limestone</div>
+            <div> Anti-Skid Grooved Chequers</div>
+            <div> 100x100x60mm Chiseled Cobbles</div>
+            <div> 100% Weatherproof Natural Limestone</div>
           </div>
         </div>
         <div class="ks7-right" style="${bg(hero)}">

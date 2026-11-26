@@ -123,7 +123,7 @@ export default function AdminLogin({ onLoginSuccess }) {
             style={{ width: "100%", borderStyle: "dashed", borderColor: "rgba(99, 102, 241, 0.4)", color: "#a5b4fc" }}
             onClick={handleQuickDemoLogin}
           >
-            ⚡ One-Click Instant Admin Access
+             One-Click Instant Admin Access
           </button>
         </div>
       </div>

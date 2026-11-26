@@ -72,9 +72,9 @@ export default function FilterSidebar({ filters, onChange, onReset }) {
           onChange={(e) => onChange({ rating: e.target.value })}
         >
           <option value="">Any rating</option>
-          <option value="4">4★ &amp; up</option>
-          <option value="3">3★ &amp; up</option>
-          <option value="2">2★ &amp; up</option>
+          <option value="4">4 &amp; up</option>
+          <option value="3">3 &amp; up</option>
+          <option value="2">2 &amp; up</option>
         </select>
       </div>
 

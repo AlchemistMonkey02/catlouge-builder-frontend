@@ -412,11 +412,11 @@ export default function ProductImagePreviewModal({
                   <span>• Price: <strong>₹{productMeta.price.toLocaleString?.() || productMeta.price}{productMeta.unit ? ` / ${productMeta.unit}` : ""}</strong></span>
                 )}
                 {productMeta.mrp && <span style={{ textDecoration: "line-through", color: "var(--text-muted)" }}>₹{productMeta.mrp}</span>}
-                {productMeta.size && <span>• 📏 <strong>{productMeta.size}</strong></span>}
-                {productMeta.material && <span>• 🌿 <strong>{productMeta.material}</strong></span>}
-                {productMeta.finish && <span>• ✨ <strong>{productMeta.finish}</strong></span>}
-                {productMeta.application && <span>• 🎯 <strong>{productMeta.application}</strong></span>}
-                {productMeta.priceRange && <span>• 💰 <strong>{productMeta.priceRange}</strong></span>}
+                {productMeta.size && <span>•  <strong>{productMeta.size}</strong></span>}
+                {productMeta.material && <span>•  <strong>{productMeta.material}</strong></span>}
+                {productMeta.finish && <span>•  <strong>{productMeta.finish}</strong></span>}
+                {productMeta.application && <span>•  <strong>{productMeta.application}</strong></span>}
+                {productMeta.priceRange && <span>•  <strong>{productMeta.priceRange}</strong></span>}
               </div>
             </div>
           </div>
@@ -647,13 +647,13 @@ export default function ProductImagePreviewModal({
                 gap: "8px",
               }}
             >
-              <span style={{ color: "#10b981", fontWeight: 800, fontSize: "0.85rem" }}>✓</span>
+              <span style={{ color: "#10b981", fontWeight: 800, fontSize: "0.85rem" }}></span>
               <div>
                 <span style={{ fontWeight: 700, color: "#6ee7b7" }}>
                   {upscaleStats.scale || "2x"} Super-Resolution Applied:
                 </span>{" "}
                 <span style={{ color: "#cbd5e1" }}>
-                  {upscaleStats.from} ➔{" "}
+                  {upscaleStats.from} {" "}
                   <strong style={{ color: "#ffffff" }}>{upscaleStats.to || `${dimensions.width}×${dimensions.height}`}</strong>
                 </span>
               </div>
@@ -733,7 +733,7 @@ export default function ProductImagePreviewModal({
                 }}
                 title="Open in AI Studio to replace background or add shadows"
               >
-                <Palette size={14} /> Edit in AI Studio ➔
+                <Palette size={14} /> Edit in AI Studio 
               </button>
             )}
 

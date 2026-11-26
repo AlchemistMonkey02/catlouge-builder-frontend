@@ -206,7 +206,7 @@ export default function ProductSheetUploadModal({
                     border: "1px solid rgba(16, 185, 129, 0.3)",
                   }}
                 >
-                  ✓ {categoryFamily.toUpperCase()} SPECIFICATIONS READY
+                   {categoryFamily.toUpperCase()} SPECIFICATIONS READY
                 </span>
               </div>
               <div style={{ fontSize: "0.8rem", color: "var(--text-secondary)", marginTop: "2px" }}>
@@ -262,11 +262,11 @@ export default function ProductSheetUploadModal({
                 {/* Category Selection Tabs */}
                 <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", marginTop: "10px" }}>
                   {[
-                    { id: "garlic", label: "🧄 Garlic" },
-                    { id: "kotastone", label: "🪨 Kota Stone" },
-                    { id: "sandstone", label: "🏛️ Sandstone" },
-                    { id: "kotadoria", label: "✨ Kota Doria" },
-                    { id: "general", label: "📦 General" },
+                    { id: "garlic", label: " Garlic" },
+                    { id: "kotastone", label: " Kota Stone" },
+                    { id: "sandstone", label: " Sandstone" },
+                    { id: "kotadoria", label: " Kota Doria" },
+                    { id: "general", label: " General" },
                   ].map((cat) => (
                     <button
                       key={cat.id}
@@ -286,7 +286,7 @@ export default function ProductSheetUploadModal({
                         gap: "4px",
                       }}
                     >
-                      {cat.label} {cat.id === selectedFamily && "✓"}
+                      {cat.label} {cat.id === selectedFamily && ""}
                     </button>
                   ))}
                 </div>
@@ -450,12 +450,12 @@ export default function ProductSheetUploadModal({
                       borderRadius: "6px",
                     }}
                   >
-                    ✓ All Validated
+                     All Validated
                   </span>
                 </div>
                 {parseErrors.length > 0 && (
                   <span style={{ fontSize: "0.76rem", color: "#ef4444", fontWeight: 600 }}>
-                    ⚠ {parseErrors.length} row(s) skipped due to missing price or name
+                     {parseErrors.length} row(s) skipped due to missing price or name
                   </span>
                 )}
               </div>
@@ -538,7 +538,7 @@ export default function ProductSheetUploadModal({
               }}
             >
               <CheckCircle size={18} />
-              <span>✓ Successfully imported {parsedProducts.length} products into the catalogue! Refreshing view...</span>
+              <span> Successfully imported {parsedProducts.length} products into the catalogue! Refreshing view...</span>
             </div>
           )}
         </div>

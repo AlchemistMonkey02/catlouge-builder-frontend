@@ -24,7 +24,7 @@ export default function ProductCard({ product }) {
         <span className={`stock-pill ${stockInfo.className}`}>{stockInfo.label}</span>
         <div className="product-card-footer">
           <span className="product-card-price">{formatPrice(product.price)}</span>
-          <span className="product-card-rating">★ {product.rating?.toFixed(1) ?? "0.0"}</span>
+          <span className="product-card-rating"> {product.rating?.toFixed(1) ?? "0.0"}</span>
         </div>
         <Link to={`/products/${product._id}`} className="view-details-btn">
           View Details

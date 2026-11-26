@@ -152,7 +152,7 @@ const TEMPLATES = [
 const head = (c, label, no) => `
   <div class="kd-head">
     <div class="kd-head-brand">
-      <span class="kd-loom-icon">🥻</span>
+      <span class="kd-loom-icon"></span>
       <strong>${E(c.info.ent || 'KOTA DORIA HANDLOOM')}</strong>
       <span class="kd-head-district">&bull; District: ${E(c.info.district || 'Kota, Rajasthan')} [ODOP: ${E(c.info.odopProduct || 'Kota Doria')}]</span>
     </div>
@@ -164,7 +164,7 @@ const head = (c, label, no) => `
 const foot = c => `
   <div class="kd-foot">
     <span><b>${E(c.info.ent || '')}</b> &bull; ${E(c.info.district || 'Kota, Rajasthan')} &bull; ODOP: ${E(c.info.odopProduct || 'Kota Doria')}</span>
-    <span>💬 WhatsApp: <b>${E(fmtWa(c.info.whatsapp || c.info.mobile))}</b> ${c.info.email ? `&bull; ${E(c.info.email)}` : ''}</span>
+    <span> WhatsApp: <b>${E(fmtWa(c.info.whatsapp || c.info.mobile))}</b> ${c.info.email ? `&bull; ${E(c.info.email)}` : ''}</span>
   </div>
 `;
 
@@ -208,9 +208,9 @@ function paramparaCover(c) {
           <h1 class="parampara-logo-title">${E(brand)}</h1>
           <div class="parampara-edition-badge">WHOLESALE TRADE LOOKBOOK &bull; 2026</div>
           <div class="parampara-odop-badge" style="display:inline-flex; align-items:center; justify-content:center; gap:8px; background:rgba(255,255,255,0.12); border:1px solid var(--acc, #c5a059); padding:4px 14px; border-radius:20px; font-size:9.5px; font-weight:700; color:#fdfbf7; margin:6px auto 10px; letter-spacing:0.06em;">
-            <span>📍 District: <b>${E(c.info.district || 'Kota, Rajasthan')}</b></span>
+            <span> District: <b>${E(c.info.district || 'Kota, Rajasthan')}</b></span>
             <span style="opacity:0.6">&bull;</span>
-            <span>🏷️ ODOP Product: <b>${E(c.info.odopProduct || 'Kota Doria')}</b></span>
+            <span> ODOP Product: <b>${E(c.info.odopProduct || 'Kota Doria')}</b></span>
           </div>
 
           <div class="parampara-quote-card">
@@ -237,9 +237,9 @@ function paramparaCover(c) {
           </div>
 
           <div class="parampara-bottom-assurance">
-            <span>✦ FACTORY-DIRECT DISPATCH</span>
-            <span>✦ PRE-PACKED ASSORTMENT SETS</span>
-            <span>✦ B2B TRADE ONLY</span>
+            <span> FACTORY-DIRECT DISPATCH</span>
+            <span> PRE-PACKED ASSORTMENT SETS</span>
+            <span> B2B TRADE ONLY</span>
           </div>
         </div>
       </div>
@@ -272,28 +272,28 @@ function paramparaStory(c, no) {
 
           <div class="parampara-feature-cards">
             <div class="parampara-fcard">
-              <div class="fcard-icon">🏭</div>
+              <div class="fcard-icon"></div>
               <div class="fcard-body">
                 <strong>In-House Powerloom Operations</strong>
                 <p>Complete control over yarn count, zari tension, and uniform fabric density for zero-defect production.</p>
               </div>
             </div>
             <div class="parampara-fcard">
-              <div class="fcard-icon">💎</div>
+              <div class="fcard-icon"></div>
               <div class="fcard-body">
                 <strong>Direct Mill Pricing</strong>
                 <p>Eliminate distributor and commission agent markups to ensure maximum retail profit margins.</p>
               </div>
             </div>
             <div class="parampara-fcard">
-              <div class="fcard-icon">📦</div>
+              <div class="fcard-icon"></div>
               <div class="fcard-body">
                 <strong>6-Color Assortment Set Packs</strong>
                 <p>Pre-packed sets in customer-favorite festive shades ready for immediate counter display.</p>
               </div>
             </div>
             <div class="parampara-fcard">
-              <div class="fcard-icon">⚡</div>
+              <div class="fcard-icon"></div>
               <div class="fcard-body">
                 <strong>Rapid Bulk Fulfillment</strong>
                 <p>Standardized carton packaging with reliable 48-hour dispatch for repeat orders.</p>
@@ -446,7 +446,7 @@ function paramparaWholesaleEnquiry(c, pageNum) {
     <div class="parampara-cover-wrap">
       <div class="parampara-trade-desk-card">
         <div class="trade-desk-header">
-          <div class="trade-crest">⚖️</div>
+          <div class="trade-crest"></div>
           <h2>B2B Trade Agreement &amp; Procurement Desk</h2>
           <p>Partnering with verified retailers, boutique owners, and regional distributors nationwide</p>
         </div>
@@ -556,17 +556,17 @@ function silkenCover(c) {
 
       <div class="silken-glass-monograph-card">
         <div class="silken-crest-motif">
-          <span class="motif-leaf">❧</span>
-          <span class="motif-center">❀</span>
-          <span class="motif-leaf">☙</span>
+          <span class="motif-leaf"></span>
+          <span class="motif-center"></span>
+          <span class="motif-leaf"></span>
         </div>
 
         <h1 class="silken-title">${E(brand)}</h1>
         <div class="silken-edition-sub">The Fabric of Celebration &bull; Wedding Lookbook</div>
         <div class="silken-odop-pill" style="display:inline-flex; align-items:center; justify-content:center; gap:8px; background:rgba(255,255,255,0.18); border:1px solid rgba(255,255,255,0.45); padding:4px 14px; border-radius:20px; font-size:10px; font-weight:700; color:#ffffff; margin:6px auto 10px; letter-spacing:0.06em;">
-          <span>📍 District: <b>${E(c.info.district || 'Kota, Rajasthan')}</b></span>
+          <span> District: <b>${E(c.info.district || 'Kota, Rajasthan')}</b></span>
           <span style="opacity:0.6">&bull;</span>
-          <span>🏷️ ODOP: <b>${E(c.info.odopProduct || 'Kota Doria')}</b></span>
+          <span> ODOP: <b>${E(c.info.odopProduct || 'Kota Doria')}</b></span>
         </div>
 
         <div class="silken-card-divider"></div>
@@ -576,9 +576,9 @@ function silkenCover(c) {
         </p>
 
         <div class="silken-trousseau-chips">
-          <span>✦ PURE HANDLOOM SILK</span>
-          <span>✦ FEATHERLIGHT DRAPE</span>
-          <span>✦ BRIDAL ARCHIVE</span>
+          <span> PURE HANDLOOM SILK</span>
+          <span> FEATHERLIGHT DRAPE</span>
+          <span> BRIDAL ARCHIVE</span>
         </div>
       </div>
 
@@ -608,7 +608,7 @@ function silkenStory(c, pageNum) {
         </div>
 
         <h2 class="silken-serif-h1">The Heart Behind<br>Every Weave</h2>
-        <div class="silken-hearts-deco">❦ ❀ ❦</div>
+        <div class="silken-hearts-deco">  </div>
 
         <div class="silken-story-body">
           <p class="dropcap-p">
@@ -696,28 +696,28 @@ function silkenServices(c, pageNum) {
       <div class="silken-serv-layout">
         <div class="silken-serv-grid">
           <div class="serv-card">
-            <div class="serv-icon">🏡</div>
+            <div class="serv-icon"></div>
             <div class="serv-text">
               <strong>Private Home Draping Service</strong>
               <p>Curated trunk selections brought directly to your home for family bridal trials.</p>
             </div>
           </div>
           <div class="serv-card">
-            <div class="serv-icon">🎁</div>
+            <div class="serv-icon"></div>
             <div class="serv-text">
               <strong>Custom Velvet Gifting Trunks</strong>
               <p>Handcrafted trousseau packaging, brass embossed tags, and personal handwritten message cards.</p>
             </div>
           </div>
           <div class="serv-card">
-            <div class="serv-icon">📹</div>
+            <div class="serv-icon"></div>
             <div class="serv-text">
               <strong>1-on-1 4K Video Consultations</strong>
               <p>Live drape demos over WhatsApp video with our senior stylists to inspect real texture.</p>
             </div>
           </div>
           <div class="serv-card">
-            <div class="serv-icon">✈️</div>
+            <div class="serv-icon"></div>
             <div class="serv-text">
               <strong>Insured Worldwide Express Courier</strong>
               <p>Doorstep delivery to USA, UK, Canada, UAE, Singapore &amp; Australia with tracking.</p>
@@ -734,9 +734,9 @@ function silkenServices(c, pageNum) {
       </div>
 
       <div class="silken-bottom-maroon-bar">
-        <span>📸 Instagram: @${(brand || 'silken_saga').toLowerCase().replace(/[^a-z0-9]/g, '_')}</span>
-        <span>🌐 Website: ${E(website)}</span>
-        <span>💬 Direct Concierge: ${E(mobile)}</span>
+        <span> Instagram: @${(brand || 'silken_saga').toLowerCase().replace(/[^a-z0-9]/g, '_')}</span>
+        <span> Website: ${E(website)}</span>
+        <span> Direct Concierge: ${E(mobile)}</span>
       </div>
     </div>
   `;
@@ -792,7 +792,7 @@ function silkenWhyBuyers(c, pageNum) {
 
       <div class="silken-why-right-quote-card">
         <div class="quote-card-inner">
-          <div class="quote-stars">★★★★★</div>
+          <div class="quote-stars"></div>
           <div class="quote-mark">“</div>
           <p class="quote-text">
             I ordered three sarees for my sister's wedding across video call from the US. When the parcel arrived, the fabric was even more magnificent in person — so soft, so grand, and lightweight beyond belief!
@@ -821,19 +821,19 @@ function silkenFeedbackScrapbook(c, pageNum) {
 
       <div class="silken-reviews-grid">
         <div class="silken-review-card">
-          <div class="stars">★★★★★</div>
+          <div class="stars"></div>
           <p>“The color did not bleed after gentle care, and the gold zari still looks fresh and regal like day one.”</p>
           <strong>Divya Verma</strong>
           <small>Delhi &bull; Festive Order</small>
         </div>
         <div class="silken-review-card">
-          <div class="stars">★★★★★</div>
+          <div class="stars"></div>
           <p>“Feels light to wear for 8+ hours during rituals but still gives a royal silhouette in photography.”</p>
           <strong>Divya Reddy</strong>
           <small>Hyderabad &bull; Wedding Guest</small>
         </div>
         <div class="silken-review-card">
-          <div class="stars">★★★★★</div>
+          <div class="stars"></div>
           <p>“The fall and drape are incredibly graceful. The pleats stay crisp without slipping or needing dozens of pins.”</p>
           <strong>Divya Khosla</strong>
           <small>Bangalore &bull; Bridal Trousseau</small>
@@ -843,11 +843,11 @@ function silkenFeedbackScrapbook(c, pageNum) {
       <div class="silken-polaroid-row">
         <div class="scrap-polaroid">
           <div class="polaroid-crop" style="${bg(it0)}"></div>
-          <div class="polaroid-text">Family Wedding Sangeet ❤️</div>
+          <div class="polaroid-text">Family Wedding Sangeet </div>
         </div>
         <div class="scrap-polaroid">
           <div class="polaroid-crop" style="${bg(it1)}"></div>
-          <div class="polaroid-text">Mom's Golden Anniversary ✨</div>
+          <div class="polaroid-text">Mom's Golden Anniversary </div>
         </div>
       </div>
     </div>
@@ -882,7 +882,7 @@ function silkenPackaging(c, pageNum) {
 
       <div class="silken-pkg-footer">
         <div class="silken-pkg-card">
-          <div class="pkg-lotus">🪷</div>
+          <div class="pkg-lotus"></div>
           <div class="pkg-brand">${E(brand)}</div>
           <p class="pkg-quote">“May this saree wrap you in beauty, softness, and every little joy you deserve.”</p>
           <div class="pkg-love">With everlasting love &bull; The Atelier</div>
@@ -902,7 +902,7 @@ function silkenClosing(c, pageNum) {
     <div class="silken-page-body silken-closing-page" style="${bg(heroImg)}">
       <div class="silken-closing-overlay"></div>
       <div class="silken-closing-glass-box">
-        <div class="closing-crest">❧ ❀ ❧</div>
+        <div class="closing-crest">  </div>
         <h2 class="silken-closing-h2">Come, find your story in our collection.</h2>
         <p class="silken-closing-p">
           Take your time, browse, ask questions — we are here for you.<br><br>
@@ -916,9 +916,9 @@ function silkenClosing(c, pageNum) {
       </div>
 
       <div class="silken-bottom-maroon-bar">
-        <span>📸 Instagram: @${(brand || 'silken_saga').toLowerCase().replace(/[^a-z0-9]/g, '_')}</span>
-        <span>🌐 Website: ${E(website)}</span>
-        <span>💬 Direct Concierge: ${E(mobile)}</span>
+        <span> Instagram: @${(brand || 'silken_saga').toLowerCase().replace(/[^a-z0-9]/g, '_')}</span>
+        <span> Website: ${E(website)}</span>
+        <span> Direct Concierge: ${E(mobile)}</span>
       </div>
     </div>
   `;
@@ -995,7 +995,7 @@ function kd1_cover(c, t) {
     <div class="kd1-cover-container">
       <div class="kd1-court-border">
         <div class="kd1-odop-gov-banner">
-          <span class="kd1-gov-emblem">🏛️</span>
+          <span class="kd1-gov-emblem"></span>
           <div class="kd1-gov-text">
             <strong>GOVERNMENT OF INDIA &bull; ONE DISTRICT ONE PRODUCT (ODOP) INITIATIVE</strong>
             <span>DISTRICT: <b>${E(i.district || 'Kota, Rajasthan')}</b> &bull; ODOP PRODUCT: <b>${E(i.odopProduct || 'Kota Doria')}</b></span>
@@ -1003,7 +1003,7 @@ function kd1_cover(c, t) {
         </div>
 
         <div class="kd1-cov-header">
-          <div class="kd1-regal-insignia">👑 ${E((i.odopProduct || 'Royal Handloom').toUpperCase())} HERITAGE</div>
+          <div class="kd1-regal-insignia"> ${E((i.odopProduct || 'Royal Handloom').toUpperCase())} HERITAGE</div>
           <div class="kd1-gi-stamp">${E(i.giTag || (i.odopProduct ? `ODOP ${i.odopProduct.toUpperCase()}` : 'GI TAG NO. 37'))} &bull; ${E(i.district ? i.district.toUpperCase() : 'KAITHUN CLUSTER')}</div>
         </div>
         <div class="kd1-arch-medallion">
@@ -1021,7 +1021,7 @@ function kd1_cover(c, t) {
           
           <div class="kd1-cover-odop-connect">
             <div class="kd1-cover-wa-pill">
-              <span>💬 WhatsApp Business: <b>${E(fmtWa(waNum))}</b></span>
+              <span> WhatsApp Business: <b>${E(fmtWa(waNum))}</b></span>
               <small>Instant catalog order &amp; bulk wholesale booking</small>
             </div>
           </div>
@@ -1053,10 +1053,10 @@ function kd1_story(c, no) {
           <p>Each authentic Kota Doria saree is distinguished by its micro-square grid (Khat). A single khat is an exact interlacing of 14 combed cotton yarns with 8 fine mulberry silk filaments, yielding sheer gossamer lightness paired with tensile grandeur.</p>
         </div>
         <div class="kd1-audit-badges">
-          <div>✦ Pure Onion-Juice Loom Starch</div>
-          <div>✦ Throw-Shuttle Pit Weaving</div>
-          <div>✦ Non-Tarnishing Tested Zari</div>
-          <div>✦ Certified Geographical Indication</div>
+          <div> Pure Onion-Juice Loom Starch</div>
+          <div> Throw-Shuttle Pit Weaving</div>
+          <div> Non-Tarnishing Tested Zari</div>
+          <div> Certified Geographical Indication</div>
         </div>
       </div>
       <div class="kd1-story-col-art">
@@ -1105,19 +1105,19 @@ function renderKdProductCard(it, idx, c, prefix = 'kd') {
         
         <div class="kd1-spec-matrix">
           <div class="kd1-spec-item" title="${E(specSize)}">
-            <span class="kd1-spec-lbl">📏 Size:</span>
+            <span class="kd1-spec-lbl"> Size:</span>
             <span class="kd1-spec-val">${E(specSize)}</span>
           </div>
           <div class="kd1-spec-item" title="${E(specMaterial)}">
-            <span class="kd1-spec-lbl">🧵 Material:</span>
+            <span class="kd1-spec-lbl"> Material:</span>
             <span class="kd1-spec-val">${E(specMaterial)}</span>
           </div>
           <div class="kd1-spec-item" title="${E(specFinish)}">
-            <span class="kd1-spec-lbl">✨ Finish:</span>
+            <span class="kd1-spec-lbl"> Finish:</span>
             <span class="kd1-spec-val">${E(specFinish)}</span>
           </div>
           <div class="kd1-spec-item" title="${E(specApp)}">
-            <span class="kd1-spec-lbl">🎯 Use:</span>
+            <span class="kd1-spec-lbl"> Use:</span>
             <span class="kd1-spec-val">${E(specApp)}</span>
           </div>
         </div>
@@ -1129,7 +1129,7 @@ function renderKdProductCard(it, idx, c, prefix = 'kd') {
           </div>
           <div class="kd1-contact-block">
             <span class="kd1-craft">${E(cardCraft)}</span>
-            <span class="kd1-wa">💬 WA: ${E(fmtWa(c.info.whatsapp || c.info.mobile))}</span>
+            <span class="kd1-wa"> WA: ${E(fmtWa(c.info.whatsapp || c.info.mobile))}</span>
           </div>
         </div>
       </div>
@@ -1189,19 +1189,19 @@ function kd1_products(c, no, slice, pageIdx, totalPages) {
             
             <div class="kd1-spec-matrix">
               <div class="kd1-spec-item" title="${E(specSize)}">
-                <span class="kd1-spec-lbl">📏 Size:</span>
+                <span class="kd1-spec-lbl"> Size:</span>
                 <span class="kd1-spec-val">${E(specSize)}</span>
               </div>
               <div class="kd1-spec-item" title="${E(specMaterial)}">
-                <span class="kd1-spec-lbl">🧵 Material:</span>
+                <span class="kd1-spec-lbl"> Material:</span>
                 <span class="kd1-spec-val">${E(specMaterial)}</span>
               </div>
               <div class="kd1-spec-item" title="${E(specFinish)}">
-                <span class="kd1-spec-lbl">✨ Finish:</span>
+                <span class="kd1-spec-lbl"> Finish:</span>
                 <span class="kd1-spec-val">${E(specFinish)}</span>
               </div>
               <div class="kd1-spec-item" title="${E(specApp)}">
-                <span class="kd1-spec-lbl">🎯 Use:</span>
+                <span class="kd1-spec-lbl"> Use:</span>
                 <span class="kd1-spec-val">${E(specApp)}</span>
               </div>
             </div>
@@ -1213,7 +1213,7 @@ function kd1_products(c, no, slice, pageIdx, totalPages) {
               </div>
               <div class="kd1-contact-block">
                 <span class="kd1-craft">${E(cardCraft)}</span>
-                <span class="kd1-wa">💬 WA: ${E(fmtWa(c.info.whatsapp || c.info.mobile))}</span>
+                <span class="kd1-wa"> WA: ${E(fmtWa(c.info.whatsapp || c.info.mobile))}</span>
               </div>
             </div>
           </div>
@@ -1260,7 +1260,7 @@ function kd1_tech(c, no) {
         </div>
       </div>
       <div class="kd1-seal-banner">
-        <span class="kd1-seal-icon">🏛️</span>
+        <span class="kd1-seal-icon"></span>
         <div>
           <strong>Government of India GI Certified Handloom</strong>
           <small>Registered under Geographical Indications of Goods Act 1999 (Registration No. 84, Kaithun Cluster).</small>
@@ -1280,9 +1280,9 @@ function kd1_closing(c, no) {
     <div class="kd1-closing-wrap">
       <div class="kd1-closing-frame">
         <div class="kd1-odop-closing-badge">
-          🏛️ ODOP CERTIFIED ENTERPRISE &bull; DISTRICT: ${E(i.district || 'Kota, Rajasthan')} &bull; PRODUCT: ${E(i.odopProduct || 'Kota Doria')}
+           ODOP CERTIFIED ENTERPRISE &bull; DISTRICT: ${E(i.district || 'Kota, Rajasthan')} &bull; PRODUCT: ${E(i.odopProduct || 'Kota Doria')}
         </div>
-        <div class="kd1-closing-crown">👑</div>
+        <div class="kd1-closing-crown"></div>
         <h2 class="kd1-closing-title">${E(i.ent || 'Parampara Threads')} &bull; Direct Loom Orders</h2>
         <div class="kd1-closing-divider"></div>
         <p class="kd1-closing-sub">Supplying royalty, luxury bridal houses, export partners and premier boutique showrooms nationwide.</p>
@@ -1299,7 +1299,7 @@ function kd1_closing(c, no) {
             </div>
             <div class="kd1-contact-entry">
               <span class="kd1-entry-lbl">WhatsApp Business / Mobile Number</span>
-              <b>💬 ${E(fmtWa(waNum))}</b>
+              <b> ${E(fmtWa(waNum))}</b>
             </div>
             <div class="kd1-contact-entry">
               <span class="kd1-entry-lbl">Institutional Trade Email &amp; Web</span>
@@ -1313,9 +1313,9 @@ function kd1_closing(c, no) {
         </div>
 
         <div class="kd1-closing-guarantee">
-          <span>✦ 100% Handloom Authenticity Guarantee</span>
-          <span>✦ Insured Wooden Gift Packaging</span>
-          <span>✦ Worldwide Express Courier</span>
+          <span> 100% Handloom Authenticity Guarantee</span>
+          <span> Insured Wooden Gift Packaging</span>
+          <span> Worldwide Express Courier</span>
         </div>
       </div>
     </div>
@@ -1366,9 +1366,9 @@ function kd2_cover(c, t) {
           </div>
         </div>
         <div class="kd2-cov-foot">
-          <span>🌿 Zero Synthetic Chemicals</span>
-          <span>🪵 Sheesham Block Carving</span>
-          <span>💧 Chambal River Washing</span>
+          <span> Zero Synthetic Chemicals</span>
+          <span> Sheesham Block Carving</span>
+          <span> Chambal River Washing</span>
         </div>
       </div>
     </div>
@@ -1438,17 +1438,17 @@ function kd2_tech(c, no) {
       </div>
       <div class="kd2-tech-cards">
         <div class="kd2-tech-card">
-          <span class="kd2-tech-icon">🧪</span>
+          <span class="kd2-tech-icon"></span>
           <h4>Dye Recipe Standard</h4>
           <p>Extract of Manjistha root for reds, fermented Indigofera tinctoria for blues, and iron rust (Kashish) for deep blacks.</p>
         </div>
         <div class="kd2-tech-card">
-          <span class="kd2-tech-icon">☀️</span>
+          <span class="kd2-tech-icon"></span>
           <h4>Sun &amp; Wash Fastness</h4>
           <p>Grade 4.5+ colorfastness rating under standard ISO 105-C06 wash test with zero bleeding onto contrast blouse fabrics.</p>
         </div>
         <div class="kd2-tech-card">
-          <span class="kd2-tech-icon">🍃</span>
+          <span class="kd2-tech-icon"></span>
           <h4>Zero Carcinogen Certification</h4>
           <p>100% AZO-free and chemical-free. Hypoallergenic profile tested safe for humid climate all-day wedding wear.</p>
         </div>
@@ -1473,7 +1473,7 @@ function kd2_closing(c, no) {
           <div><span>Catalogue Orders:</span> <b>${E(i.email || 'orders@artisan-kotadoria.in')}</b></div>
         </div>
         <div class="kd2-ledger-footer">
-          <span>🌿 Handcrafted with love in Kaithun &bull; Shipped in recycled unbleached cotton pouches</span>
+          <span> Handcrafted with love in Kaithun &bull; Shipped in recycled unbleached cotton pouches</span>
         </div>
       </div>
     </div>
@@ -1639,7 +1639,7 @@ function kd4_cover(c, t) {
     <div class="kd4-summer-cover">
       <div class="kd4-scallop-frame">
         <div class="kd4-cover-top">
-          <span class="kd4-festive-badge">🌸 SUMMER BRIDAL TROUSSEAU</span>
+          <span class="kd4-festive-badge"> SUMMER BRIDAL TROUSSEAU</span>
           <h1 class="kd4-pastel-title">${E(i.ent || 'Pastel Festive Kota Doria')}</h1>
           <div class="kd4-pastel-sub">${E(c.textOverrides?.tagline || i.tagline || 'Light As Morning Dew &bull; Peach, Pistachio &amp; Blush Handlooms')}</div>
         </div>
@@ -1649,9 +1649,9 @@ function kd4_cover(c, t) {
         <div class="kd4-cover-bottom">
           <p>${E(i.desc || 'Curated lightweight trousseau ensembles for summer destination weddings, mehendi ceremonies, and festive celebrations.')}</p>
           <div class="kd4-chips-row">
-            <span>✨ Scalloped Zari Borders</span>
-            <span>🌿 100% Breathable</span>
-            <span>🎀 Bridal Gift Ready</span>
+            <span> Scalloped Zari Borders</span>
+            <span> 100% Breathable</span>
+            <span> Bridal Gift Ready</span>
           </div>
         </div>
       </div>
@@ -1724,28 +1724,28 @@ function kd4_tech(c, no) {
             <td><b>320 grams</b></td>
             <td><b>98% (Khat Aeration)</b></td>
             <td><b>Soft Royal Sheen</b></td>
-            <td><b>★★★★★ (Optimal)</b></td>
+            <td><b> (Optimal)</b></td>
           </tr>
           <tr>
             <td>Heavy Banarasi Silk</td>
             <td>850 - 1100g</td>
             <td>35%</td>
             <td>Heavy Metallic</td>
-            <td>★★☆☆☆ (Stifling)</td>
+            <td> (Stifling)</td>
           </tr>
           <tr>
             <td>Chiffon Synthetic</td>
             <td>400g</td>
             <td>50%</td>
             <td>Dull / Static</td>
-            <td>★★★☆☆ (Clingy)</td>
+            <td> (Clingy)</td>
           </tr>
           <tr>
             <td>Organza Crisp</td>
             <td>380g</td>
             <td>70%</td>
             <td>Crisp Translucent</td>
-            <td>★★★☆☆ (Rigid)</td>
+            <td> (Rigid)</td>
           </tr>
         </tbody>
       </table>
@@ -1759,7 +1759,7 @@ function kd4_closing(c, no) {
   return `
     <div class="kd4-closing-wrap">
       <div class="kd4-closing-card">
-        <span class="kd4-flower">🌸</span>
+        <span class="kd4-flower"></span>
         <h2>Bridal Trousseau Concierge &amp; Bulk Gifting</h2>
         <p>Curating personalized trousseau hampers, wedding favor collections, and bespoke bridesmaid sarees.</p>
         <div class="kd4-contact-list">
@@ -1769,7 +1769,7 @@ function kd4_closing(c, no) {
           <div><span>Email:</span> <b>${E(i.email || 'bridal@festive-kotadoria.in')}</b></div>
         </div>
         <div class="kd4-gift-promo">
-          <span>🎁 Complimentary embroidered satin dust-bags and custom monogram gift cards on orders over 10 sarees.</span>
+          <span> Complimentary embroidered satin dust-bags and custom monogram gift cards on orders over 10 sarees.</span>
         </div>
       </div>
     </div>
@@ -1813,9 +1813,9 @@ function kd5_cover(c, t) {
         <h1 class="kd5-atelier-h1">${E(i.ent || 'Kota Doria Dupattas')}</h1>
         <p>${E(i.desc || 'Handwoven 2.5m luxury stoles and dupattas crafted with artisan latkan tassels and ornate zari selvages.')}</p>
         <div class="kd5-banner-stats">
-          <span>✦ 2.5m Standard Cut</span>
-          <span>✦ 36" Full Width</span>
-          <span>✦ Hand-Knotted Tassels</span>
+          <span> 2.5m Standard Cut</span>
+          <span> 36" Full Width</span>
+          <span> Hand-Knotted Tassels</span>
         </div>
       </div>
     </div>
@@ -1934,7 +1934,7 @@ function kd6_cover(c, t) {
   return `
     <div class="kd6-eco-cover">
       <div class="kd6-leaf-border">
-        <div class="kd6-top-badge">🌿 100% BOTANICAL &amp; ECO-CERTIFIED</div>
+        <div class="kd6-top-badge"> 100% BOTANICAL &amp; ECO-CERTIFIED</div>
         <h1 class="kd6-h1">${E(i.ent || 'Organic Dye Kota Doria')}</h1>
         <div class="kd6-sub">${E(c.textOverrides?.tagline || i.tagline || 'Naturally Dyed with Forest Herbs, Bark &amp; River Clay')}</div>
         <div class="kd6-hex-frame">
@@ -1944,9 +1944,9 @@ function kd6_cover(c, t) {
           <p>${E(i.desc || 'Zero chemical effluent handloom weaving. Cotton yarns starched with organic wild onion juice and dyed using indigenous plants.')}</p>
         </div>
         <div class="kd6-badges-row">
-          <span>✦ GOTS Organic Cotton</span>
-          <span>✦ Zero Chemical Runoff</span>
-          <span>✦ Skin Friendly pH 6.8</span>
+          <span> GOTS Organic Cotton</span>
+          <span> Zero Chemical Runoff</span>
+          <span> Skin Friendly pH 6.8</span>
         </div>
       </div>
     </div>
@@ -2071,7 +2071,7 @@ function kd7_cover(c, t) {
     <div class="kd7-noir-cover">
       <div class="kd7-stars-grid"></div>
       <div class="kd7-couture-content">
-        <div class="kd7-crest">⚜️ HAUTE COUTURE EDITION</div>
+        <div class="kd7-crest"> HAUTE COUTURE EDITION</div>
         <h1 class="kd7-gold-title">${E(i.ent || 'Royal Noir Couture')}</h1>
         <div class="kd7-gold-line"></div>
         <div class="kd7-tagline">${E(c.textOverrides?.tagline || i.tagline || 'Master Artisan Commissioned Pure Zari Gossamer Saree Masterpieces')}</div>
@@ -2146,7 +2146,7 @@ function kd7_tech(c, no) {
         </div>
       </div>
       <div class="kd7-hallmark-badge">
-        <span>⚜️ Certified Archival Longevity: Guaranteed Non-Tarnishing for 50+ Years</span>
+        <span> Certified Archival Longevity: Guaranteed Non-Tarnishing for 50+ Years</span>
       </div>
     </div>
     ${foot(c)}
@@ -2158,7 +2158,7 @@ function kd7_closing(c, no) {
   return `
     <div class="kd7-noir-closing">
       <div class="kd7-vip-box">
-        <div class="kd7-crest-small">⚜️</div>
+        <div class="kd7-crest-small"></div>
         <h2>Private Atelier Commissioning</h2>
         <p>Private appointments, bespoke heirloom bridal orders, and global white-glove courier deliveries.</p>
         <div class="kd7-vip-contacts">
@@ -2201,7 +2201,7 @@ function kd8_cover(c, t) {
       </div>
       <div class="kd8-dossier-split">
         <div class="kd8-dossier-left">
-          <div class="kd8-emblem">🏛️</div>
+          <div class="kd8-emblem"></div>
           <span class="kd8-doc-kicker">OFFICIAL TRADE &amp; EXPORT DOSSIER</span>
           <h1 class="kd8-h1">${E(i.ent || 'Kaithun Weaver Guild Export')}</h1>
           <p class="kd8-doc-desc">${E(i.desc || 'Comprehensive institutional catalog of authentic Geographical Indication registered Kota Doria handloom textiles, technical warp-weft specifications, and bulk container export rates.')}</p>
@@ -2228,17 +2228,17 @@ function kd8_story(c, no) {
       <p>Under the Geographical Indications of Goods (Registration and Protection) Act, only textiles woven on traditional throw-shuttle pit-looms within the demarcated Kaithun cluster may legally carry the name &lsquo;Kota Doria&rsquo;.</p>
       <div class="kd8-audit-grid">
         <div class="kd8-audit-card">
-          <div class="kd8-audit-icon">📋</div>
+          <div class="kd8-audit-icon"></div>
           <h4>Loom Audit &amp; QR Tagging</h4>
           <p>Every active pit-loom is assigned a unique government biometric registration ID, preventing powerloom counterfeits.</p>
         </div>
         <div class="kd8-audit-card">
-          <div class="kd8-audit-icon">🌾</div>
+          <div class="kd8-audit-icon"></div>
           <h4>Indigenous Sizing Starch</h4>
           <p>Local Chambal river water combined with indigenous onion paste starch gives genuine Kota Doria its signature crisp hand-feel.</p>
         </div>
         <div class="kd8-audit-card">
-          <div class="kd8-audit-icon">🚢</div>
+          <div class="kd8-audit-icon"></div>
           <h4>Global Export Compliance</h4>
           <p>All bulk consignments are verified by the Textiles Committee of India with certificate of origin documentation.</p>
         </div>

@@ -274,7 +274,7 @@ export default function DynamicCatalogueRenderer({
                   {currentCompany.industry || "Signature Brand Portfolio"}
                 </div>
                 <div style={{ fontSize: "0.72rem", color: "#15803d", fontWeight: 700, marginTop: "2px" }}>
-                  📍 District: {resolvedDistrict} • ODOP: {resolvedOdopProduct}
+                   District: {resolvedDistrict} • ODOP: {resolvedOdopProduct}
                 </div>
               </div>
             </div>
@@ -301,7 +301,7 @@ export default function DynamicCatalogueRenderer({
                 </div>
                 <div>
                   <div style={{ fontSize: "0.85rem", color: accentColor, fontWeight: 800, letterSpacing: "0.2em", textTransform: "uppercase", marginBottom: "0.75rem" }}>
-                    ✦ {coverConfig.edition || "2026 SIGNATURE COLLECTION"} ✦
+                     {coverConfig.edition || "2026 SIGNATURE COLLECTION"} 
                   </div>
                   <h1
                     style={{
@@ -329,7 +329,7 @@ export default function DynamicCatalogueRenderer({
               <div>
                 <div style={{ textAlign: "center", marginBottom: "2rem" }}>
                   <div style={{ display: "inline-flex", alignItems: "center", gap: "8px", border: `1.5px solid ${accentColor}`, padding: "4px 18px", borderRadius: "30px", fontSize: "0.75rem", fontWeight: 800, letterSpacing: "0.18em", color: accentColor, textTransform: "uppercase", background: cardBg, marginBottom: "1rem" }}>
-                    ✦ {coverConfig.edition || "2026 SIGNATURE COLLECTION"} ✦
+                     {coverConfig.edition || "2026 SIGNATURE COLLECTION"} 
                   </div>
                   <h1
                     style={{
@@ -548,7 +548,7 @@ export default function DynamicCatalogueRenderer({
                   {currentCompany.tagline}
                 </div>
                 <div style={{ fontSize: "0.80rem", color: "#34d399", fontWeight: 750, marginTop: "4px" }}>
-                  📍 ODOP District: {resolvedDistrict} • Sector: {resolvedOdopProduct}
+                   ODOP District: {resolvedDistrict} • Sector: {resolvedOdopProduct}
                 </div>
               </div>
 
@@ -593,10 +593,10 @@ export default function DynamicCatalogueRenderer({
                               </div>
                             )}
                             <div style={{ fontSize: "0.71rem", color: textColor, opacity: 0.85, marginTop: "4px", display: "flex", flexWrap: "wrap", gap: "6px" }}>
-                              <span>📏 <b>{p.size || "Standard"}</b></span>
-                              <span>🧵 <b>{p.material || p.materialComposition || "Natural"}</b></span>
-                              <span>✨ <b>{p.finish || "Export Grade"}</b></span>
-                              <span>🎯 <b>{p.application || p.useApplication || "Wholesale"}</b></span>
+                              <span> <b>{p.size || "Standard"}</b></span>
+                              <span> <b>{p.material || p.materialComposition || "Natural"}</b></span>
+                              <span> <b>{p.finish || "Export Grade"}</b></span>
+                              <span> <b>{p.application || p.useApplication || "Wholesale"}</b></span>
                             </div>
                           </td>
                           {showCategory && <td style={{ padding: "10px 14px", fontWeight: 600 }}>{p.category || "General"}</td>}
@@ -743,16 +743,16 @@ export default function DynamicCatalogueRenderer({
                         {/* Four Mandatory ODOP Spec Points Matrix */}
                         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "4px 8px", background: `${pageBg}`, border: `1px solid ${cardBorderColor}`, borderRadius: "6px", padding: "6px 8px", margin: "6px 0 8px", fontSize: "0.74rem" }}>
                           <div style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }} title={p.size || "Standard Format"}>
-                            <strong style={{ opacity: 0.7 }}>📏 Size:</strong> {p.size || "Standard Format"}
+                            <strong style={{ opacity: 0.7 }}> Size:</strong> {p.size || "Standard Format"}
                           </div>
                           <div style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }} title={p.material || p.materialComposition || "Premium Natural"}>
-                            <strong style={{ opacity: 0.7 }}>🧵 Material:</strong> {p.material || p.materialComposition || "Premium Natural"}
+                            <strong style={{ opacity: 0.7 }}> Material:</strong> {p.material || p.materialComposition || "Premium Natural"}
                           </div>
                           <div style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }} title={p.finish || "Export Quality Standard"}>
-                            <strong style={{ opacity: 0.7 }}>✨ Finish:</strong> {p.finish || "Export Quality Standard"}
+                            <strong style={{ opacity: 0.7 }}> Finish:</strong> {p.finish || "Export Quality Standard"}
                           </div>
                           <div style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }} title={p.application || p.useApplication || "Wholesale & Retail"}>
-                            <strong style={{ opacity: 0.7 }}>🎯 Use:</strong> {p.application || p.useApplication || "Wholesale & Retail"}
+                            <strong style={{ opacity: 0.7 }}> Use:</strong> {p.application || p.useApplication || "Wholesale & Retail"}
                           </div>
                         </div>
 
@@ -800,7 +800,7 @@ export default function DynamicCatalogueRenderer({
                               </div>
                             )}
                             <div style={{ fontSize: "0.70rem", color: "#15803d", fontWeight: 700 }}>
-                              💬 WA: +91 {currentCompany.whatsappNumber || (currentCompany.contact && (currentCompany.contact.phone || currentCompany.contact.mobile)) || "9414123456"}
+                               WA: +91 {currentCompany.whatsappNumber || (currentCompany.contact && (currentCompany.contact.phone || currentCompany.contact.mobile)) || "9414123456"}
                             </div>
                           </div>
                         </div>
@@ -882,7 +882,7 @@ export default function DynamicCatalogueRenderer({
           <div>
             <div style={{ textAlign: "center", marginBottom: "2.5rem" }}>
               <div style={{ display: "inline-flex", alignItems: "center", gap: "8px", border: `1.5px solid ${accentColor}`, padding: "4px 18px", borderRadius: "30px", fontSize: "0.74rem", fontWeight: 800, letterSpacing: "0.18em", color: accentColor, textTransform: "uppercase", background: cardBg, marginBottom: "0.75rem" }}>
-                {backCoverConfig.ctaBadge || "✦ OFFICIAL DIGITAL SHOWCASE & REAL-TIME CATALOGUE ✦"}
+                {backCoverConfig.ctaBadge || " OFFICIAL DIGITAL SHOWCASE & REAL-TIME CATALOGUE "}
               </div>
 
               <h2 style={{ fontFamily: headingFont, fontSize: "3.2rem", fontWeight: 900, color: primaryColor, margin: "0 0 0.5rem 0", letterSpacing: headingLetterSpacing }}>

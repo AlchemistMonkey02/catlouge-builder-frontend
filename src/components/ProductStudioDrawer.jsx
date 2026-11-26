@@ -226,7 +226,7 @@ export default function ProductStudioDrawer({ product, onClose, onSave }) {
 
         ctx.fillStyle = "#ffffff";
         ctx.font = "bold 28px 'Plus Jakarta Sans', sans-serif";
-        ctx.fillText(`✓ ${badgeText.toUpperCase()}`, 85, 905);
+        ctx.fillText(` ${badgeText.toUpperCase()}`, 85, 905);
       }
     };
   }, [activeTab, formData.image, bgMode, badgeText, brightness, contrast]);
@@ -386,10 +386,10 @@ export default function ProductStudioDrawer({ product, onClose, onSave }) {
                       Registered Company ODOP Category
                     </div>
                     <div style={{ fontSize: "0.95rem", fontWeight: 800, color: "var(--text-primary)" }}>
-                      {categoryFamily === "garlic" ? "🧄 Garlic Specialty" :
-                       categoryFamily === "sandstone" ? "🧱 Sand Stone Specialty" :
-                       categoryFamily === "kotastone" ? "🏛️ Kota Stone Specialty" :
-                       categoryFamily === "kotadoria" ? "🥻 Kota Doria Handloom" :
+                      {categoryFamily === "garlic" ? " Garlic Specialty" :
+                       categoryFamily === "sandstone" ? " Sand Stone Specialty" :
+                       categoryFamily === "kotastone" ? " Kota Stone Specialty" :
+                       categoryFamily === "kotadoria" ? " Kota Doria Handloom" :
                        (formData.category || "General Specialty")}
                       <span style={{ fontWeight: 600, color: "var(--text-secondary)", fontSize: "0.82rem", marginLeft: "6px" }}>
                         ({formData.brand || "Registered Enterprise"})
@@ -410,7 +410,7 @@ export default function ProductStudioDrawer({ product, onClose, onSave }) {
                       borderRadius: "6px"
                     }}
                   >
-                    📍 Registered District: <strong>{formData.district || "Rajasthan"}</strong>
+                     Registered District: <strong>{formData.district || "Rajasthan"}</strong>
                   </span>
                   <span
                     style={{
@@ -423,7 +423,7 @@ export default function ProductStudioDrawer({ product, onClose, onSave }) {
                       borderRadius: "6px"
                     }}
                   >
-                    ✓ Linked at Company Registration
+                     Linked at Company Registration
                   </span>
                 </div>
               </div>
@@ -440,15 +440,15 @@ export default function ProductStudioDrawer({ product, onClose, onSave }) {
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
                   <label style={{ fontSize: "0.85rem", fontWeight: 750, color: "var(--text-primary)" }}>
                     {categoryFamily === "garlic"
-                      ? "🧄 Garlic Agro Specifications & Grading Standards"
+                      ? " Garlic Agro Specifications & Grading Standards"
                       : (categoryFamily === "sandstone" || categoryFamily === "kotastone")
-                      ? "🧱 Stone Architectural Specifications & Calibration (Thickness & Surface)"
+                      ? " Stone Architectural Specifications & Calibration (Thickness & Surface)"
                       : categoryFamily === "kotadoria"
-                      ? "🥻 Kota Doria Artisan Handloom Specifications (Length & Weight)"
+                      ? " Kota Doria Artisan Handloom Specifications (Length & Weight)"
                       : "Four Mandatory Product Specification Points"}
                   </label>
                   <span style={{ fontSize: "0.75rem", color: "#166534", background: "#dcfce7", padding: "2px 8px", borderRadius: "4px", fontWeight: 700 }}>
-                    ✓ Auto-Formatted for Catalogue
+                     Auto-Formatted for Catalogue
                   </span>
                 </div>
 
@@ -467,13 +467,13 @@ export default function ProductStudioDrawer({ product, onClose, onSave }) {
                     fontWeight: 700,
                     marginBottom: "0.75rem",
                   }}>
-                    <span>⚡ {priceNotice}</span>
+                    <span> {priceNotice}</span>
                     <button
                       type="button"
                       onClick={() => setPriceNotice(null)}
                       style={{ background: "transparent", border: "none", color: "#059669", cursor: "pointer", fontWeight: 800, fontSize: "0.85rem" }}
                     >
-                      ✕
+                      
                     </button>
                   </div>
                 )}
@@ -485,7 +485,7 @@ export default function ProductStudioDrawer({ product, onClose, onSave }) {
                       <div>
                         <SmartPresetInput
                           label="1. Bulb Caliber / Sizing Diameter *"
-                          icon={<span style={{ fontSize: "0.9rem" }}>🧄</span>}
+                          icon={<span style={{ fontSize: "0.9rem" }}></span>}
                           placeholder="e.g. 50 - 65 mm (Grade A+ Large) / 40-50 mm (Medium)"
                           value={formData.size || ""}
                           onChange={(val) => handleChange("size", val)}
@@ -502,13 +502,13 @@ export default function ProductStudioDrawer({ product, onClose, onSave }) {
                               setPriceNotice(`Price auto-adjusted to ₹${preset.price}/kg based on ${preset.chipLabel || preset.value}`);
                             }
                           }}
-                          customHelpText="⚡ Select grade to auto-calculate price, or type custom."
+                          customHelpText=" Select grade to auto-calculate price, or type custom."
                         />
                       </div>
                       <div>
                         <SmartPresetInput
                           label="2. Moisture Content & Quality Standard *"
-                          icon={<span style={{ fontSize: "0.9rem" }}>💧</span>}
+                          icon={<span style={{ fontSize: "0.9rem" }}></span>}
                           placeholder="e.g. Moisture < 65%, Sun-Cured Clean White"
                           value={formData.material || formData.materialComposition || ""}
                           onChange={(val) => {
@@ -520,7 +520,7 @@ export default function ProductStudioDrawer({ product, onClose, onSave }) {
                             { value: "Moisture < 70%, Well-Dried Organically Grown", chipLabel: "<70% Organic", label: "Moisture < 70%, Well-Dried Organically Grown" },
                             { value: "Standard Mandi Sun-Cured, High Allicin", chipLabel: "Standard Mandi", label: "Standard Mandi Sun-Cured, High Allicin" },
                           ]}
-                          customHelpText="💡 Pick quality standard or type custom."
+                          customHelpText=" Pick quality standard or type custom."
                         />
                       </div>
                     </div>
@@ -529,18 +529,18 @@ export default function ProductStudioDrawer({ product, onClose, onSave }) {
                       <div>
                         <SmartPresetInput
                           label="3. Curing & Skin Finish *"
-                          icon={<span style={{ fontSize: "0.9rem" }}>✨</span>}
+                          icon={<span style={{ fontSize: "0.9rem" }}></span>}
                           placeholder="e.g. Sun-Cured Export Clean White Skin"
                           value={formData.finish || ""}
                           onChange={(val) => handleChange("finish", val)}
                           presets={ODOP_CATEGORY_PRESETS.garlic.finishes}
-                          customHelpText="💡 Pick curing finish or type custom."
+                          customHelpText=" Pick curing finish or type custom."
                         />
                       </div>
                       <div>
                         <SmartPresetInput
                           label="4. Variety, Packaging & Commercial Use *"
-                          icon={<span style={{ fontSize: "0.9rem" }}>🎯</span>}
+                          icon={<span style={{ fontSize: "0.9rem" }}></span>}
                           placeholder="e.g. Malwa Desi in 25kg Aerated Red Mesh Bags"
                           value={formData.application || formData.useApplication || ""}
                           onChange={(val) => {
@@ -548,7 +548,7 @@ export default function ProductStudioDrawer({ product, onClose, onSave }) {
                             handleChange("useApplication", val);
                           }}
                           presets={ODOP_CATEGORY_PRESETS.garlic.applications}
-                          customHelpText="💡 Pick packaging or type custom."
+                          customHelpText=" Pick packaging or type custom."
                         />
                       </div>
                     </div>
@@ -562,18 +562,18 @@ export default function ProductStudioDrawer({ product, onClose, onSave }) {
                       <div>
                         <SmartPresetInput
                           label="1. Plan Dimensions / Tile Size (L × W) *"
-                          icon={<span style={{ fontSize: "0.9rem" }}>📐</span>}
+                          icon={<span style={{ fontSize: "0.9rem" }}></span>}
                           placeholder="e.g. 2×2 ft (600×600 mm) / Custom Size"
                           value={formData.size || ""}
                           onChange={(val) => handleChange("size", val)}
                           presets={ODOP_CATEGORY_PRESETS[categoryFamily]?.sizes || ODOP_CATEGORY_PRESETS.kotastone.sizes}
-                          customHelpText="💡 Pick standard tile dimensions or type custom size."
+                          customHelpText=" Pick standard tile dimensions or type custom size."
                         />
                       </div>
                       <div>
                         <SmartPresetInput
                           label="2. Stone Thickness & Gauging Calibration *"
-                          icon={<span style={{ fontSize: "0.9rem" }}>📏</span>}
+                          icon={<span style={{ fontSize: "0.9rem" }}></span>}
                           placeholder="e.g. 20 - 25 mm Gauged / Custom Thickness"
                           value={formData.thickness || ""}
                           onChange={(val) => handleChange("thickness", val)}
@@ -590,7 +590,7 @@ export default function ProductStudioDrawer({ product, onClose, onSave }) {
                               setPriceNotice(`Rate auto-adjusted to ₹${preset.price}/sq.ft based on ${preset.chipLabel || preset.value}`);
                             }
                           }}
-                          customHelpText="⚡ Select thickness to auto-update rate, or type custom thickness."
+                          customHelpText=" Select thickness to auto-update rate, or type custom thickness."
                         />
                       </div>
                     </div>
@@ -599,18 +599,18 @@ export default function ProductStudioDrawer({ product, onClose, onSave }) {
                       <div>
                         <SmartPresetInput
                           label="3. Surface Finish & Edge Treatment *"
-                          icon={<span style={{ fontSize: "0.9rem" }}>✨</span>}
+                          icon={<span style={{ fontSize: "0.9rem" }}></span>}
                           placeholder="e.g. Mirror Polish / Honed Satin / Hand-Chiseled"
                           value={formData.finish || ""}
                           onChange={(val) => handleChange("finish", val)}
                           presets={ODOP_CATEGORY_PRESETS[categoryFamily]?.finishes || ODOP_CATEGORY_PRESETS.kotastone.finishes}
-                          customHelpText="💡 Pick texture finish or type custom."
+                          customHelpText=" Pick texture finish or type custom."
                         />
                       </div>
                       <div>
                         <SmartPresetInput
                           label="4. Rock Material & Commercial Application *"
-                          icon={<span style={{ fontSize: "0.9rem" }}>🎯</span>}
+                          icon={<span style={{ fontSize: "0.9rem" }}></span>}
                           placeholder="e.g. Natural Limestone / Heavy Traffic Flooring"
                           value={formData.material || formData.materialComposition || formData.application || ""}
                           onChange={(val) => {
@@ -620,7 +620,7 @@ export default function ProductStudioDrawer({ product, onClose, onSave }) {
                             handleChange("useApplication", val);
                           }}
                           presets={ODOP_CATEGORY_PRESETS[categoryFamily]?.applications || ODOP_CATEGORY_PRESETS.kotastone.applications}
-                          customHelpText="💡 Pick stone application or type custom."
+                          customHelpText=" Pick stone application or type custom."
                         />
                       </div>
                     </div>
@@ -634,7 +634,7 @@ export default function ProductStudioDrawer({ product, onClose, onSave }) {
                       <div>
                         <SmartPresetInput
                           label="1. Fabric Length & Cut Dimensions *"
-                          icon={<span style={{ fontSize: "0.9rem" }}>📏</span>}
+                          icon={<span style={{ fontSize: "0.9rem" }}></span>}
                           placeholder="e.g. 6.5 Metres with 80cm Running Blouse"
                           value={formData.size || ""}
                           onChange={(val) => handleChange("size", val)}
@@ -651,13 +651,13 @@ export default function ProductStudioDrawer({ product, onClose, onSave }) {
                               setPriceNotice(`Price auto-adjusted to ₹${preset.price} based on ${preset.chipLabel || preset.value}`);
                             }
                           }}
-                          customHelpText="⚡ Select cut length to auto-set price, or type custom."
+                          customHelpText=" Select cut length to auto-set price, or type custom."
                         />
                       </div>
                       <div>
                         <SmartPresetInput
                           label="2. Fabric Weight & Yarn Count *"
-                          icon={<span style={{ fontSize: "0.9rem" }}>⚖️</span>}
+                          icon={<span style={{ fontSize: "0.9rem" }}></span>}
                           placeholder="e.g. Lightweight 280-320 grams / 80s × 100s Count"
                           value={formData.fabricWeight || ""}
                           onChange={(val) => handleChange("fabricWeight", val)}
@@ -666,7 +666,7 @@ export default function ProductStudioDrawer({ product, onClose, onSave }) {
                             { value: "Featherlight 240-270 grams (Pure Silk Warp & Weft)", chipLabel: "240-270g Pure Silk", label: "Featherlight 240-270 grams (Pure Silk Warp & Weft)" },
                             { value: "Medium 350-380 grams (Pure Cotton Handloom)", chipLabel: "350-380g Pure Cotton", label: "Medium 350-380 grams (Pure Cotton Handloom)" },
                           ]}
-                          customHelpText="💡 Pick yarn count weight or type custom."
+                          customHelpText=" Pick yarn count weight or type custom."
                         />
                       </div>
                     </div>
@@ -675,18 +675,18 @@ export default function ProductStudioDrawer({ product, onClose, onSave }) {
                       <div>
                         <SmartPresetInput
                           label="3. Weave Grid (Khat) & Zari Border *"
-                          icon={<span style={{ fontSize: "0.9rem" }}>✨</span>}
+                          icon={<span style={{ fontSize: "0.9rem" }}></span>}
                           placeholder="e.g. Traditional Square Khat Grid with Tested Gold Zari"
                           value={formData.finish || ""}
                           onChange={(val) => handleChange("finish", val)}
                           presets={ODOP_CATEGORY_PRESETS.kotadoria.finishes}
-                          customHelpText="💡 Pick weave motif or type custom."
+                          customHelpText=" Pick weave motif or type custom."
                         />
                       </div>
                       <div>
                         <SmartPresetInput
                           label="4. Fiber Composition, Occasion & Care *"
-                          icon={<span style={{ fontSize: "0.9rem" }}>🎯</span>}
+                          icon={<span style={{ fontSize: "0.9rem" }}></span>}
                           placeholder="e.g. Pure Mulberry Silk & Cotton / Dry Clean Only"
                           value={formData.material || formData.materialComposition || formData.application || ""}
                           onChange={(val) => {
@@ -696,7 +696,7 @@ export default function ProductStudioDrawer({ product, onClose, onSave }) {
                             handleChange("useApplication", val);
                           }}
                           presets={ODOP_CATEGORY_PRESETS.kotadoria.applications}
-                          customHelpText="💡 Pick composition & care or type custom."
+                          customHelpText=" Pick composition & care or type custom."
                         />
                       </div>
                     </div>
@@ -710,7 +710,7 @@ export default function ProductStudioDrawer({ product, onClose, onSave }) {
                       <div>
                         <SmartPresetInput
                           label="1. Size / Specification *"
-                          icon={<span style={{ fontSize: "0.9rem" }}>📏</span>}
+                          icon={<span style={{ fontSize: "0.9rem" }}></span>}
                           placeholder="e.g. Dimensions, Capacity, Size"
                           value={formData.size || ""}
                           onChange={(val) => handleChange("size", val)}
@@ -719,13 +719,13 @@ export default function ProductStudioDrawer({ product, onClose, onSave }) {
                             { value: "Large Format / Heavy Duty", chipLabel: "Large", label: "Large Format / Heavy Duty" },
                             { value: "Compact / Portable Size", chipLabel: "Compact", label: "Compact / Portable Size" },
                           ]}
-                          customHelpText="💡 Pick standard size or type custom."
+                          customHelpText=" Pick standard size or type custom."
                         />
                       </div>
                       <div>
                         <SmartPresetInput
                           label="2. Material Composition *"
-                          icon={<span style={{ fontSize: "0.9rem" }}>🧵</span>}
+                          icon={<span style={{ fontSize: "0.9rem" }}></span>}
                           placeholder="e.g. Material, Fabric, Metal"
                           value={formData.material || formData.materialComposition || ""}
                           onChange={(val) => {
@@ -736,7 +736,7 @@ export default function ProductStudioDrawer({ product, onClose, onSave }) {
                             { value: "High Grade Natural Composition", chipLabel: "Natural", label: "High Grade Natural Composition" },
                             { value: "Premium Certified Organic Component", chipLabel: "Organic", label: "Premium Certified Organic Component" },
                           ]}
-                          customHelpText="💡 Pick material or type custom."
+                          customHelpText=" Pick material or type custom."
                         />
                       </div>
                     </div>
@@ -744,7 +744,7 @@ export default function ProductStudioDrawer({ product, onClose, onSave }) {
                     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.75rem", marginBottom: "0.75rem" }}>
                       <div>
                         <label style={{ fontSize: "0.8rem", fontWeight: 650, color: "var(--text-secondary)", display: "block", marginBottom: "4px" }}>
-                          ✨ 3. Surface Finish / Color *
+                           3. Surface Finish / Color *
                         </label>
                         <input
                           type="text"
@@ -757,7 +757,7 @@ export default function ProductStudioDrawer({ product, onClose, onSave }) {
                       </div>
                       <div>
                         <label style={{ fontSize: "0.8rem", fontWeight: 650, color: "var(--text-secondary)", display: "block", marginBottom: "4px" }}>
-                          🎯 4. Use / Application *
+                           4. Use / Application *
                         </label>
                         <input
                           type="text"
@@ -778,7 +778,7 @@ export default function ProductStudioDrawer({ product, onClose, onSave }) {
                 {/* Price Range */}
                 <div>
                   <label style={{ fontSize: "0.8rem", fontWeight: 650, color: "var(--text-secondary)", display: "block", marginBottom: "4px" }}>
-                    💰 Price Range (₹)
+                     Price Range (₹)
                   </label>
                   <input
                     type="text"
@@ -832,13 +832,13 @@ export default function ProductStudioDrawer({ product, onClose, onSave }) {
                   fontSize: "0.82rem",
                   fontWeight: 700
                 }}>
-                  <span>⚡ {priceNotice}</span>
+                  <span> {priceNotice}</span>
                   <button
                     type="button"
                     onClick={() => setPriceNotice(null)}
                     style={{ background: "transparent", border: "none", color: "#059669", cursor: "pointer", fontWeight: 800, fontSize: "0.9rem" }}
                   >
-                    ✕
+                    
                   </button>
                 </div>
               )}
@@ -1291,7 +1291,7 @@ export default function ProductStudioDrawer({ product, onClose, onSave }) {
 
                 {upscaleStats && (
                   <div style={{ marginTop: "6px", fontSize: "0.74rem", color: "#166534", fontWeight: 600, display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "6px" }}>
-                    <span>✓ Image optimized: {upscaleStats.from} ➔ {upscaleStats.to} ({upscaleStats.scale} Super-Resolution applied)</span>
+                    <span> Image optimized: {upscaleStats.from}  {upscaleStats.to} ({upscaleStats.scale} Super-Resolution applied)</span>
                     <button
                       type="button"
                       onClick={() => setIsPreviewModalOpen(true)}
@@ -1306,7 +1306,7 @@ export default function ProductStudioDrawer({ product, onClose, onSave }) {
                         fontSize: "0.74rem",
                       }}
                     >
-                      View HD Preview ➔
+                      View HD Preview 
                     </button>
                   </div>
                 )}
@@ -1433,8 +1433,8 @@ export default function ProductStudioDrawer({ product, onClose, onSave }) {
                 <ul style={{ fontSize: "0.8rem", color: "var(--text-secondary)", paddingLeft: "1.25rem", display: "flex", flexDirection: "column", gap: "4px" }}>
                   <li>Title length: {(formData.name || "").length} / 200 chars</li>
                   <li>Bullet points count: {(formData.keyFeatures || []).length} / 5 recommended</li>
-                  <li>HSN Code: {formData.hsnCode ? `✓ ${formData.hsnCode}` : "⚠️ Missing HSN Code"}</li>
-                  <li>Pure White Background Image: {bgMode === "white" ? "✓ Compliant" : "⚠️ Needs pure white bg"}</li>
+                  <li>HSN Code: {formData.hsnCode ? ` ${formData.hsnCode}` : " Missing HSN Code"}</li>
+                  <li>Pure White Background Image: {bgMode === "white" ? " Compliant" : " Needs pure white bg"}</li>
                 </ul>
               </div>
 
@@ -1448,8 +1448,8 @@ export default function ProductStudioDrawer({ product, onClose, onSave }) {
                 </div>
                 <ul style={{ fontSize: "0.8rem", color: "var(--text-secondary)", paddingLeft: "1.25rem", display: "flex", flexDirection: "column", gap: "4px" }}>
                   <li>Title limit: max 150 chars</li>
-                  <li>Package Dimensions (L x W x H): {formData.dimensions?.length ? "✓ Filled" : "⚠️ Missing dimensions"}</li>
-                  <li>Weight: {formData.weight?.value ? `✓ ${formData.weight.value}g` : "⚠️ Missing weight"}</li>
+                  <li>Package Dimensions (L x W x H): {formData.dimensions?.length ? " Filled" : " Missing dimensions"}</li>
+                  <li>Weight: {formData.weight?.value ? ` ${formData.weight.value}g` : " Missing weight"}</li>
                 </ul>
               </div>
 

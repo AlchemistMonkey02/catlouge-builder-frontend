@@ -512,7 +512,7 @@ export default function CompanyManager() {
           }}
         >
           <div style={{ color: "#b91c1c", fontSize: "0.88rem", fontWeight: 600 }}>
-            ⚠️ Server Notice: {loadError}. Cached or mock data has been disabled.
+             Server Notice: {loadError}. Cached or mock data has been disabled.
           </div>
           <button
             className="btn btn-sm btn-primary"
@@ -763,7 +763,7 @@ export default function CompanyManager() {
                                       fontSize: "0.75rem",
                                     }}
                                   >
-                                    📍 {displayDistrict}
+                                     {displayDistrict}
                                   </span>
                                 </>
                               );
@@ -1129,28 +1129,28 @@ export default function CompanyManager() {
                         {
                           product: "Kota Doria",
                           district: "Kota, Rajasthan",
-                          label: "🥻 Kota Doria Handloom",
+                          label: " Kota Doria Handloom",
                           loc: "District: Kota",
                           ind: "Kota Doria Handlooms & Sarees",
                         },
                         {
                           product: "Garlic",
                           district: "Baran, Rajasthan",
-                          label: "🧄 Garlic Agro-Commodity",
+                          label: " Garlic Agro-Commodity",
                           loc: "District: Baran",
                           ind: "Garlic Agro-Commodity & Exports",
                         },
                         {
                           product: "Kota Stone",
                           district: "Jhalawar, Rajasthan",
-                          label: "🏛️ Kota Stone Architectural",
+                          label: " Kota Stone Architectural",
                           loc: "District: Jhalawar",
                           ind: "Kota Stone Architectural Limestone",
                         },
                         {
                           product: "Sandstone",
                           district: "Bundi, Rajasthan",
-                          label: "🧱 Sandstone Heritage Mining",
+                          label: " Sandstone Heritage Mining",
                           loc: "District: Bundi",
                           ind: "Sandstone Heritage Masonry & Mining",
                         },
@@ -1185,7 +1185,7 @@ export default function CompanyManager() {
                               {odop.label}
                             </div>
                             <div style={{ fontSize: "0.75rem", color: isSelected ? "var(--primary)" : "var(--text-muted)", marginTop: "2px", fontWeight: 600 }}>
-                              📍 {odop.loc}
+                               {odop.loc}
                             </div>
                           </button>
                         );
@@ -1223,10 +1223,10 @@ export default function CompanyManager() {
 
                     <div style={{ display: "flex", gap: "8px", marginTop: "8px", fontSize: "0.76rem" }}>
                       <span style={{ background: "rgba(99, 102, 241, 0.12)", color: "var(--primary)", padding: "2px 8px", borderRadius: "4px", fontWeight: 700 }}>
-                        📍 Registered District: {formData.district || "Pending Registration"}
+                         Registered District: {formData.district || "Pending Registration"}
                       </span>
                       <span style={{ background: "rgba(16, 185, 129, 0.12)", color: "#059669", padding: "2px 8px", borderRadius: "4px", fontWeight: 700 }}>
-                        🏷️ ODOP Product: {formData.odopProduct || "Pending Selection"}
+                         ODOP Product: {formData.odopProduct || "Pending Selection"}
                       </span>
                     </div>
                   </div>

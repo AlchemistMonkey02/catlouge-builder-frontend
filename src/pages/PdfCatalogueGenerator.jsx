@@ -69,7 +69,7 @@ const CANVA_TEMPLATES = [
     desc: "Complete 9-page architectural stone catalogue with Cover, About Us, Benefits, Product Specs Table, Surface Finishes, Applications, CNC Patterns, and QR Contact Us back cover.",
     palette: ["#F5F6F0", "#4E5C43", "#1C1917", "#C5A059"],
     badge: "Reference Format",
-    icon: "🏛️",
+    icon: "",
     previewBg: "linear-gradient(135deg, #F5F6F0 0%, #E8EBE0 100%)",
     previewBorder: "#4E5C43",
     textColor: "#4E5C43",
@@ -81,7 +81,7 @@ const CANVA_TEMPLATES = [
     desc: "Alabaster parchment, champagne gold double-borders, Playfair serif typography, diamond ornaments, and luxury seal.",
     palette: ["#FAF8F5", "#D4AF37", "#1A1715", "#C5A059"],
     badge: "Canva Luxe",
-    icon: "✨",
+    icon: "",
     previewBg: "linear-gradient(135deg, #FAF8F5 0%, #F3EDE2 100%)",
     previewBorder: "#D4AF37",
     textColor: "#1A1715",
@@ -93,7 +93,7 @@ const CANVA_TEMPLATES = [
     desc: "Deep obsidian canvas, electric magenta & cyan gradient accents, 3D floating cards, bold Montserrat 900 typography.",
     palette: ["#0D1117", "#7928CA", "#FF0080", "#00DFD8"],
     badge: "Canva Trendy",
-    icon: "⚡",
+    icon: "",
     previewBg: "linear-gradient(135deg, #0D1117 0%, #161B22 100%)",
     previewBorder: "#FF0080",
     textColor: "#FFFFFF",
@@ -105,7 +105,7 @@ const CANVA_TEMPLATES = [
     desc: "Crisp white canvas, royal navy banner, sapphire blue accents, dual B2B wholesale pricing, structured spec matrices.",
     palette: ["#FFFFFF", "#0A2540", "#0066CC", "#E2E8F0"],
     badge: "Canva B2B",
-    icon: "🏢",
+    icon: "",
     previewBg: "linear-gradient(135deg, #0A2540 0%, #134074 100%)",
     previewBorder: "#0066CC",
     textColor: "#FFFFFF",
@@ -117,7 +117,7 @@ const CANVA_TEMPLATES = [
     desc: "Warm linen background, signature Canva arched photo frames, sage green & terracotta hues, Cinzel serif typography.",
     palette: ["#F7F4EE", "#2E4F3E", "#C86A4B", "#E3D5C5"],
     badge: "Canva Organic",
-    icon: "🌿",
+    icon: "",
     previewBg: "linear-gradient(135deg, #F7F4EE 0%, #EAE4D7 100%)",
     previewBorder: "#2E4F3E",
     textColor: "#2E4F3E",
@@ -129,7 +129,7 @@ const CANVA_TEMPLATES = [
     desc: "Matte carbon graphite, safety hazard amber accents, laser cyan crosshair reticle, technical blueprint parameter readouts.",
     palette: ["#12161F", "#F59E0B", "#00E5FF", "#1E2538"],
     badge: "Canva Tech",
-    icon: "⚙️",
+    icon: "",
     previewBg: "linear-gradient(135deg, #12161F 0%, #1E2538 100%)",
     previewBorder: "#00E5FF",
     textColor: "#00E5FF",
@@ -979,7 +979,7 @@ export default function PdfCatalogueGenerator() {
                       <div style={{ fontSize: "0.80rem", color: "var(--text-secondary)", fontWeight: 600, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", marginTop: "2px", display: "flex", alignItems: "center", gap: "6px" }}>
                         <span style={{ color: "var(--primary)", fontWeight: 750 }}>{pOdop}</span>
                         <span>•</span>
-                        <span style={{ color: "#047857", fontWeight: 700 }}>📍 {pDist}</span>
+                        <span style={{ color: "#047857", fontWeight: 700 }}> {pDist}</span>
                       </div>
                     );
                   })()}
@@ -1039,7 +1039,7 @@ export default function PdfCatalogueGenerator() {
                   }}
                 >
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                    <span style={{ fontSize: "1.15rem" }}>{tmpl.icon || (tmpl.isCustom ? "🎨" : "📄")}</span>
+                    <span style={{ fontSize: "1.15rem" }}>{tmpl.icon || (tmpl.isCustom ? "" : "")}</span>
                     <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
                       {tmpl.isCustom && (
                         <button
@@ -1606,7 +1606,7 @@ export default function PdfCatalogueGenerator() {
         {/* Zero-product alert notice */}
         {visibleProducts.length === 0 && companyProducts.length > 0 && (
           <div style={{ padding: "0.6rem 0.9rem", background: "rgba(245, 158, 11, 0.12)", border: "1px solid rgba(245, 158, 11, 0.35)", borderRadius: "8px", color: "var(--warning)", fontSize: "0.84rem", fontWeight: 700, marginBottom: "0.75rem", display: "flex", alignItems: "center", gap: "8px" }}>
-            <span>⚠️</span>
+            <span></span>
             <span>0 products currently selected. Check the checkboxes below to add products back into your catalogue.</span>
           </div>
         )}
@@ -1704,7 +1704,7 @@ export default function PdfCatalogueGenerator() {
             <Eye size={20} color="var(--primary)" /> Live Catalogue Preview
           </div>
           <span style={{ fontSize: "0.84rem", color: "var(--text-secondary)", fontWeight: 600 }}>
-            Format: <strong style={{ color: "var(--primary)", fontWeight: 800 }}>{CANVA_TEMPLATES.find((t) => t.id === templateId)?.name}</strong> • Company: <strong style={{ color: "var(--text-primary)", fontWeight: 800 }}>{currentCompany.name}</strong> • <span style={{ color: "#166534", fontWeight: 750 }}>📍 District: {currentCompany.district} (ODOP {currentCompany.odopProduct})</span>
+            Format: <strong style={{ color: "var(--primary)", fontWeight: 800 }}>{CANVA_TEMPLATES.find((t) => t.id === templateId)?.name}</strong> • Company: <strong style={{ color: "var(--text-primary)", fontWeight: 800 }}>{currentCompany.name}</strong> • <span style={{ color: "#166534", fontWeight: 750 }}> District: {currentCompany.district} (ODOP {currentCompany.odopProduct})</span>
           </span>
         </div>
 
@@ -1717,7 +1717,7 @@ export default function PdfCatalogueGenerator() {
           {/* EMPTY STATE */}
           {visibleProducts.length === 0 && (
             <div style={{ textAlign: "center", padding: "4rem 2rem", background: "rgba(0,0,0,0.03)", borderRadius: "8px", border: "2px dashed #cbd5e1" }}>
-              <div style={{ fontSize: "2.5rem", marginBottom: "0.5rem" }}>📦</div>
+              <div style={{ fontSize: "2.5rem", marginBottom: "0.5rem" }}></div>
               <h3 style={{ fontSize: "1.25rem", color: secondaryColor, fontWeight: 700, margin: 0 }}>
                 No Products Selected in this Catalogue
               </h3>
@@ -1756,7 +1756,7 @@ export default function PdfCatalogueGenerator() {
                       {currentCompany.name}
                     </h1>
                     <div style={{ display: "inline-flex", alignItems: "center", gap: "6px", background: "#4E5C43", color: "#FFFFFF", padding: "4px 14px", borderRadius: "20px", fontSize: "0.78rem", fontWeight: 700, marginTop: "8px" }}>
-                      <span>📍 District: {currentCompany.district}</span>
+                      <span> District: {currentCompany.district}</span>
                       <span>•</span>
                       <span>ODOP: {currentCompany.odopProduct}</span>
                     </div>
@@ -1884,8 +1884,8 @@ export default function PdfCatalogueGenerator() {
 
                   {/* Footer Bar */}
                   <div style={{ borderTop: "1px solid #D8DDD0", paddingTop: "1rem", marginTop: "2rem", display: "flex", justifyContent: "space-between", fontSize: "0.78rem", color: "#444444" }}>
-                    <div>📍 {currentCompany.contact?.address}</div>
-                    <div>📞 {currentCompany.contact?.phone}</div>
+                    <div> {currentCompany.contact?.address}</div>
+                    <div> {currentCompany.contact?.phone}</div>
                   </div>
                 </div>
               )}
@@ -2252,7 +2252,7 @@ export default function PdfCatalogueGenerator() {
                     <div style={{ background: "#FFFFFF", borderRadius: "16px", padding: "1.5rem 2.25rem", marginBottom: "1.75rem", boxShadow: "0 8px 30px rgba(0,0,0,0.08)", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "2rem", border: "2px solid #5C6B50" }}>
                       <div>
                         <div style={{ fontSize: "0.75rem", color: "#5C6B50", fontWeight: 800, letterSpacing: "0.15em", textTransform: "uppercase" }}>
-                          ✦ OFFICIAL DIGITAL SHOWCASE &amp; REAL-TIME CATALOGUE ✦
+                           OFFICIAL DIGITAL SHOWCASE &amp; REAL-TIME CATALOGUE 
                         </div>
                         <h4 style={{ fontFamily: "'Playfair Display', serif", fontSize: "1.65rem", fontWeight: 700, color: "#111111", margin: "4px 0" }}>
                           Scan to View {currentCompany.name} Online
@@ -2262,7 +2262,7 @@ export default function PdfCatalogueGenerator() {
                         </p>
                         {qrLinks.businessProfile && (
                           <div style={{ fontSize: "0.75rem", color: "#5C6B50", marginTop: "6px", fontWeight: 600, wordBreak: "break-all" }}>
-                            🔗 {qrLinks.businessProfile}
+                             {qrLinks.businessProfile}
                           </div>
                         )}
                       </div>
@@ -2455,7 +2455,7 @@ export default function PdfCatalogueGenerator() {
                     {
                       product: "Kota Doria",
                       district: "Kota, Rajasthan",
-                      label: "🥻 Kota Doria",
+                      label: " Kota Doria",
                       loc: "District: Kota",
                       ind: "Kota Doria Handlooms & Sarees",
                       tag: "GI Certified Gossamer Handloom Drapes",
@@ -2464,7 +2464,7 @@ export default function PdfCatalogueGenerator() {
                     {
                       product: "Garlic",
                       district: "Baran, Rajasthan",
-                      label: "🧄 Garlic",
+                      label: " Garlic",
                       loc: "District: Baran",
                       ind: "Garlic Agro-Commodity & Exports",
                       tag: "Farm-Fresh High-Allicin Cured Garlic Bulbs",
@@ -2473,7 +2473,7 @@ export default function PdfCatalogueGenerator() {
                     {
                       product: "Kota Stone",
                       district: "Jhalawar, Rajasthan",
-                      label: "🏛️ Kota Stone",
+                      label: " Kota Stone",
                       loc: "District: Jhalawar",
                       ind: "Kota Stone Architectural Mining",
                       tag: "Indurated Natural Limestone Slabs & Tiles",
@@ -2482,7 +2482,7 @@ export default function PdfCatalogueGenerator() {
                     {
                       product: "Sandstone",
                       district: "Bundi, Rajasthan",
-                      label: "🧱 Sandstone",
+                      label: " Sandstone",
                       loc: "District: Bundi",
                       ind: "Heritage Sandstone & Architectural Mining",
                       tag: "Sedimentary Quartz Sandstone Blocks & Tiles",
@@ -2521,7 +2521,7 @@ export default function PdfCatalogueGenerator() {
                           {od.label}
                         </div>
                         <div style={{ fontSize: "0.70rem", color: isSelected ? "var(--primary)" : "var(--text-muted)", marginTop: "1px" }}>
-                          📍 {od.loc}
+                           {od.loc}
                         </div>
                       </button>
                     );
@@ -2570,10 +2570,10 @@ export default function PdfCatalogueGenerator() {
                   }}
                 >
                   <span style={{ fontWeight: 750, color: "#15803d" }}>
-                    📍 District: <strong>{newCompany.district || "Pending Registration"}</strong>
+                     District: <strong>{newCompany.district || "Pending Registration"}</strong>
                   </span>
                   <span style={{ fontWeight: 700, color: "var(--primary)" }}>
-                    🏷️ ODOP: {newCompany.odopProduct || "Pending Selection"}
+                     ODOP: {newCompany.odopProduct || "Pending Selection"}
                   </span>
                 </div>
               </div>
