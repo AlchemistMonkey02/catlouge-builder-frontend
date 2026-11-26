@@ -17,16 +17,17 @@ const THEMES = [
   { id: "light", label: "Light", title: "Studio Light", icon: Sun, dot: "#4f46e5" },
   { id: "warm", label: "Warm", title: "Warm Luxe", icon: Palette, dot: "#d97706" },
   { id: "slate", label: "Slate", title: "Nordic Slate", icon: Layers, dot: "#2563eb" },
+  { id: "forest", label: "Forest", title: "Earthy Forest Hues", icon: Layers, dot: "#588157" },
   { id: "dark", label: "Dark", title: "Obsidian Dark", icon: Moon, dot: "#818cf8" },
 ];
 
 export default function Navbar() {
   const location = useLocation();
   const navigate = useNavigate();
-  const isLoggedIn = Boolean(localStorage.getItem("token"));
 
   const handleLogout = () => {
     localStorage.removeItem("token");
+    localStorage.removeItem("admin_logged_in");
     navigate("/login");
   };
 
@@ -191,25 +192,23 @@ export default function Navbar() {
           <span>Studio Ready</span>
         </div>
 
-        {isLoggedIn && (
-          <button
-            type="button"
-            onClick={handleLogout}
-            className="org-badge"
-            style={{
-              cursor: "pointer",
-              fontSize: "0.82rem",
-              padding: "0.42rem 0.85rem",
-              color: "#dc2626",
-              borderColor: "rgba(220, 38, 38, 0.25)",
-              background: "rgba(220, 38, 38, 0.06)",
-            }}
-            title="Sign out"
-          >
-            <LogOut size={15} />
-            <span>Logout</span>
-          </button>
-        )}
+        <button
+          type="button"
+          onClick={handleLogout}
+          className="org-badge"
+          style={{
+            cursor: "pointer",
+            fontSize: "0.82rem",
+            padding: "0.42rem 0.85rem",
+            color: "#dc2626",
+            borderColor: "rgba(220, 38, 38, 0.25)",
+            background: "rgba(220, 38, 38, 0.06)",
+          }}
+          title="Sign out"
+        >
+          <LogOut size={15} />
+          <span>Logout</span>
+        </button>
       </div>
     </header>
   );

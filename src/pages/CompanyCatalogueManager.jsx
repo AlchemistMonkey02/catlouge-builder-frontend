@@ -24,8 +24,10 @@ import {
   Database,
   Eye,
   FileSpreadsheet,
+  Scissors,
 } from "lucide-react";
 import ImageUpscaleModal from "../components/ImageUpscaleModal";
+import RemoveBgModal from "../components/RemoveBgModal";
 import ProductImagePreviewModal from "../components/ProductImagePreviewModal";
 import CompanyDataBankModal from "../components/CompanyDataBankModal";
 import ProductSheetUploadModal from "../components/ProductSheetUploadModal";
@@ -36,6 +38,7 @@ import {
   updateCatalogueProduct,
   deleteCatalogueProduct,
   updateCompanyDataBank,
+  neuralAiCutout,
   // generateAiContent, // AI features commented out
 } from "../services/api";
 import { isProductCompatibleWithFamily, SPECIALTY_DEMO_PRODUCTS } from "../components/dynamic-catalogue/DynamicCatalogueStudio";
@@ -759,13 +762,13 @@ export function SmartPresetInput({
                 zIndex: 2,
               }}
             >
-              <option value="" disabled>⚡ Select Pre-Filled Preset...</option>
+              <option value="" disabled>Select Preset...</option>
               {presets.map((p, idx) => (
                 <option key={idx} value={p.value}>
                   {p.label || p.value}
                 </option>
               ))}
-              <option value="__custom__">✏️ Custom (Type your own)...</option>
+              <option value="__custom__">Custom</option>
             </select>
             <div style={{ display: "flex", alignItems: "center", gap: "4px", fontSize: "0.72rem", fontWeight: 700, color: "var(--primary, #4f46e5)", pointerEvents: "none", whiteSpace: "nowrap" }}>
               <span>Presets</span>
@@ -846,7 +849,7 @@ export function SmartPresetInput({
               }}
               title="Save this custom value to company Data Bank"
             >
-              <span>💾 Save to Data Bank</span>
+              <span>Save to Data Bank</span>
             </button>
           )}
         </div>
@@ -1045,6 +1048,36 @@ export default function CompanyCatalogueManager() {
     };
     reader.readAsDataURL(file);
     e.target.value = "";
+  };
+
+  const [removeBgModal, setRemoveBgModal] = useState({ isOpen: false, productId: null, imageSrc: null });
+
+  const handleApplyRemoveBgImage = async (cutoutImage) => {
+    const targetId = removeBgModal.productId;
+    if (!targetId) return;
+    if (targetId === "FORM") {
+      setProductForm((prev) => ({ ...prev, image: cutoutImage }));
+      return;
+    }
+    setProducts((prev) =>
+      prev.map((item) => (item._id === targetId ? { ...item, image: cutoutImage } : item))
+    );
+    setFailedThumbnails((prev) => {
+      const next = { ...prev };
+      delete next[targetId];
+      return next;
+    });
+    setImagePreviewModal((prev) => {
+      if (prev.isOpen && prev.meta?.id === targetId) {
+        return { ...prev, url: cutoutImage };
+      }
+      return prev;
+    });
+    try {
+      await updateCatalogueProduct(targetId, { image: cutoutImage });
+    } catch (err) {
+      console.warn("Product image server update:", err.message);
+    }
   };
 
   const handleApplyUpscaledImage = async (finalImage, stats) => {
@@ -1868,6 +1901,25 @@ export default function CompanyCatalogueManager() {
                           </button>
                           <button
                             className="btn btn-outline btn-sm"
+                            title="Remove Background using rembg"
+                            onClick={() => setRemoveBgModal({ isOpen: true, productId: p._id, imageSrc: displayImg })}
+                            style={{
+                              color: "#7c3aed",
+                              borderColor: "rgba(124, 58, 237, 0.35)",
+                              background: "rgba(124, 58, 237, 0.08)",
+                              display: "inline-flex",
+                              alignItems: "center",
+                              gap: "4px",
+                              fontWeight: 750,
+                              padding: "4px 9px",
+                              fontSize: "0.78rem",
+                            }}
+                          >
+                            <Scissors size={13} />
+                            <span>Remove BG</span>
+                          </button>
+                          <button
+                            className="btn btn-outline btn-sm"
                             title="AI Studio Shoot (Convert image to studio master, change stage & cutout)"
                             onClick={() =>
                               navigate("/ai-studio", {
@@ -2456,7 +2508,7 @@ export default function CompanyCatalogueManager() {
                       }}
                       title="Open AI Studio to edit lighting, remove background, or add luxury stages"
                     >
-                      <Palette size={13} /> Edit in AI Studio ➔
+                      <Palette size={13} /> Edit in AI Studio
                     </button>
                   </div>
                 </div>
@@ -2602,11 +2654,11 @@ export default function CompanyCatalogueManager() {
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
                   <label style={{ fontSize: "0.86rem", fontWeight: 750, color: "var(--text-primary)" }}>
                     {categoryFamily === "garlic"
-                      ? "🧄 Garlic Agro Specifications & Grading Standards"
+                      ? "Garlic Agro Specifications & Grading Standards"
                       : (categoryFamily === "sandstone" || categoryFamily === "kotastone")
-                      ? "🧱 Stone Architectural Specifications & Calibration (Thickness & Surface)"
+                      ? "Stone Architectural Specifications & Calibration (Thickness & Surface)"
                       : categoryFamily === "kotadoria"
-                      ? "🥻 Kota Doria Artisan Handloom Specifications (Length & Weight)"
+                      ? "Kota Doria Artisan Handloom Specifications (Length & Weight)"
                       : "Four Mandatory Product Specification Points"}
                   </label>
                   <span style={{ fontSize: "0.72rem", color: "#15803d", background: "rgba(22, 163, 74, 0.08)", border: "1px solid rgba(22, 163, 74, 0.2)", padding: "2px 8px", borderRadius: "6px", fontWeight: 700 }}>
@@ -3187,6 +3239,13 @@ export default function CompanyCatalogueManager() {
           companyId: companyId,
         }}
         onApply={handleApplyUpscaledImage}
+      />
+
+      <RemoveBgModal
+        isOpen={removeBgModal.isOpen}
+        onClose={() => setRemoveBgModal({ isOpen: false, productId: null, imageSrc: null })}
+        imageSrc={removeBgModal.imageSrc}
+        onApply={handleApplyRemoveBgImage}
       />
 
       {/* Full-Resolution Product Image Preview Modal */}

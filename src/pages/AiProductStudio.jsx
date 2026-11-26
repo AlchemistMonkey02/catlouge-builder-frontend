@@ -217,14 +217,15 @@ export default function AiProductStudio() {
   const navigate = useNavigate();
 
   // Initial image if passed via state
+  const hasPassedImage = Boolean(location.state?.image);
   const initialImage = location.state?.image || DEMO_PHONE_SHOTS[0].url;
-  const initialCutout = location.state?.cutout || demoCutouts.watch || null;
+  const initialCutout = location.state?.cutout || (hasPassedImage ? null : demoCutouts.watch) || null;
   const initialProductId = location.state?.productId || null;
 
   // Source & Cutout State
   const [sourceImage, setSourceImage] = useState(initialImage);
   const [cutoutImage, setCutoutImage] = useState(initialCutout);
-  const [useCutout, setUseCutout] = useState(true);
+  const [useCutout, setUseCutout] = useState(Boolean(initialCutout));
   const [isProcessingCutout, setIsProcessingCutout] = useState(false);
   const [isTransforming, setIsTransforming] = useState(false);
   const [magicWandActive, setMagicWandActive] = useState(false);
@@ -445,23 +446,63 @@ export default function AiProductStudio() {
         targetB = Math.round(bSum / corners.length);
       }
 
-      const colorThreshold = tolerance * 2.2;
+      const colorThreshold = tolerance * 1.4;
+      const featherBand = Math.max(1, feather * 5);
+      const visited = new Uint8Array(w * h);
+      const queue = new Int32Array(w * h);
+      let head = 0;
+      let tail = 0;
 
-      for (let i = 0; i < data.length; i += 4) {
-        const r = data[i];
-        const g = data[i + 1];
-        const b = data[i + 2];
+      const colorDist = (pIdx) => {
+        const i = pIdx * 4;
+        const dr = data[i] - targetR;
+        const dg = data[i + 1] - targetG;
+        const db = data[i + 2] - targetB;
+        return Math.sqrt(dr * dr + dg * dg + db * db);
+      };
 
-        const dist = Math.sqrt(
-          Math.pow(r - targetR, 2) + Math.pow(g - targetG, 2) + Math.pow(b - targetB, 2)
-        );
+      const enqueue = (x, y) => {
+        if (x < 0 || x >= w || y < 0 || y >= h) return;
+        const pIdx = y * w + x;
+        if (visited[pIdx]) return;
+        visited[pIdx] = 1;
+        if (colorDist(pIdx) < colorThreshold + featherBand) {
+          queue[tail++] = pIdx;
+        }
+      };
 
+      if (sampleX !== null && sampleY !== null) {
+        const sx = sampleX <= 1.0 ? Math.round(sampleX * (w - 1)) : Math.max(0, Math.min(w - 1, Math.round(sampleX)));
+        const sy = sampleY <= 1.0 ? Math.round(sampleY * (h - 1)) : Math.max(0, Math.min(h - 1, Math.round(sampleY)));
+        enqueue(sx, sy);
+      } else {
+        for (let x = 0; x < w; x++) {
+          enqueue(x, 0);
+          enqueue(x, h - 1);
+        }
+        for (let y = 1; y < h - 1; y++) {
+          enqueue(0, y);
+          enqueue(w - 1, y);
+        }
+      }
+
+      while (head < tail) {
+        const pIdx = queue[head++];
+        const dist = colorDist(pIdx);
+        const i = pIdx * 4;
         if (dist < colorThreshold) {
           data[i + 3] = 0;
-        } else if (dist < colorThreshold + feather * 5) {
-          const alpha = (dist - colorThreshold) / (feather * 5);
-          data[i + 3] = Math.round(alpha * 255);
+        } else {
+          const alpha = (dist - colorThreshold) / featherBand;
+          data[i + 3] = Math.round(Math.max(0, Math.min(1, alpha)) * 255);
         }
+
+        const x = pIdx % w;
+        const y = (pIdx - x) / w;
+        enqueue(x + 1, y);
+        enqueue(x - 1, y);
+        enqueue(x, y + 1);
+        enqueue(x, y - 1);
       }
 
       ctx.putImageData(imgData, 0, 0);

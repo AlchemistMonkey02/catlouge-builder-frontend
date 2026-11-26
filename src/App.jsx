@@ -41,7 +41,7 @@ export default function App() {
 
         {/* Core Direct Workflow: Login -> Companies -> Add Products -> Generate PDF */}
         <Route path="/login" element={<AdminLogin />} />
-        <Route path="/" element={<RequireAuth><CompanyManager /></RequireAuth>} />
+        <Route path="/" element={<Navigate to="/login" replace />} />
         <Route path="/companies" element={<RequireAuth><CompanyManager /></RequireAuth>} />
         <Route path="/companies/:companyId/catalogue" element={<RequireAuth><CompanyCatalogueManager /></RequireAuth>} />
         <Route path="/ai-studio" element={<RequireAuth><AiProductStudio /></RequireAuth>} />
