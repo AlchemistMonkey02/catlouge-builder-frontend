@@ -569,16 +569,19 @@ export default function CompanyManager() {
             return (
               <button
                 key={ind}
+                type="button"
                 onClick={() => setSelectedIndustry(ind)}
-                className="btn btn-sm"
                 style={{
-                  padding: "4px 10px",
-                  fontSize: "0.78rem",
-                  fontWeight: isSel ? 750 : 500,
-                  borderRadius: "var(--radius-full)",
-                  background: isSel ? "var(--primary)" : "var(--bg-surface-elevated)",
-                  color: isSel ? "#ffffff" : "var(--text-secondary)",
-                  border: isSel ? "1px solid var(--primary)" : "1px solid var(--border-subtle)",
+                  padding: "4px 6px",
+                  fontSize: "0.8rem",
+                  fontWeight: isSel ? 700 : 500,
+                  borderRadius: "4px",
+                  background: "transparent",
+                  color: isSel ? "var(--primary)" : "var(--text-muted)",
+                  border: "none",
+                  borderBottom: isSel ? "2px solid var(--primary)" : "2px solid transparent",
+                  cursor: "pointer",
+                  transition: "all 0.15s ease",
                 }}
               >
                 {ind === "all" ? "All Industries" : ind}

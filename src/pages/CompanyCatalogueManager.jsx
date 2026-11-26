@@ -689,20 +689,29 @@ export function SmartPresetInput({
           {icon} {label}
         </label>
         {value && (
-          <span
+          <button
+            type="button"
+            onClick={() => {
+              onChange("");
+              const inputEl = document.activeElement?.closest?.("div")?.parentElement?.querySelector("input");
+              if (inputEl) inputEl.focus();
+            }}
             style={{
-              fontSize: "0.68rem",
+              fontSize: "0.72rem",
               fontWeight: 700,
-              padding: "1px 7px",
-              borderRadius: "12px",
-              background: matchedPreset ? "rgba(99, 102, 241, 0.1)" : "rgba(245, 158, 11, 0.1)",
-              color: matchedPreset ? "var(--primary, #4f46e5)" : "#d97706",
-              border: `1px solid ${matchedPreset ? "rgba(99, 102, 241, 0.25)" : "rgba(245, 158, 11, 0.25)"}`,
+              padding: "1px 4px",
+              border: "none",
+              background: "transparent",
+              color: matchedPreset ? "var(--primary, #4f46e5)" : "#b45309",
+              textDecoration: "underline",
+              textUnderlineOffset: "3px",
+              cursor: "pointer",
               whiteSpace: "nowrap"
             }}
+            title="Click to clear and type a custom value"
           >
-            {matchedPreset ? " Pre-filled" : " Custom"}
-          </span>
+            {matchedPreset ? "Pre-filled (Clear)" : "Custom (Clear)"}
+          </button>
         )}
       </div>
 
@@ -789,14 +798,17 @@ export function SmartPresetInput({
                 type="button"
                 onClick={() => handleChipClick(p)}
                 style={{
-                  fontSize: "0.71rem",
-                  padding: "2px 8px",
-                  borderRadius: "6px",
-                  border: isSelected ? "1.5px solid var(--primary, #4f46e5)" : "1px solid var(--border-subtle)",
-                  background: isSelected ? "rgba(99, 102, 241, 0.12)" : "var(--bg-surface-elevated)",
-                  color: isSelected ? "var(--primary, #4f46e5)" : "var(--text-secondary)",
+                  fontSize: "0.74rem",
+                  padding: "2px 4px",
+                  borderRadius: "4px",
+                  border: "none",
+                  background: isSelected ? "var(--primary-light)" : "transparent",
+                  color: isSelected ? "var(--primary)" : "var(--text-muted)",
                   cursor: "pointer",
-                  fontWeight: isSelected ? 750 : 550,
+                  fontWeight: isSelected ? 700 : 500,
+                  textDecoration: isSelected ? "none" : "underline",
+                  textDecorationColor: "var(--border-medium)",
+                  textUnderlineOffset: "3px",
                   transition: "all 0.15s ease",
                   display: "inline-flex",
                   alignItems: "center",
@@ -833,13 +845,14 @@ export function SmartPresetInput({
                 onSaveToDataBank(value);
               }}
               style={{
-                fontSize: "0.69rem",
-                padding: "2px 8px",
-                borderRadius: "6px",
-                border: "1px solid rgba(16, 185, 129, 0.35)",
-                background: "rgba(16, 185, 129, 0.1)",
+                fontSize: "0.73rem",
+                padding: "2px 4px",
+                border: "none",
+                background: "transparent",
                 color: "#059669",
-                fontWeight: 750,
+                fontWeight: 700,
+                textDecoration: "underline",
+                textUnderlineOffset: "3px",
                 cursor: "pointer",
                 display: "inline-flex",
                 alignItems: "center",
@@ -1790,14 +1803,6 @@ export default function CompanyCatalogueManager() {
                         <div style={{ fontWeight: 650, color: "var(--text-primary)", fontSize: "0.92rem", maxWidth: "280px" }}>
                           {p.name}
                         </div>
-                        <div style={{ fontSize: "0.78rem", color: "var(--text-muted)", marginTop: "2px" }}>
-                          {p.size ? ` ${p.size} • ` : ""}{p.material || p.materialComposition || ""}
-                        </div>
-                        {p.finish && (
-                          <div style={{ fontSize: "0.72rem", color: "var(--text-secondary)", marginTop: "1px" }}>
-                             {p.finish}
-                          </div>
-                        )}
                       </td>
                       <td>
                         <div style={{ fontSize: "0.78rem", color: "#166534", fontWeight: 700 }}>

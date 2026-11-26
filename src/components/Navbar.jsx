@@ -50,15 +50,52 @@ export default function Navbar() {
   return (
     <header className="header-nav no-print">
       <div style={{ display: "flex", alignItems: "center", gap: "1.75rem" }}>
-        <Link to="/companies" className="header-brand">
-          <div className="brand-icon-box">
-            <Sparkles size={20} />
+        <Link to="/companies" className="header-brand" style={{ gap: "0.65rem" }}>
+          <div
+            className="brand-icon-box"
+            style={{
+              width: "34px",
+              height: "34px",
+              borderRadius: "9px",
+              boxShadow: "0 2px 8px rgba(0, 0, 0, 0.12)",
+            }}
+          >
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+              aria-hidden="true"
+            >
+              <path
+                d="M4 5.5C4 4.67157 4.67157 4 5.5 4H10.5C11.3284 4 12 4.67157 12 5.5V19.5C12 18.6716 11.3284 18 10.5 18H5.5C4.67157 18 4 17.3284 4 16.5V5.5Z"
+                fill="white"
+                fillOpacity="0.92"
+              />
+              <path
+                d="M20 5.5C20 4.67157 19.3284 4 18.5 4H13.5C12.6716 4 12 4.67157 12 5.5V19.5C12 18.6716 12.6716 18 13.5 18H18.5C19.3284 18 20 17.3284 20 16.5V5.5Z"
+                fill="white"
+                fillOpacity="0.65"
+              />
+              <circle cx="16" cy="9" r="1.5" fill="white" />
+            </svg>
           </div>
-          <div>
-            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-              <span className="brand-title">Catalogue Studio</span>
-              <span className="brand-tag">PRO SUITE</span>
-            </div>
+          <div style={{ display: "flex", flexDirection: "column", lineHeight: 1.15 }}>
+            <span className="brand-title" style={{ fontSize: "1.02rem", fontWeight: 800, letterSpacing: "-0.02em" }}>
+              Catalogue Studio
+            </span>
+            <span
+              style={{
+                fontSize: "0.62rem",
+                fontWeight: 700,
+                letterSpacing: "0.1em",
+                color: "var(--primary)",
+                textTransform: "uppercase",
+              }}
+            >
+              Pro Suite
+            </span>
           </div>
         </Link>
 
@@ -152,12 +189,16 @@ export default function Navbar() {
 
         <Link
           to="/login"
-          className="org-badge"
           style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: "0.4rem",
             textDecoration: "none",
             cursor: "pointer",
-            fontSize: "0.82rem",
-            padding: "0.42rem 0.85rem",
+            fontSize: "0.84rem",
+            fontWeight: 600,
+            color: "var(--text-secondary)",
+            padding: "0.35rem 0.5rem",
           }}
           title="Admin Account"
         >
@@ -169,12 +210,9 @@ export default function Navbar() {
           style={{
             display: "flex",
             alignItems: "center",
-            gap: "0.45rem",
-            padding: "0.38rem 0.75rem",
-            background: "var(--success-bg)",
-            borderRadius: "var(--radius-full)",
-            border: "1px solid rgba(4, 120, 87, 0.25)",
-            fontSize: "0.78rem",
+            gap: "0.4rem",
+            padding: "0.35rem 0.5rem",
+            fontSize: "0.8rem",
             color: "var(--success)",
             fontWeight: 700,
           }}
@@ -185,7 +223,6 @@ export default function Navbar() {
               height: "7px",
               borderRadius: "50%",
               backgroundColor: "var(--success)",
-              boxShadow: "0 0 6px var(--success)",
               display: "inline-block",
             }}
           />
@@ -195,14 +232,17 @@ export default function Navbar() {
         <button
           type="button"
           onClick={handleLogout}
-          className="org-badge"
           style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: "0.4rem",
             cursor: "pointer",
-            fontSize: "0.82rem",
-            padding: "0.42rem 0.85rem",
+            fontSize: "0.84rem",
+            fontWeight: 600,
+            padding: "0.35rem 0.5rem",
             color: "#dc2626",
-            borderColor: "rgba(220, 38, 38, 0.25)",
-            background: "rgba(220, 38, 38, 0.06)",
+            border: "none",
+            background: "transparent",
           }}
           title="Sign out"
         >
