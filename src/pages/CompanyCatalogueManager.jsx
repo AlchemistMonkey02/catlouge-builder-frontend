@@ -161,7 +161,7 @@ function getCompanyDefaultOdop(comp) {
   return ODOP_PRESETS["Kota Doria"];
 }
 
-export function getCategoryFamily(item) {
+function getCategoryFamily(item) {
   return resolveCompanyCategory(item);
 }
 

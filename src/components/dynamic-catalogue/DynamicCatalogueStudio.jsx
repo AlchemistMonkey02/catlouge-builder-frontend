@@ -1196,6 +1196,21 @@ export default function DynamicCatalogueStudio({
 
     applyEdit(swapModalTarget.el, { customImg: newImageUrl, photo: undefined }, newImageUrl);
 
+    // Immediately update the DOM element in real time
+    const targetInner = swapModalTarget.inner || swapModalTarget.el;
+    if (targetInner) {
+      if (targetInner.tagName === "IMG") {
+        targetInner.src = newImageUrl;
+      } else if (targetInner.tagName && targetInner.tagName.toLowerCase() === "image") {
+        targetInner.setAttribute("href", newImageUrl);
+        targetInner.setAttribute("xlink:href", newImageUrl);
+      } else {
+        const childImg = targetInner.querySelector && targetInner.querySelector("img");
+        if (childImg) childImg.src = newImageUrl;
+        else targetInner.style.backgroundImage = `url("${newImageUrl}")`;
+      }
+    }
+
     const pv = swapModalTarget.el.closest(".pvpage");
     if (pv) {
       const key = keyFor(swapModalTarget.el, pv);

@@ -43,6 +43,24 @@
 
 .pvpage {
   position: relative;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+.pvpage h1,
+.pvpage h2,
+.pvpage h3 {
+  text-wrap: balance;
+  letter-spacing: -0.015em;
+  line-height: 1.18;
+  overflow-wrap: break-word;
+}
+
+.pvpage p,
+.pvpage li {
+  line-height: 1.48;
+  overflow-wrap: break-word;
+}
   box-shadow: 0 12px 36px rgba(0, 0, 0, 0.45);
   border-radius: 6px;
   background: #ffffff;

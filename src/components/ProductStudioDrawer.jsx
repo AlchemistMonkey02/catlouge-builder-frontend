@@ -78,7 +78,7 @@ const ODOP_PRESETS = {
 
 import { resolveCompanyCategory } from "../utils/defaultDataBank";
 
-export function getCategoryFamily(item) {
+function getCategoryFamily(item) {
   return resolveCompanyCategory(item);
 }
 // AI features commented out:
