@@ -941,7 +941,7 @@ export default function DynamicCatalogueStudio({
       if (!Array.isArray(products) || products.length === 0) {
         return [];
       }
-      return products.filter(p => isProductCompatibleWithFamily(p, fam));
+      return products;
     }
 
     // 1. If explicit products array is passed from parent, filter out cross-category items!
