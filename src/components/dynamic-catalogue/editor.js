@@ -214,10 +214,15 @@ export function applyEdit(el, ed, photoUrl) {
 
   const cs = getComputedStyle(el), s = el.style;
 
-  // 3. Font Scale & Typography
+  // 3. Font Scale & Typography (store base fontSize/lineHeight once so fsMul never compounds)
   if (ed.fsMul && ed.fsMul !== 1) {
-    s.fontSize = (parseFloat(cs.fontSize) * ed.fsMul) + 'px';
-    if (/px$/.test(cs.lineHeight)) s.lineHeight = (parseFloat(cs.lineHeight) * ed.fsMul) + 'px';
+    if (!el.dataset.baseFs) el.dataset.baseFs = parseFloat(cs.fontSize) || 14;
+    if (!el.dataset.baseLh && /px$/.test(cs.lineHeight)) el.dataset.baseLh = parseFloat(cs.lineHeight);
+    s.fontSize = (parseFloat(el.dataset.baseFs) * ed.fsMul) + 'px';
+    if (el.dataset.baseLh) s.lineHeight = (parseFloat(el.dataset.baseLh) * ed.fsMul) + 'px';
+  } else if (el.dataset.baseFs) {
+    s.fontSize = el.dataset.baseFs + 'px';
+    if (el.dataset.baseLh) s.lineHeight = el.dataset.baseLh + 'px';
   }
   if (ed.fontFamily !== undefined) {
     if (ed.fontFamily) {
@@ -973,7 +978,8 @@ function onPanel(e) {
 
 /* ---------------- floating toolbar ---------------- */
 function ensureBar() {
-  if (bar) return bar;
+  if (bar && document.body.contains(bar)) return bar;
+  document.querySelectorAll('.dz-bar').forEach(el => el.remove());
   bar = document.createElement('div');
   bar.className = 'dz-bar';
   bar.style.display = 'none';
@@ -1160,7 +1166,7 @@ function drawBar() {
         '<em id="bSizeV">' + curScale + '%</em>' +
       '</div>';
   }
-  h += '<div class="bar-row bar-end"><button type="button" data-act="cloneel" style="color:#2563eb;font-weight:700;background:#eff6ff;border-color:rgba(37,99,235,0.25);" title="Duplicate/Clone this element on the page">⎘ Duplicate</button><button type="button" data-act="deleteel" style="color:#ef4444;font-weight:700;background:#fef2f2;border-color:rgba(239,68,68,0.25);" title="Delete this element from the page"> Delete</button><button type="button" data-act="hide">' + (ed.hide ? 'Show again' : 'Hide') + '</button><button type="button" data-act="resetone">Reset element</button><button type="button" data-act="close" title="Deselect"></button></div>';
+  h += '<div class="bar-row bar-end"><button type="button" data-act="cloneel" style="color:#2563eb;font-weight:700;background:#eff6ff;border-color:rgba(37,99,235,0.25);" title="Duplicate/Clone this element on the page">Duplicate</button><button type="button" data-act="deleteel" style="color:#ef4444;font-weight:700;background:#fef2f2;border-color:rgba(239,68,68,0.25);" title="Delete this element from the page">Delete</button><button type="button" data-act="hide">' + (ed.hide ? 'Show again' : 'Hide') + '</button><button type="button" data-act="resetone">Reset element</button><button type="button" data-act="close" title="Deselect">&times;</button></div>';
   bar.innerHTML = h;
   bar.style.display = 'block';
   positionBar();
@@ -1171,8 +1177,8 @@ function positionBar() {
   const r = sel.el.getBoundingClientRect();
   const bw = bar.offsetWidth || 330, bh = bar.offsetHeight || 120, W = window.innerWidth, H = window.innerHeight;
   let top = r.top - bh - 38;
-  if (top < 10) top = r.bottom + 15;
-  if (top + bh > H - 10) top = Math.max(10, Math.min(H - bh - 10, r.top + 10));
+  if (top < 72) top = r.bottom + 15;
+  if (top + bh > H - 10) top = Math.max(72, Math.min(H - bh - 10, r.top + 10));
   let left = r.left + r.width / 2 - bw / 2;
   left = Math.max(10, Math.min(W - bw - 10, left));
   bar.style.top = top + 'px';

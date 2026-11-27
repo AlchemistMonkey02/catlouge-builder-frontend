@@ -611,7 +611,7 @@ export function qrPageHtml(info, sel, qrList) {
         <img class="qrx qrimg" src="${c.img || c.qr}" alt="" style="display:block;width:${q}px;height:${q}px;margin:0 auto">
         <div style="font:700 ${q > 240 ? 18 : 15}px/1.2 Montserrat,sans-serif;color:#1f2433;margin-top:12px;letter-spacing:.3px">${esc(c.label || c.title)}</div>
         <div style="margin-top:6px;">
-          <span class="qr-click-btn" style="display:inline-flex;align-items:center;gap:3px;font-size:11px;font-weight:700;color:#ffffff;background:${acc || '#2563eb'};padding:3px 12px;border-radius:99px;text-decoration:none;box-shadow:0 2px 6px rgba(0,0,0,0.15);">Click here ↗</span>
+          <span class="qr-click-btn" style="display:inline-flex;align-items:center;gap:3px;font-size:11px;font-weight:700;color:#ffffff;background:${acc || '#2563eb'};padding:4px 12px;border-radius:6px;text-decoration:none;box-shadow:0 2px 6px rgba(0,0,0,0.15);">Click here ↗</span>
         </div>
         <div style="font:400 11px/1.4 Montserrat,sans-serif;color:#6b7280;margin-top:6px">${esc(c.note || c.subtitle || 'Scan to view link')}</div>
       </a>
