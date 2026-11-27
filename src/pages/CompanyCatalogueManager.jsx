@@ -1968,21 +1968,27 @@ export default function CompanyCatalogueManager() {
         </div>
       </div>
 
-      {/* ADD / EDIT PRODUCT MODAL */}
+      {/* ADD / EDIT PRODUCT FULL-PAGE VIEW */}
       {isProductModalOpen && (
-        <div className="drawer-backdrop" onClick={() => setIsProductModalOpen(false)}>
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            zIndex: 90,
+            background: "var(--bg-app)",
+            overflowY: "auto",
+            padding: "2rem 1.5rem",
+          }}
+        >
           <div
             className="card"
             style={{
               width: "100%",
-              maxWidth: "740px",
-              margin: "auto",
+              maxWidth: "880px",
+              margin: "0 auto",
               background: "var(--bg-surface)",
               boxShadow: "var(--shadow-lg)",
-              maxHeight: "90vh",
-              overflowY: "auto",
             }}
-            onClick={(e) => e.stopPropagation()}
           >
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
               <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
