@@ -518,7 +518,12 @@ export default function PdfCatalogueGenerator() {
       if (byBrand.length > 0) return byBrand;
     }
 
-    // 3. Match from allProducts that are strictly compatible with targetFam
+    // If a real company is selected and has no products yet, return [] (do not pull other companies' or demo products)
+    if (selectedCompanyId) {
+      return [];
+    }
+
+    // 3. Match from allProducts that are strictly compatible with targetFam (only when no company is selected)
     const compatibleProds = allProducts.filter((p) => isProductCompatibleWithFamily(p, targetFam));
     if (compatibleProds.length > 0) return compatibleProds;
 
