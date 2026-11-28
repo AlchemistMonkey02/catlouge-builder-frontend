@@ -149,6 +149,7 @@ export default function PdfCatalogueGenerator() {
 
   // Dynamic Studio Engine: "dynamic" (ODOP 41-Layout Designer with live photo & text editing) or "classic"
   const [studioEngine, setStudioEngine] = useState("dynamic");
+  const [mobileStep, setMobileStep] = useState("company");
 
   // Template State - Defaults to Supreme Architectural (Exact Reference Format)
   const [templateId, setTemplateId] = useState("supreme_architectural");
@@ -917,8 +918,27 @@ export default function PdfCatalogueGenerator() {
         </div>
       </div>
 
+      {/* MOBILE APP STEP NAVIGATION */}
+      <div className="mobile-step-tabs no-print">
+        {[
+          { id: "company", label: "1. Company" },
+          { id: "qr", label: "2. QR" },
+          { id: "products", label: "3. Products" },
+          { id: "studio", label: "4. Studio" },
+        ].map((t) => (
+          <button
+            key={t.id}
+            type="button"
+            className={`mobile-step-tab ${mobileStep === t.id ? "active" : ""}`}
+            onClick={() => setMobileStep(t.id)}
+          >
+            {t.label}
+          </button>
+        ))}
+      </div>
+
       {/* STEP 1: COMPANY SELECTOR */}
-      <div className="card no-print" style={{ marginBottom: "1.25rem", padding: "1.25rem" }}>
+      <div className={`card no-print mobile-step-panel ${mobileStep === "company" ? "is-active" : ""}`} style={{ marginBottom: "1.25rem", padding: "1.25rem" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.75rem" }}>
           <div style={{ fontWeight: 800, fontSize: "1rem", color: "var(--text-primary)", display: "flex", alignItems: "center", gap: "0.5rem" }}>
             <Building2 size={20} color="var(--primary)" />
@@ -1685,6 +1705,7 @@ export default function PdfCatalogueGenerator() {
       </div>
 
       {/* STEP 4: DYNAMIC CATALOGUE STUDIO / LIVE PREVIEW */}
+      <div className={`mobile-step-panel ${mobileStep === "studio" ? "is-active" : ""}`}>
       {studioEngine === "dynamic" ? (
         <div style={{ marginBottom: "2rem" }}>
           <DynamicCatalogueStudio
@@ -2639,6 +2660,7 @@ export default function PdfCatalogueGenerator() {
           </div>
         </div>
       )}
+      </div>
     </div>
   );
 }

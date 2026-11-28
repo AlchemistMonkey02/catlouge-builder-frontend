@@ -2555,7 +2555,7 @@ export default function DynamicCatalogueStudio({
         </div>
 
         {/* Action Buttons */}
-        <div style={{ display: "flex", alignItems: "center", gap: "0.6rem", flexWrap: "wrap" }}>
+        <div className="dyn-header-actions" style={{ display: "flex", alignItems: "center", gap: "0.6rem", flexWrap: "wrap" }}>
           {/* Full View / Hide Sidebar Toggle */}
           <button
             type="button"
@@ -2761,7 +2761,7 @@ export default function DynamicCatalogueStudio({
       )}
 
       {/* Main Studio Layout: Toggleable between 2-Column Editor and Centered Full View */}
-      <div style={{ display: "grid", gridTemplateColumns: isSidebarCollapsed ? "1fr" : "380px minmax(0, 1fr)", gap: "1.25rem", alignItems: "start", width: "100%", maxWidth: "100%", transition: "grid-template-columns 0.25s ease" }}>
+      <div className="dyn-workspace-grid" style={{ display: "grid", gridTemplateColumns: isSidebarCollapsed ? "1fr" : "380px minmax(0, 1fr)", gap: "1.25rem", alignItems: "start", width: "100%", maxWidth: "100%", transition: "grid-template-columns 0.25s ease" }}>
 
         {/* Left Sidebar: Comprehensive Multi-Tab Tools */}
         {!isSidebarCollapsed && (

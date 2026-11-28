@@ -19,16 +19,16 @@
   max-width: 100%;
 }
 
-.dyn-preview-scaler {
-  width: 100%;
-  max-width: 100%;
-  transform-origin: top center;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-start;
-  box-sizing: border-box;
-}
+  .dyn-preview-scaler {
+    width: 100%;
+    max-width: 100%;
+    transform-origin: top center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    box-sizing: border-box;
+  }
 
 #previewHost {
   display: flex;
@@ -60,6 +60,42 @@
 .pvpage li {
   line-height: 1.48;
   overflow-wrap: break-word;
+}
+
+/* Mobile Responsive Catalogue Preview */
+@media (max-width: 900px) {
+  .dyn-workspace-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .dyn-preview-container {
+    padding: 12px 8px;
+    min-height: 360px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .dyn-preview-scaler {
+    zoom: 0.45;
+  }
+
+  .dyn-header-actions {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px !important;
+    width: 100%;
+  }
+
+  .dyn-header-actions > button {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .dyn-header-actions > button:nth-last-child(-n+2) {
+    grid-column: 1 / -1;
+  }
 }
   box-shadow: 0 12px 36px rgba(0, 0, 0, 0.45);
   border-radius: 6px;

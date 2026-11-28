@@ -588,6 +588,9 @@ tbody td {
   .card {
     padding: 1rem;
     border-radius: 12px;
+    min-width: 0;
+    max-width: 100%;
+    box-sizing: border-box;
   }
 
   table {
@@ -611,6 +614,18 @@ tbody td {
     font-size: 0.9rem;
   }
 
+  .btn-sm {
+    padding: 0.35rem 0.65rem;
+    font-size: 0.75rem;
+    min-height: 32px;
+  }
+
+  .card > div,
+  .main-content div[style*="display: flex"] {
+    flex-wrap: wrap;
+    max-width: 100%;
+  }
+
   .dz-bar {
     max-width: calc(100vw - 20px) !important;
     width: calc(100vw - 20px) !important;
@@ -630,6 +645,95 @@ tbody td {
   h2 {
     font-size: 1.15rem !important;
   }
+}
+
+/* Mobile App Bottom Navigation Bar */
+.mobile-bottom-nav {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .main-content {
+    padding-bottom: 80px;
+  }
+
+  .header-nav .nav-tabs {
+    display: none;
+  }
+
+  .mobile-bottom-nav {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 250;
+    background: var(--bg-glass);
+    backdrop-filter: blur(18px);
+    border-top: 1px solid var(--border-subtle);
+    padding: 6px 4px env(safe-area-inset-bottom, 6px);
+    box-shadow: 0 -4px 18px rgba(0, 0, 0, 0.08);
+  }
+
+  .mobile-nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    padding: 6px 4px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-decoration: none;
+    border-radius: 8px;
+    cursor: pointer;
+  }
+
+  .mobile-nav-item.active {
+    color: var(--primary);
+    background: var(--primary-light);
+    font-weight: 700;
+  }
+
+  .mobile-step-tabs {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+    margin-bottom: 1rem;
+    background: var(--bg-surface);
+    padding: 6px;
+    border-radius: 10px;
+    border: 1px solid var(--border-subtle);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .mobile-step-tab {
+    padding: 8px 4px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    border: none;
+    border-radius: 7px;
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+    text-align: center;
+  }
+
+  .mobile-step-tab.active {
+    background: var(--primary);
+    color: #ffffff;
+    font-weight: 700;
+  }
+
+  .mobile-step-panel:not(.is-active) {
+    display: none !important;
+  }
+}
+
+.mobile-step-tabs {
+  display: none;
 }
 
 /* Dashboard KPI Grid */

@@ -48,6 +48,7 @@ export default function Navbar() {
   ];
 
   return (
+    <>
     <header className="header-nav no-print">
       <div style={{ display: "flex", alignItems: "center", gap: "1.75rem" }}>
         <Link to="/companies" className="header-brand" style={{ gap: "0.65rem" }}>
@@ -251,5 +252,39 @@ export default function Navbar() {
         </button>
       </div>
     </header>
+
+    <nav className="mobile-bottom-nav no-print" aria-label="Mobile Navigation">
+      <Link
+        to="/companies"
+        className={`mobile-nav-item ${location.pathname.startsWith("/companies") ? "active" : ""}`}
+      >
+        <Building2 size={18} />
+        <span>Companies</span>
+      </Link>
+      <Link
+        to="/pdf-generator"
+        className={`mobile-nav-item ${location.pathname.startsWith("/pdf") ? "active" : ""}`}
+      >
+        <FileText size={18} />
+        <span>PDF Studio</span>
+      </Link>
+      <Link
+        to="/login"
+        className={`mobile-nav-item ${location.pathname === "/login" ? "active" : ""}`}
+      >
+        <ShieldCheck size={18} />
+        <span>Admin</span>
+      </Link>
+      <button
+        type="button"
+        onClick={handleLogout}
+        className="mobile-nav-item"
+        style={{ color: "#dc2626", background: "transparent", border: "none" }}
+      >
+        <LogOut size={18} />
+        <span>Logout</span>
+      </button>
+    </nav>
+    </>
   );
 }
